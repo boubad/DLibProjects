@@ -33,6 +33,33 @@
     <ClInclude Include="targetver.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="include\database.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\dbstatitems.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\dbvalue.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\statdbmanager.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\statement.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\stringconvert.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="src\sqlite3.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\sqlite3ext.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="tests\infotestdata.h">
+      <Filter>tests</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -43,6 +70,30 @@
     </ClCompile>
     <ClCompile Include="tester.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\database.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\dbstatitems.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\dbvalue.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sqlite3.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\statdbmanager.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\statement.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="tests\infotestdata.cpp">
+      <Filter>tests</Filter>
+    </ClCompile>
+    <ClCompile Include="tests\test_statdatamanager.cpp">
+      <Filter>tests</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
