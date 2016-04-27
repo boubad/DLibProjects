@@ -2,6 +2,7 @@
 // License: Boost Software License   See LICENSE.txt for the full license.
 
 #include <dlib/test/tester.h>
+#include <dlib/logger.h>
 #include "infotestdata.h"
 #include <statdbmanager.h>
 // This is called an unnamed-namespace and it has the effect of making everything 
@@ -12,6 +13,7 @@ namespace
 {
 	using namespace test;
 	using namespace info;
+	using namespace dlib;
 	// Declare the logger we will use in this test.  The name of the logger 
 	// should start with "test."
 	dlib::logger dlog("test.statdbmanager");
@@ -31,10 +33,13 @@ namespace
 				"Run StatDBManager tests.", // the command line argument description
 				0                     // the number of command line arguments for this test
 			)
-		{}
+		{
+			dlog.set_level(LALL);
+		}
 		void fill_random_data(StatDBManager *pMan, const std::string &setName, 
 			size_t nTotalInds = 1024,
 			size_t nTotalVars = 20) {
+			dlog << LTRACE << "Entering fill random data";
 			DLIB_TEST(pMan != nullptr);
 			DLIB_TEST(pMan->is_valid());
 			DLIB_TEST(!setName.empty());
@@ -133,13 +138,14 @@ namespace
 				bRet = pMan->maintains_values(oVals);
 				DLIB_TEST_MSG(bRet, "Insert Values update failed");
 			}
+			dlog << LTRACE << "Exiting fill random data";
 		}// fill_tandom_data
 		void perform_test()
 		{
 			// This message gets logged to the file debug.txt if the user has enabled logging by
 			// supplying the -d option on the command line (and they haven't set the logging level
 			// to something higher than LINFO).
-			dlog << dlib::LINFO << "ENTERING StatDBManager tests...";
+			dlog << LTRACE << "ENTERING StatDBManager tests...";
 			//
 			std::string dbName;
 			InfoTestData::get_database_filename(dbName);
@@ -164,6 +170,7 @@ namespace
 			DLIB_TEST(!status.empty());
 			bool bRet = oMan.import_dataset(setName, nRows, nCols, gdata, rowNames, colNames, type, genre, status);
 			DLIB_TEST_MSG(bRet, "mortal data import failed!");
+			dlog << LTRACE << "Done checking mortal data...";
 			//
 			nRows = 0;
 			nCols = 0;
@@ -182,6 +189,7 @@ namespace
 			DLIB_TEST(!status.empty());
 			bRet = oMan.import_dataset(setName, nRows, nCols, gdata, rowNames, colNames, type, genre, status);
 			DLIB_TEST_MSG(bRet, "conso data import failed!");
+			dlog << LTRACE << "Done checking conso data...";
 			//
 			nRows = 0;
 			nCols = 0;
