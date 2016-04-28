@@ -237,7 +237,7 @@ namespace info {
 		return (!this->m_val.empty());
 	}
 	bool DbValue::empty(void) const {
-		return (!this->m_val.empty());
+		return (this->m_val.empty());
 	}
 	//////////////////////////////////////////
 	bool DbValue::operator<(const DbValue &other) const {

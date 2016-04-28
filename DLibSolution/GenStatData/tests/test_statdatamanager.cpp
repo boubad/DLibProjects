@@ -2,6 +2,8 @@
 // License: Boost Software License   See LICENSE.txt for the full license.
 
 #include <dlib/test/tester.h>
+#include <dlib/dir_nav.h>
+////////////////////////////////
 #include <dlib/logger.h>
 #include "infotestdata.h"
 #include <statdbmanager.h>
@@ -35,10 +37,36 @@ namespace
 			)
 		{
 		}
-		void fill_random_data(StatDBManager *pMan, const std::string &setName, 
+		void fiil_test_data(StatDBManager *pMan, const std::string &setName) {
+			dlog << dlib::LINFO << "Checkibg existence of dataset " << setName;
+			DLIB_TEST(pMan != nullptr);
+			DLIB_TEST(pMan->is_valid());
+			DBStatDataset oSet(setName);
+			if (!pMan->find_dataset(oSet)) {
+				std::string type, genre, status;
+				std::vector<std::string> rowNames, colNames;
+				std::vector<int> gdata;
+				InfoTestData::get_default_type_genre_status(type, genre, status);
+				DLIB_TEST(!type.empty());
+				DLIB_TEST(!genre.empty());
+				DLIB_TEST(!status.empty());
+				size_t nRows = 0, nCols = 0;
+				InfoTestData::get_data(setName, nRows, nCols, gdata, rowNames, colNames);
+				DLIB_TEST(nRows > 2);
+				DLIB_TEST(nCols > 2);
+				DLIB_TEST(gdata.size() >= (size_t)(nCols * nRows));
+				DLIB_TEST(rowNames.size() >= nRows);
+				DLIB_TEST(colNames.size() >= nCols);
+				print_spinner();
+				bool bRet = pMan->import_dataset(setName, nRows, nCols, gdata, rowNames, colNames, type, genre, status);
+				DLIB_TEST_MSG(bRet, "data import failed!");
+			}
+			print_spinner();
+		}// fill_test_data
+		void fill_random_data(StatDBManager *pMan, const std::string &setName,
 			size_t nTotalInds = 1024,
 			size_t nTotalVars = 20) {
-			dlog << LTRACE << "Entering fill random data";
+			dlog << LINFO << "Entering fill random data";
 			DLIB_TEST(pMan != nullptr);
 			DLIB_TEST(pMan->is_valid());
 			DLIB_TEST(!setName.empty());
@@ -49,15 +77,18 @@ namespace
 			std::string desc(setName);
 			std::string status("OK");
 			//
+			dlog << LINFO << "Checking random data dataset " << setName;
+			print_spinner();
 			DBStatDataset oSet(setName);
 			bool bRet = pMan->find_dataset(oSet);
-			if (!bRet) {
-				bRet = pMan->insert_dataset(oSet);
-				DLIB_TEST_MSG(bRet, "Insert database failed");
-				bRet = pMan->find_dataset(oSet);
-				DLIB_TEST_MSG(bRet, "Database not found.");
+			if (bRet) {
+				return;
 			}
-			DLIB_TEST_MSG(oSet.id() != 0,"Database id must not be zero");
+			bRet = pMan->insert_dataset(oSet);
+			DLIB_TEST_MSG(bRet, "Insert database failed");
+			bRet = pMan->find_dataset(oSet);
+			DLIB_TEST_MSG(bRet, "Database not found.");
+			DLIB_TEST_MSG(oSet.id() != 0, "Database id must not be zero");
 			//
 			std::vector<DBStatIndiv> oInds;
 			for (size_t i = 0; i < nTotalInds; ++i) {
@@ -105,6 +136,7 @@ namespace
 				DLIB_TEST_MSG(bRet, "Insert Variables update failed");
 			}
 			//
+			print_spinner();
 			oVars.clear();
 			oInds.clear();
 			bRet = pMan->get_dataset_indivs(oSet, oInds);
@@ -115,6 +147,7 @@ namespace
 			DLIB_TEST(nRows > 0);
 			DLIB_TEST(nCols > 0);
 			//
+			print_spinner();
 			std::vector<DBStatValue> oVals;
 			for (size_t ivar = 0; ivar < nCols; ++ivar) {
 				print_spinner();
@@ -137,14 +170,15 @@ namespace
 				bRet = pMan->maintains_values(oVals);
 				DLIB_TEST_MSG(bRet, "Insert Values update failed");
 			}
-			dlog << LTRACE << "Exiting fill random data";
+			dlog << LINFO << "Exiting fill random data";
+			print_spinner();
 		}// fill_tandom_data
 		void perform_test()
 		{
 			// This message gets logged to the file debug.txt if the user has enabled logging by
 			// supplying the -d option on the command line (and they haven't set the logging level
 			// to something higher than LINFO).
-			dlog << LTRACE << "ENTERING StatDBManager tests...";
+			dlog << LINFO << "ENTERING StatDBManager tests...";
 			//
 			std::string dbName;
 			InfoTestData::get_database_filename(dbName);
@@ -152,46 +186,16 @@ namespace
 			StatDBManager oMan(dbName);
 			DLIB_TEST_MSG(oMan.is_valid(), "StatDataManager is not valid");
 			//
-			size_t nRows = 0, nCols = 0;
-			std::string setName, type, genre, status;
-			std::vector<std::string> rowNames, colNames;
-			std::vector<int> gdata;
-			InfoTestData::get_default_type_genre_status(type, genre, status);
-			//
-			InfoTestData::get_mortal_data(setName, nRows, nCols, gdata, rowNames, colNames);
-			DLIB_TEST(nRows > 2);
-			DLIB_TEST(nCols > 2);
-			DLIB_TEST(gdata.size() >= (size_t)(nCols * nRows));
-			DLIB_TEST(rowNames.size() >= nRows);
-			DLIB_TEST(colNames.size() >= nCols);
-			DLIB_TEST(!type.empty());
-			DLIB_TEST(!genre.empty());
-			DLIB_TEST(!status.empty());
-			bool bRet = oMan.import_dataset(setName, nRows, nCols, gdata, rowNames, colNames, type, genre, status);
-			DLIB_TEST_MSG(bRet, "mortal data import failed!");
-			dlog << LTRACE << "Done checking mortal data...";
-			//
-			nRows = 0;
-			nCols = 0;
-			setName.clear();
-			gdata.clear();
-			rowNames.clear();
-			colNames.clear();
-			InfoTestData::get_conso_data(setName, nRows, nCols, gdata, rowNames, colNames);
-			DLIB_TEST(nRows > 2);
-			DLIB_TEST(nCols > 2);
-			DLIB_TEST(gdata.size() >= (size_t)(nCols * nRows));
-			DLIB_TEST(rowNames.size() >= nRows);
-			DLIB_TEST(colNames.size() >= nCols);
-			DLIB_TEST(!type.empty());
-			DLIB_TEST(!genre.empty());
-			DLIB_TEST(!status.empty());
-			bRet = oMan.import_dataset(setName, nRows, nCols, gdata, rowNames, colNames, type, genre, status);
-			DLIB_TEST_MSG(bRet, "conso data import failed!");
-			dlog << LTRACE << "Done checking conso data...";
-			//
-			nRows = 0;
-			nCols = 0;
+			std::vector<std::string> oNames;
+			InfoTestData::get_data_names(oNames);
+			for (auto it = oNames.begin(); it != oNames.end(); ++it) {
+				print_spinner();
+				std::string setName = *it;
+				this->fiil_test_data(&oMan, setName);
+			}// it
+			size_t  nRows = 0;
+			size_t nCols = 0;
+			std::string setName;
 			InfoTestData::get_test_indiv_data(setName, nRows, nCols);
 			this->fill_random_data(&oMan, setName, nRows, nCols);
 			//

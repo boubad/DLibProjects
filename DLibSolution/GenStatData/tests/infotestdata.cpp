@@ -62,7 +62,7 @@ namespace info {
 		"DANNEMARK","ISLANDE","ECOSSE","ESPAGNE","NORVEGE",
 		"IRLSUD","PABAS","ANGGALLE","USA" };
 	///////////////////////////////////
-	static const size_t TEST_NROWS = 1024;
+	static const size_t TEST_NROWS = 2048;
 	static const size_t TEST_NCOLS = 20;
 	static const char *st_test_name = "info_test";
 	///////////////////////////////////////
@@ -72,6 +72,27 @@ namespace info {
 		nCols = TEST_NCOLS;
 	}
 	 ///////////////////////////////////////
+	void InfoTestData::get_data(const std::string &name, size_t &nRows, size_t &nCols,
+		std::vector<int> &data, std::vector<std::string> &indNames, std::vector<std::string> &varNames) {
+		nRows = 0;
+		nCols = 0;
+		data.clear();
+		indNames.clear();
+		varNames.clear();
+		if (name == st_mortal_name) {
+			std::string s;
+			get_mortal_data(s, nRows, nCols, data, indNames, varNames);
+		}
+		else if (name == st_conso_name) {
+			std::string s;
+			get_mortal_data(s, nRows, nCols, data, indNames, varNames);
+		}
+	}// get_data
+	void InfoTestData::get_data_names(std::vector<std::string> &onames) {
+		onames.clear();
+		onames.push_back(st_conso_name);
+		onames.push_back(st_mortal_name);
+	}// get_data_names
 	void InfoTestData::get_mortal_name(std::string &name) {
 		name = st_mortal_name;
 	}

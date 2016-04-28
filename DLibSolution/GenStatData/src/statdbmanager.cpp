@@ -163,6 +163,8 @@ namespace info {
 	static const char *SQL_VALUES_BY_INDIVID =
 		"SELECT valueid,optlock,variableid,individ,stringval,status"
 		" FROM dbvalue WHERE individ = ?1";
+	static const char *SQL_VARIABLE_VALUES_DISTINCT =
+		"SELECT DISTINCT stringval FROM dbvalue WHERE variableid = ?1";
 	//////////////////////////////////////////////////////
 	static const char *CREATE_SQL[] = {
 		SQL_CREATE_DATASET,
@@ -583,6 +585,39 @@ namespace info {
 		} // values
 		return (true);
 	}//get_indiv_values
+	bool StatDBManager::get_variable_distinct_values(const DBStatVariable &oVar, strings_set &oSet) {
+		DLIB_ASSERT(this->is_valid(), "this StatDBManager is not valid");
+		oSet.clear();
+		int nId = oVar.id();
+		if (nId == 0) {
+			return (false);
+		}
+		Database *pBase = this->m_database.get();
+		Statement stmt(pBase, SQL_VARIABLE_VALUES_DISTINCT);
+		if (!stmt.is_valid()) {
+			return (false);
+		}
+		stmt.set_parameter(1, nId);
+		if (!stmt.exec()) {
+			return (false);
+		}
+		while (stmt.has_values()) {
+			DbValue v;
+			if (stmt.col_value(0, v)) {
+				std::string s;
+				if (v.string_value(s)) {
+					std::string ss = info_trim_upper(s);
+					if (!ss.empty()) {
+						oSet.insert(ss);
+					}
+				}
+			}
+			if (!stmt.next()) {
+				break;
+			}
+		} // values
+		return (true);
+	}//get_variable_distinct_values
 	bool StatDBManager::get_variable_values(const DBStatVariable &oVar, values_vector &oVec) {
 		DLIB_ASSERT(this->is_valid(), "this StatDBManager is not valid");
 		oVec.clear();

@@ -160,8 +160,10 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\database.h" />
+    <ClInclude Include="include\dbindivprovider.h" />
     <ClInclude Include="include\dbstatitems.h" />
     <ClInclude Include="include\dbvalue.h" />
+    <ClInclude Include="include\indiv.h" />
     <ClInclude Include="include\statdbmanager.h" />
     <ClInclude Include="include\statement.h" />
     <ClInclude Include="include\stringconvert.h" />
@@ -174,8 +176,10 @@
   <ItemGroup>
     <ClCompile Include="GenStatData.cpp" />
     <ClCompile Include="src\database.cpp" />
+    <ClCompile Include="src\dbindivprovider.cpp" />
     <ClCompile Include="src\dbstatitems.cpp" />
     <ClCompile Include="src\dbvalue.cpp" />
+    <ClCompile Include="src\indiv.cpp" />
     <ClCompile Include="src\sqlite3.c">
       <SDLCheck Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</SDLCheck>
       <SDLCheck Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</SDLCheck>
@@ -187,6 +191,7 @@
     <ClCompile Include="stdafx.cpp" />
     <ClCompile Include="tester.cpp" />
     <ClCompile Include="tests\infotestdata.cpp" />
+    <ClCompile Include="tests\test_dbindivprovider.cpp" />
     <ClCompile Include="tests\test_statdatamanager.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

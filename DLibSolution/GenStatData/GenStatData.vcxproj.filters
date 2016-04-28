@@ -60,6 +60,12 @@
     <ClInclude Include="tests\infotestdata.h">
       <Filter>tests</Filter>
     </ClInclude>
+    <ClInclude Include="include\indiv.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\dbindivprovider.h">
+      <Filter>include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -93,6 +99,15 @@
       <Filter>tests</Filter>
     </ClCompile>
     <ClCompile Include="tests\test_statdatamanager.cpp">
+      <Filter>tests</Filter>
+    </ClCompile>
+    <ClCompile Include="src\indiv.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\dbindivprovider.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="tests\test_dbindivprovider.cpp">
       <Filter>tests</Filter>
     </ClCompile>
   </ItemGroup>

@@ -6,6 +6,7 @@
 //////////////////////////////////
 #include <memory>
 #include <vector>
+#include <set>
 /////////////////////////////////////
 namespace info {
 	class Database;
@@ -17,6 +18,7 @@ namespace info {
 		typedef std::vector<DBStatIndiv> indivs_vector;
 		typedef std::vector<DBStatVariable> variables_vector;
 		typedef std::vector<IntType> ints_vector;
+		typedef std::set<std::string> strings_set;
 	private:
 		bool m_intransaction;
 		std::unique_ptr<Database> m_database;
@@ -59,6 +61,7 @@ namespace info {
 		//
 		bool get_indiv_values(const DBStatIndiv &oInd, values_vector &oVec);
 		bool get_variable_values(const DBStatVariable &oVar, values_vector &oVec);
+		bool get_variable_distinct_values(const DBStatVariable &oVar, strings_set &oSet);
 		//
 		template <typename X, class ALLOCX, class TSTRING, class ALLOCTSTRING>
 		bool import_dataset(const TSTRING &name, const size_t nRows, const size_t nCols,
