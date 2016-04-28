@@ -10,17 +10,21 @@
 #include "../include/database.h"
 #include "../include/statement.h"
 #include "../include/stringconvert.h"
+/////////////////////////////
+#include <dlib/assert.h>
+#include <dlib/logger.h>
 ////////////////////////////
 namespace info {
+	dlib::logger dlog_statement("Statement");
+	////////////////////////////
 	using namespace info;
 	////////////////////////////////////////////
 	void Statement::init(Database &oBase, const char *pszSQL) {
-		assert(pszSQL != nullptr);
+		DLIB_ASSERT(pszSQL != nullptr,"SQL Statement is null");
+		DLIB_ASSERT(oBase.is_open(), "SQLite database is not opened");
 		this->m_pBase = &oBase;
 		this->m_pstmt = nullptr;
 		this->m_lastcode = SQLITE_OK;
-		assert(this->m_pBase != nullptr);
-		assert(this->m_pBase->is_open());
 		::sqlite3 *pdb = this->m_pBase->m_pDb;
 		assert(pdb != nullptr);
 		const char *pszTail = nullptr;
@@ -31,19 +35,23 @@ namespace info {
 			this->m_pstmt = pRes;
 			this->m_pBase->m_stmts.push_back(this);
 		}
+		else {
+			this->m_pBase->internal_get_error();
+			dlog_statement << dlib::LDEBUG << "Preparing statement " << pszSQL;
+			dlog_statement << dlib::LERROR << "SQLite error code " << rc;
+		}
 	} // Statement
 	void Statement::init(Database *pBase, const char *pszSQL) {
-		assert(pBase != nullptr);
 		this->init(*pBase, pszSQL);
 	} // Statement
 	void Statement::init(Database &oBase, const wchar_t *pszSQL) {
-		assert(pszSQL != nullptr);
+		DLIB_ASSERT(pszSQL != nullptr, "SQL Statement is null");
 		std::wstring ss(pszSQL);
 		std::string s = StringConvert::ws2s(ss);
 		this->init(&oBase, s.c_str());
 	} // Statement
 	void Statement::init(Database *pBase, const wchar_t *pszSQL) {
-		assert(pszSQL != nullptr);
+		DLIB_ASSERT(pszSQL != nullptr, "SQL Statement is null");
 		std::wstring ss(pszSQL);
 		std::string s = StringConvert::ws2s(ss);
 		this->init(pBase, s.c_str());
@@ -142,7 +150,7 @@ namespace info {
 		return (bRet);
 	} // col_value
 	bool Statement::exec(void) {
-		assert(this->is_valid());
+		DLIB_ASSERT(this->is_valid(), "Statement is not valid");
 		values_vector &vals = this->m_vals;
 		vals.clear();
 		strings_vector &names = this->m_names;
@@ -312,8 +320,8 @@ namespace info {
 		return (bRet);
 	} // close
 	bool Statement::reset(void) {
-		assert(this->m_pBase != nullptr);
-		assert(this->m_pBase->is_open());
+		DLIB_ASSERT(this->m_pBase != nullptr, "Parent SQLite database is null");
+		DLIB_ASSERT(this->m_pBase->is_open(), "Parent SQLite Database is not opened");
 		::sqlite3_stmt *p = this->m_pstmt;
 		assert(p != nullptr);
 		if (::sqlite3_reset(p) != SQLITE_OK) {
@@ -325,11 +333,11 @@ namespace info {
 		return true;
 	} // reset
 	bool Statement::set_parameter_null(int iParam) {
-		assert(this->m_pBase != nullptr);
-		assert(this->m_pBase->is_open());
+		DLIB_ASSERT(this->m_pBase != nullptr, "Parent SQLite database is null");
+		DLIB_ASSERT(this->m_pBase->is_open(), "Parent SQLite Database is not opened");
 		::sqlite3_stmt *p = this->m_pstmt;
-		assert(p != nullptr);
-		assert(iParam > 0);
+		DLIB_ASSERT(p != nullptr,"this Statement is not prepared (null)");
+		DLIB_ASSERT(iParam > 0,"Parameter position must be greater than 0");
 		if (::sqlite3_bind_null(p, iParam) != SQLITE_OK) {
 			this->m_pBase->internal_get_error();
 			return (false);
@@ -337,11 +345,11 @@ namespace info {
 		return (true);
 	} // set_parameter_null
 	bool Statement::set_parameter(int iParam, int ivalue) {
-		assert(this->m_pBase != nullptr);
-		assert(this->m_pBase->is_open());
+		DLIB_ASSERT(this->m_pBase != nullptr, "Parent SQLite database is null");
+		DLIB_ASSERT(this->m_pBase->is_open(), "Parent SQLite Database is not opened");
 		::sqlite3_stmt *p = this->m_pstmt;
-		assert(p != nullptr);
-		assert(iParam > 0);
+		DLIB_ASSERT(p != nullptr, "this Statement is not prepared (null)");
+		DLIB_ASSERT(iParam > 0, "Parameter position must be greater than 0");
 		if (::sqlite3_bind_int(p, iParam, ivalue) != SQLITE_OK) {
 			this->m_pBase->internal_get_error();
 			return (false);
@@ -349,11 +357,11 @@ namespace info {
 		return (true);
 	} // set_parameter
 	bool Statement::set_parameter(int iParam, long ivalue) {
-		assert(this->m_pBase != nullptr);
-		assert(this->m_pBase->is_open());
+		DLIB_ASSERT(this->m_pBase != nullptr, "Parent SQLite database is null");
+		DLIB_ASSERT(this->m_pBase->is_open(), "Parent SQLite Database is not opened");
 		::sqlite3_stmt *p = this->m_pstmt;
-		assert(p != nullptr);
-		assert(iParam > 0);
+		DLIB_ASSERT(p != nullptr, "this Statement is not prepared (null)");
+		DLIB_ASSERT(iParam > 0, "Parameter position must be greater than 0");
 		if (::sqlite3_bind_int(p, iParam, ivalue) != SQLITE_OK) {
 			this->m_pBase->internal_get_error();
 			return (false);
@@ -361,11 +369,11 @@ namespace info {
 		return (true);
 	} // set_parameter
 	bool Statement::set_parameter(int iParam, unsigned long ivalue) {
-		assert(this->m_pBase != nullptr);
-		assert(this->m_pBase->is_open());
+		DLIB_ASSERT(this->m_pBase != nullptr, "Parent SQLite database is null");
+		DLIB_ASSERT(this->m_pBase->is_open(), "Parent SQLite Database is not opened");
 		::sqlite3_stmt *p = this->m_pstmt;
-		assert(p != nullptr);
-		assert(iParam > 0);
+		DLIB_ASSERT(p != nullptr, "this Statement is not prepared (null)");
+		DLIB_ASSERT(iParam > 0, "Parameter position must be greater than 0");
 		if (::sqlite3_bind_int(p, iParam, ivalue) != SQLITE_OK) {
 			this->m_pBase->internal_get_error();
 			return (false);
@@ -373,11 +381,11 @@ namespace info {
 		return (true);
 	} // set_parameter
 	bool Statement::set_parameter(int iParam, double dval) {
-		assert(this->m_pBase != nullptr);
-		assert(this->m_pBase->is_open());
+		DLIB_ASSERT(this->m_pBase != nullptr, "Parent SQLite database is null");
+		DLIB_ASSERT(this->m_pBase->is_open(), "Parent SQLite Database is not opened");
 		::sqlite3_stmt *p = this->m_pstmt;
-		assert(p != nullptr);
-		assert(iParam > 0);
+		DLIB_ASSERT(p != nullptr, "this Statement is not prepared (null)");
+		DLIB_ASSERT(iParam > 0, "Parameter position must be greater than 0");
 		if (::sqlite3_bind_double(p, iParam, dval) != SQLITE_OK) {
 			this->m_pBase->internal_get_error();
 			return (false);
@@ -385,12 +393,12 @@ namespace info {
 		return (true);
 	} // set_parameter
 	bool Statement::set_parameter(int iParam, const char *pszVal) {
-		assert(this->m_pBase != nullptr);
-		assert(this->m_pBase->is_open());
+		DLIB_ASSERT(this->m_pBase != nullptr, "Parent SQLite database is null");
+		DLIB_ASSERT(this->m_pBase->is_open(), "Parent SQLite Database is not opened");
 		::sqlite3_stmt *p = this->m_pstmt;
-		assert(p != nullptr);
-		assert(iParam > 0);
-		assert(pszVal != nullptr);
+		DLIB_ASSERT(p != nullptr, "this Statement is not prepared (null)");
+		DLIB_ASSERT(iParam > 0, "Parameter position must be greater than 0");
+		DLIB_ASSERT(pszVal != nullptr,"String must not be null");
 		int nbytes = -1;
 		if (::sqlite3_bind_text(p, iParam, pszVal, nbytes,
 			SQLITE_TRANSIENT) != SQLITE_OK) {
@@ -400,16 +408,17 @@ namespace info {
 		return (true);
 	} // set_parameter
 	bool Statement::set_parameter(int iParam, const Blob &oBlob) {
+		DLIB_ASSERT(this->m_pBase != nullptr, "Parent SQLite database is null");
+		DLIB_ASSERT(this->m_pBase->is_open(), "Parent SQLite Database is not opened");
+		::sqlite3_stmt *p = this->m_pstmt;
+		DLIB_ASSERT(p != nullptr, "this Statement is not prepared (null)");
+		DLIB_ASSERT(iParam > 0, "Parameter position must be greater than 0");
 		size_t nSize = oBlob.size();
 		const void *pData = (const void *)oBlob.data();
 		if ((nSize < 1) || (pData == nullptr)) {
+			dlog_statement << dlib::LWARN << "Blob data is invalid ";
 			return (false);
 		}
-		assert(this->m_pBase != nullptr);
-		assert(this->m_pBase->is_open());
-		::sqlite3_stmt *p = this->m_pstmt;
-		assert(p != nullptr);
-		assert(iParam > 0);
 		int nbytes = (int)(nSize * sizeof(byte));
 		if (::sqlite3_bind_blob(p, iParam, pData, nbytes,
 			SQLITE_TRANSIENT) != SQLITE_OK) {
@@ -419,7 +428,7 @@ namespace info {
 		return (true);
 	} // set_parameter
 	bool Statement::set_parameter(int iParam, const wchar_t *pwszVal) {
-		assert(pwszVal != nullptr);
+		DLIB_ASSERT(pwszVal != nullptr,"String value is null");
 		std::wstring ss(pwszVal);
 		std::string s = StringConvert::ws2s(ss);
 		const char *px = s.c_str();
@@ -434,9 +443,10 @@ namespace info {
 	///////////////////////////////
 	bool Statement::set_parameter_null(const std::string &sname) {
 		::sqlite3_stmt *p = this->m_pstmt;
-		assert(p != nullptr);
+		DLIB_ASSERT(p != nullptr,"Statement is null");
 		int iParam = ::sqlite3_bind_parameter_index(p, sname.c_str());
 		if (iParam < 1) {
+			dlog_statement << dlib::LWARN << "Parameter " << sname << " position not found ";
 			return (false);
 		}
 		return this->set_parameter_null(iParam);
@@ -447,9 +457,10 @@ namespace info {
 	} // set_parameter_null
 	bool Statement::set_parameter(const std::string &sname, int ivalue) {
 		::sqlite3_stmt *p = this->m_pstmt;
-		assert(p != nullptr);
+		DLIB_ASSERT(p != nullptr, "Statement is null");
 		int iParam = ::sqlite3_bind_parameter_index(p, sname.c_str());
 		if (iParam < 1) {
+			dlog_statement << dlib::LWARN << "Parameter " << sname << " position not found ";
 			return (false);
 		}
 		return this->set_parameter(iParam, ivalue);
@@ -460,18 +471,20 @@ namespace info {
 	}
 	bool Statement::set_parameter(const std::string &sname, double dval) {
 		::sqlite3_stmt *p = this->m_pstmt;
-		assert(p != nullptr);
+		DLIB_ASSERT(p != nullptr, "Statement is null");
 		int iParam = ::sqlite3_bind_parameter_index(p, sname.c_str());
 		if (iParam < 1) {
+			dlog_statement << dlib::LWARN << "Parameter " << sname << " position not found ";
 			return (false);
 		}
 		return this->set_parameter(iParam, dval);
 	}
 	bool Statement::set_parameter(const std::string &sname, const Blob &oBlob) {
 		::sqlite3_stmt *p = this->m_pstmt;
-		assert(p != nullptr);
+		DLIB_ASSERT(p != nullptr, "Statement is null");
 		int iParam = ::sqlite3_bind_parameter_index(p, sname.c_str());
 		if (iParam < 1) {
+			dlog_statement << dlib::LWARN << "Parameter " << sname << " position not found ";
 			return (false);
 		}
 		return this->set_parameter(iParam, oBlob);
@@ -487,9 +500,10 @@ namespace info {
 	bool Statement::set_parameter(const std::string &sname,
 		const std::string &sval) {
 		::sqlite3_stmt *p = this->m_pstmt;
-		assert(p != nullptr);
+		DLIB_ASSERT(p != nullptr, "Statement is null");
 		int iParam = ::sqlite3_bind_parameter_index(p, sname.c_str());
 		if (iParam < 1) {
+			dlog_statement << dlib::LWARN << "Parameter " << sname << " position not found ";
 			return (false);
 		}
 		return this->set_parameter(iParam, sval);
@@ -497,10 +511,11 @@ namespace info {
 	bool Statement::set_parameter(const std::wstring &sname,
 		const std::wstring &sval) {
 		::sqlite3_stmt *p = this->m_pstmt;
-		assert(p != nullptr);
+		DLIB_ASSERT(p != nullptr, "Statement is null");
 		std::string ss = StringConvert::ws2s(sname);
 		int iParam = ::sqlite3_bind_parameter_index(p, ss.c_str());
 		if (iParam < 1) {
+			dlog_statement << dlib::LWARN << "Parameter " << ss << " position not found ";
 			return (false);
 		}
 		std::string sv = StringConvert::ws2s(sval);

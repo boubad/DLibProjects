@@ -34,7 +34,6 @@ namespace
 				0                     // the number of command line arguments for this test
 			)
 		{
-			dlog.set_level(LALL);
 		}
 		void fill_random_data(StatDBManager *pMan, const std::string &setName, 
 			size_t nTotalInds = 1024,

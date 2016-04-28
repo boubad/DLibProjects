@@ -7,8 +7,14 @@
 #include "../include/stringconvert.h"
 ///////////////////////////////////
 #include <boost/algorithm/string.hpp>
+///////////////////////////////////
+#include <dlib/logger.h>
+#include <dlib/assert.h>
 /////////////////////////////////////
 namespace info {
+	using namespace dlib;
+	////////////////////////////////
+	logger dlog("statdbmanager");
 	//////////////////////////////////////////
 	static const char *SQL_COMMIT_TRANSACTION = "COMMIT TRANSACTION";
 	static const char *SQL_BEGIN_TRANSACTION = "BEGIN TRANSACTION";
@@ -211,7 +217,6 @@ namespace info {
 		}
 	}// read_value
 	static void read_dataset(Statement &stmt, DBStatDataset &cur) {
-		assert(stmt.cols() >= 5);
 		{
 			DbValue v;
 			if (stmt.col_value(0, v)) {
@@ -358,8 +363,6 @@ namespace info {
 		}
 	}// read_indiv
 	static bool find_indiv_by_id(Database *pBase, int xId, DBStatIndiv &cur) {
-		assert(pBase != nullptr);
-		assert(xId != 0);
 		Statement stmt(pBase, SQL_INDIV_BY_ID);
 		if (!stmt.is_valid()) {
 			return (false);
@@ -378,9 +381,6 @@ namespace info {
 	}//find_indiv_by_id
 	static bool find_indiv_by_dataset_sigle(Database *pBase, int nDatasetId, const std::string &xSigle,
 		DBStatIndiv &cur) {
-		assert(pBase != nullptr);
-		assert(nDatasetId != 0);
-		assert(!xSigle.empty());
 		Statement stmt(pBase, SQL_INDIV_BY_DATASET_AND_SIGLE);
 		if (!stmt.is_valid()) {
 			return (false);
@@ -483,8 +483,6 @@ namespace info {
 		}
 	}// read_variable
 	static bool find_variable_by_id(Database *pBase, int xId, DBStatVariable &cur) {
-		assert(pBase != nullptr);
-		assert(xId != 0);
 		Statement stmt(pBase, SQL_VARIABLE_BY_ID);
 		if (!stmt.is_valid()) {
 			return (false);
@@ -503,9 +501,6 @@ namespace info {
 	}//find_variable_by_id
 	static bool find_variable_by_dataset_sigle(Database *pBase, int nDatasetId, const std::string &xSigle,
 		DBStatVariable &cur) {
-		assert(pBase != nullptr);
-		assert(nDatasetId != 0);
-		assert(!xSigle.empty());
 		Statement stmt(pBase, SQL_VARIABLE_BY_DATASET_AND_SIGLE);
 		if (!stmt.is_valid()) {
 			return (false);
@@ -523,8 +518,6 @@ namespace info {
 		return (true);
 	}//find_variable_by_dataset_sigle
 	static bool find_value_by_id(Database *pBase, int xId, DBStatValue &cur) {
-		assert(pBase != nullptr);
-		assert(xId != 0);
 		Statement stmt(pBase, SQL_VALUE_BY_ID);
 		if (!stmt.is_valid()) {
 			return (false);
@@ -542,10 +535,6 @@ namespace info {
 		return (true);
 	}//find_value_by_id
 	static bool find_value_by_variable_indiv(Database *pBase, int nVarId, int nIndId, DBStatValue &cur) {
-		assert(pBase != nullptr);
-		assert(nVarId != 0);
-		assert(nIndId != 0);
-		//
 		Statement stmt(pBase, SQL_VALUES_BY_VARIABLE_INDIV);
 		if (!stmt.is_valid()) {
 			return (false);
@@ -569,14 +558,13 @@ namespace info {
 	//
 	///////////////////////////////////////////
 	bool StatDBManager::get_indiv_values(const DBStatIndiv &oInd, values_vector &oVec) {
-		assert(this->is_valid());
+		DLIB_ASSERT(this->is_valid(), "this StatDBManager is not valid");
 		oVec.clear();
 		int nId = oInd.id();
 		if (nId == 0) {
 			return (false);
 		}
 		Database *pBase = this->m_database.get();
-		assert(pBase != nullptr);
 		Statement stmt(pBase, SQL_VALUES_BY_INDIVID);
 		if (!stmt.is_valid()) {
 			return (false);
@@ -596,14 +584,13 @@ namespace info {
 		return (true);
 	}//get_indiv_values
 	bool StatDBManager::get_variable_values(const DBStatVariable &oVar, values_vector &oVec) {
-		assert(this->is_valid());
+		DLIB_ASSERT(this->is_valid(), "this StatDBManager is not valid");
 		oVec.clear();
 		int nId = oVar.id();
 		if (nId == 0) {
 			return (false);
 		}
 		Database *pBase = this->m_database.get();
-		assert(pBase != nullptr);
 		Statement stmt(pBase, SQL_VALUES_BY_VARIABLEID);
 		if (!stmt.is_valid()) {
 			return (false);
@@ -623,14 +610,13 @@ namespace info {
 		return (true);
 	}//get_variable_values
 	bool StatDBManager::get_dataset_values(const  DBStatDataset &oSet, values_vector &oVec, int skip, int taken) {
-		assert(this->is_valid());
+		DLIB_ASSERT(this->is_valid(), "this StatDBManager is not valid");
 		oVec.clear();
 		int nDatasetId = oSet.id();
 		if (nDatasetId == 0) {
 			return (false);
 		}
 		Database *pBase = this->m_database.get();
-		assert(pBase != nullptr);
 		Statement stmt(pBase, SQL_FIND_DATASET_VALUES);
 		if (!stmt.is_valid()) {
 			return (false);
@@ -652,14 +638,13 @@ namespace info {
 		return (true);
 	}//get_dataset_values
 	bool StatDBManager::get_dataset_values_count(const  DBStatDataset &oSet, int &nCount) {
-		assert(this->is_valid());
+		DLIB_ASSERT(this->is_valid(), "this StatDBManager is not valid");
 		nCount = 0;
 		int nId = oSet.id();
 		if (nId == 0) {
 			return (false);
 		}
 		Database *pBase = this->m_database.get();
-		assert(pBase != nullptr);
 		Statement stmt(pBase, SQL_FIND_DATASET_VALUES_COUNT);
 		if (!stmt.is_valid()) {
 			return false;
@@ -678,12 +663,11 @@ namespace info {
 		return (true);
 	}//get_dataset_values_count
 	bool StatDBManager::remove_values(const values_vector &oVec) {
-		assert(this->is_valid());
+		DLIB_ASSERT(this->is_valid(), "this StatDBManager is not valid");
 		if (!this->begin_transaction()) {
 			return (false);
 		}
 		Database *pBase = this->m_database.get();
-		assert(pBase != nullptr);
 		Statement stmt(pBase, SQL_REMOVE_VALUE);
 		if (!stmt.is_valid()) {
 			this->rollback_transaction();
@@ -708,12 +692,11 @@ namespace info {
 		return (true);
 	}//remove_values
 	bool  StatDBManager::maintains_values(const values_vector &oVec) {
-		assert(this->is_valid());
+		DLIB_ASSERT(this->is_valid(), "this StatDBManager is not valid");
 		if (!this->begin_transaction()) {
 			return (false);
 		}
 		Database *pBase = this->m_database.get();
-		assert(pBase != nullptr);
 		Statement stmtFetch(pBase, SQL_VALUES_BY_VARIABLE_INDIV);
 		Statement stmtInsert(pBase, SQL_INSERT_VALUE);
 		Statement stmtUpdate(pBase, SQL_UPDATE_VALUE);
@@ -822,12 +805,11 @@ namespace info {
 		return (true);
 	}// maintains_values
 	bool  StatDBManager::maintains_indivs(const indivs_vector &oVec) {
-		assert(this->is_valid());
+		DLIB_ASSERT(this->is_valid(), "this StatDBManager is not valid");
 		if (!this->begin_transaction()) {
 			return (false);
 		}
 		Database *pBase = this->m_database.get();
-		assert(pBase != nullptr);
 		Statement stmtInsert(pBase, SQL_INSERT_INDIV);
 		Statement stmtUpdate(pBase, SQL_UPDATE_INDIV);
 		if ((!stmtUpdate.is_valid()) || (!stmtInsert.is_valid())) {
@@ -875,12 +857,11 @@ namespace info {
 		return (true);
 	}// remove_indivs
 	bool  StatDBManager::remove_indivs(const indivs_vector &oVec) {
-		assert(this->is_valid());
+		DLIB_ASSERT(this->is_valid(), "this StatDBManager is not valid");
 		if (!this->begin_transaction()) {
 			return (false);
 		}
 		Database *pBase = this->m_database.get();
-		assert(pBase != nullptr);
 		Statement stmt(pBase, SQL_REMOVE_INDIV);
 		if (!stmt.is_valid()) {
 			this->rollback_transaction();
@@ -905,14 +886,13 @@ namespace info {
 		return (true);
 	}//remove_indivs
 	bool StatDBManager::get_dataset_indivs(const DBStatDataset &oSet, indivs_vector &oVec) {
-		assert(this->is_valid());
+		DLIB_ASSERT(this->is_valid(), "this StatDBManager is not valid");
 		oVec.clear();
 		int nDatasetId = oSet.id();
 		if (nDatasetId == 0) {
 			return (false);
 		}
 		Database *pBase = this->m_database.get();
-		assert(pBase != nullptr);
 		Statement stmt(pBase, SQL_FIND_DATASET_INDIVS);
 		if (!stmt.is_valid()) {
 			return (false);
@@ -932,13 +912,13 @@ namespace info {
 		return (true);
 	}//get_dataset_indivs
 	bool StatDBManager::get_dataset_indivs_ids(const DBStatDataset &oSet, ints_vector &oInds) {
+		DLIB_ASSERT(this->is_valid(), "this StatDBManager is not valid");
 		oInds.clear();
 		int nDatasetId = oSet.id();
 		if (nDatasetId == 0) {
 			return (false);
 		}
 		Database *pBase = this->m_database.get();
-		assert(pBase != nullptr);
 		Statement stmt(pBase, SQL_GET_DATASET_INDIV_IDS);
 		if (!stmt.is_valid()) {
 			return false;
@@ -960,13 +940,12 @@ namespace info {
 		return (true);
 	}//get_dataset_indivs_ids
 	bool StatDBManager::remove_variables(const variables_vector &oVec) {
-		assert(this->is_valid());
+		DLIB_ASSERT(this->is_valid(), "this StatDBManager is not valid");
 		if (!this->begin_transaction()) {
 			return (false);
 		}
 		Database *pBase = this->m_database.get();
-		assert(pBase != nullptr);
-		Statement stmt(pBase, SQL_REMOVE_VARIABLE);
+		assert(pBase != nullptr); Statement stmt(pBase, SQL_REMOVE_VARIABLE);
 		if (!stmt.is_valid()) {
 			this->rollback_transaction();
 			return (false);
@@ -990,7 +969,7 @@ namespace info {
 		return (true);
 	}//remove_variables
 	bool StatDBManager::maintains_variables(const variables_vector &oVec) {
-		assert(this->is_valid());
+		DLIB_ASSERT(this->is_valid(), "this StatDBManager is not valid");
 		if (!this->begin_transaction()) {
 			return (false);
 		}
@@ -1043,6 +1022,9 @@ namespace info {
 					return (false);
 				}
 			}
+			else {
+				dlog << dlib::LWARN << "DBStatVariable not writeable";
+			}
 		} // it
 		if (!this->commit_transaction()) {
 			this->rollback_transaction();
@@ -1051,14 +1033,13 @@ namespace info {
 		return (true);
 	}//maintains_variables
 	bool StatDBManager::get_dataset_variables(const DBStatDataset &oSet, variables_vector &oVec) {
-		assert(this->is_valid());
+		DLIB_ASSERT(this->is_valid(), "this StatDBManager is not valid");
 		oVec.clear();
 		int nDatasetId = oSet.id();
 		if (nDatasetId == 0) {
 			return (false);
 		}
 		Database *pBase = this->m_database.get();
-		assert(pBase != nullptr);
 		Statement stmt(pBase, SQL_FIND_DATASET_VARIABLES);
 		if (!stmt.is_valid()) {
 			return (false);
@@ -1078,10 +1059,9 @@ namespace info {
 		return (true);
 	}//get_dataset_variables
 	bool StatDBManager::get_all_datasets(datasets_vector &oVec) {
-		assert(this->is_valid());
+		DLIB_ASSERT(this->is_valid(), "this StatDBManager is not valid");
 		oVec.clear();
 		Database *pBase = this->m_database.get();
-		assert(pBase != nullptr);
 		Statement stmt(pBase, SQL_FIND_ALL_DATASETS);
 		if (!stmt.is_valid()) {
 			return (false);
@@ -1100,9 +1080,8 @@ namespace info {
 		return (true);
 	}//get_all_datasets
 	bool StatDBManager::find_value(DBStatValue &cur) {
-		assert(this->is_valid());
+		DLIB_ASSERT(this->is_valid(), "this StatDBManager is not valid");
 		Database *pBase = this->m_database.get();
-		assert(pBase != nullptr);
 		int nId = cur.id();
 		if (nId != 0) {
 			if (find_value_by_id(pBase, nId, cur)) {
@@ -1117,9 +1096,8 @@ namespace info {
 		return (find_value_by_variable_indiv(pBase, nVarId, nIndId, cur));
 	}// find_value
 	bool StatDBManager::find_indiv(DBStatIndiv &cur) {
-		assert(this->is_valid());
+		DLIB_ASSERT(this->is_valid(), "this StatDBManager is not valid");
 		Database *pBase = this->m_database.get();
-		assert(pBase != nullptr);
 		int nId = cur.id();
 		if (nId != 0) {
 			if (find_indiv_by_id(pBase, nId, cur)) {
@@ -1138,7 +1116,7 @@ namespace info {
 		return find_indiv_by_dataset_sigle(pBase, nDatasetId, xSigle, cur);
 	}//find_indiv
 	bool StatDBManager::check_variable(DBStatVariable &cur) {
-		assert(this->is_valid());
+		DLIB_ASSERT(this->is_valid(), "this StatDBManager is not valid");
 		if (this->find_variable(cur)) {
 			return (true);
 		}
@@ -1152,7 +1130,6 @@ namespace info {
 			return (false);
 		}
 		Database *pBase = this->m_database.get();
-		assert(pBase != nullptr);
 		Statement stmtInsert(pBase, SQL_INSERT_VARIABLE);
 		if (!stmtInsert.is_valid()) {
 			return (false);
@@ -1185,9 +1162,8 @@ namespace info {
 		return (this->find_variable(cur));
 	} // check_variable
 	bool StatDBManager::find_variable(DBStatVariable &cur) {
-		assert(this->is_valid());
+		DLIB_ASSERT(this->is_valid(), "this StatDBManager is not valid");
 		Database *pBase = this->m_database.get();
-		assert(pBase != nullptr);
 		int nId = cur.id();
 		if (nId != 0) {
 			if (find_variable_by_id(pBase, nId, cur)) {
@@ -1206,8 +1182,9 @@ namespace info {
 		return find_variable_by_dataset_sigle(pBase, nDatasetId, xSigle, cur);
 	}//find_variable
 	bool StatDBManager::remove_dataset(const DBStatDataset &cur) {
-		assert(this->is_valid());
+		DLIB_ASSERT(this->is_valid(), "this StatDBManager is not valid");
 		if (!cur.is_removeable()) {
+			dlog << dlib::LWARN << "DBStatDataset is not removeable";
 			return (false);
 		}
 		if (!this->begin_transaction()) {
@@ -1234,7 +1211,7 @@ namespace info {
 		return (true);
 	} // remove_dataset
 	bool StatDBManager::update_dataset(const DBStatDataset &cur) {
-		assert(this->is_valid());
+		DLIB_ASSERT(this->is_valid(), "this StatDBManager is not valid");
 		if (!cur.is_updateable()) {
 			return (false);
 		}
@@ -1280,8 +1257,9 @@ namespace info {
 		return (true);
 	} // update_dataset
 	bool StatDBManager::insert_dataset(const DBStatDataset &cur) {
-		assert(this->is_valid());
+		DLIB_ASSERT(this->is_valid(), "this StatDBManager is not valid");
 		if (!cur.is_writeable()) {
+			dlog << dlib::LWARN << "DBStatDataset is not writeable.";
 			return (false);
 		}
 		if (!this->begin_transaction()) {
@@ -1322,7 +1300,7 @@ namespace info {
 		return (true);
 	} // insert_dataset
 	bool StatDBManager::find_dataset(DBStatDataset &cur) {
-		assert(this->is_valid());
+		DLIB_ASSERT(this->is_valid(), "this StatDBManager is not valid");
 		Database *pBase = this->m_database.get();
 		assert(pBase != nullptr);
 		int xId = cur.id();
@@ -1386,7 +1364,7 @@ namespace info {
 		if (!this->m_intransaction) {
 			return (false);
 		}
-		assert(this->is_valid());
+		dlog << LDEBUG << "SQLite database transaction rollback";
 		Database *pBase = this->m_database.get();
 		Statement stmt(pBase, SQL_ROLLBACK_TRANSACTION);
 		if (!stmt.is_valid()) {
@@ -1399,6 +1377,7 @@ namespace info {
 		return (false);
 	} // rollback_transaction
 	bool StatDBManager::close(void) {
+		dlog << LDEBUG << "Closing StatDataManager";
 		bool bRet = true;
 		Database *pbase = this->m_database.get();
 		if (pbase != nullptr) {
@@ -1412,6 +1391,7 @@ namespace info {
 		return (bRet);
 	} // close
 	StatDBManager::~StatDBManager() {
+		this->close();
 	}
 	bool StatDBManager::open(const std::string &filename) {
 		this->m_database.reset(new Database());
@@ -1436,6 +1416,7 @@ namespace info {
 		return ((pbase != nullptr) && pbase->is_open());
 	} // is_valid
 	bool StatDBManager::check_schema(void) {
+		dlog << dlib::LDEBUG << "Cheking database schema...";
 		Database *pbase = this->m_database.get();
 		assert(pbase != nullptr);
 		assert(pbase->is_open());
@@ -1443,10 +1424,12 @@ namespace info {
 		while (CREATE_SQL[i] != nullptr) {
 			const char *pszSQL = CREATE_SQL[i];
 			if (!pbase->exec_sql(pszSQL)) {
+				dlog << dlib::LERROR << "Error cheking database schema.";
 				return (false);
 			}
 			++i;
 		} // ok
+		dlog << dlib::LDEBUG << "Done cheking database schema";
 		return (true);
 	} // check_schema
 	///////////////////////////////////////////

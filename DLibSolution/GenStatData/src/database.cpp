@@ -10,10 +10,13 @@
 #include "../include/database.h"
 #include "../include/statement.h"
 /////////////////////////////
-#include <cassert>
 #include <algorithm>
+//////////////////////////////////
+#include <dlib/assert.h>
+#include <dlib/logger.h>
 ////////////////////////////////
 namespace info {
+	dlib::logger dlog_database("Database");
 	////////////////////////////////////////////
 	Database::Database() :
 		m_errorcode(SQLITE_OK), m_pDb(nullptr) {
@@ -49,6 +52,7 @@ namespace info {
 			const char *pSrc = ::sqlite3_errmsg(p);
 			if (pSrc != nullptr) {
 				this->m_errorstring = pSrc;
+				dlog_database << dlib::LERROR << this->m_errorstring;
 			}
 		}
 	} // internal_get_error
@@ -66,10 +70,12 @@ namespace info {
 		return (false);
 	} // get_last_error
 	bool Database::open(const char *pszFilename) {
-		assert(pszFilename != nullptr);
+		DLIB_ASSERT(pszFilename != nullptr, "Database filename is null");
+		dlog_database << dlib::LDEBUG << "Opening SQLite database " << pszFilename << " ...";
 		this->internal_clear_error();
 		::sqlite3 *p = this->m_pDb;
 		if (p != nullptr) {
+			dlog_database << dlib::LWARN << "Closing former opened database... " << pszFilename << " ...";
 			if (!this->close()) {
 				return (false);
 			}
@@ -83,7 +89,7 @@ namespace info {
 		return (rc == SQLITE_OK);
 	} // open
 	bool Database::open(const wchar_t *pszFilename) {
-		assert(pszFilename != nullptr);
+		DLIB_ASSERT(pszFilename != nullptr, "Database filename is null");
 		std::wstring ss(pszFilename);
 		std::string s = StringConvert::ws2s(ss);
 		return this->open(s.c_str());
@@ -120,6 +126,7 @@ namespace info {
 		bool bRet = true;
 		::sqlite3 *p = this->m_pDb;
 		if (p != nullptr) {
+			dlog_database << dlib::LDEBUG << "Closing SQLite database...";
 			this->prepare_close();
 			if (::sqlite3_close_v2(p) != SQLITE_OK) {
 				this->internal_get_error();
@@ -133,13 +140,13 @@ namespace info {
 	} // close
 	///////////////////////////////
 	bool Database::exec_sql(const wchar_t *pszSQL) {
-		assert(pszSQL != nullptr);
+		DLIB_ASSERT(pszSQL != nullptr, "SQL command is null");
 		std::wstring ss(pszSQL);
 		std::string s = StringConvert::ws2s(ss);
 		return (this->exec_sql(s.c_str()));
 	} // exec_sql
 	bool Database::exec_sql(const char *pszSQL) {
-		assert(pszSQL != nullptr);
+		DLIB_ASSERT(pszSQL != nullptr, "SQL command is null");
 		::sqlite3 *p = this->m_pDb;
 		if (p == nullptr) {
 			return (false);
@@ -150,6 +157,8 @@ namespace info {
 			this->m_errorcode = rc;
 			this->m_errorstring = error;
 			::sqlite3_free(error);
+			dlog_database << dlib::LERROR << "Executing SQL " << pszSQL;
+			dlog_database << dlib::LERROR << this->m_errorstring;
 			return (false);
 		}
 		return (rc == SQLITE_OK);
