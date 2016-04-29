@@ -4,6 +4,8 @@
 //////////////////////
 #include <string>
 #include <list>
+//////////////////////////////
+#include <dlib/threads.h>
 /////////////////////////////
 typedef struct sqlite3 sqlite3;
 //////////////////////////////
@@ -21,6 +23,7 @@ private:
 	::sqlite3 *m_pDb;
 	std::string m_errorstring;
 	statements_list m_stmts;
+	dlib::mutex _mutex;
 public:
 	Database();
 	Database(const char *pszFilename);

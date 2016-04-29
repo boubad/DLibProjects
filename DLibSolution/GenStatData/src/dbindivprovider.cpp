@@ -1,18 +1,19 @@
 #include "../include/dbindivprovider.h"
 #include "../include/statdbmanager.h"
 #include "../include/stringconvert.h"
+///////////////////////////////////
+#include <algorithm>
 //////////////////////////////////
 #include <dlib/assert.h>
 ///////////////////////////////////////////
 namespace info {
-	/*
-	StatDBManager *m_pman;
-	size_t   m_current;
-	ints_vector m_ids;
-	DBStatDataset m_oset;
-	*/
 	////////////////////////////////////
-	DBIndivProvider::DBIndivProvider(StatDBManager *pMan, const std::string &setName) :m_pman(pMan), m_current(0) {
+	DBIndivProvider::DBIndivProvider(StatDBManager *pMan, const DBStatDataset &oSet) :m_pman(pMan), m_current(0) {
+		std::string sigle;
+		oSet.get_sigle(sigle);
+		this->initialize(sigle);
+	}
+	DBIndivProvider::DBIndivProvider(StatDBManager *pMan, const std::string &setName) : m_pman(pMan), m_current(0) {
 		this->initialize(setName);
 	}
 	DBIndivProvider::DBIndivProvider(StatDBManager *pMan, const std::wstring &setName) : m_pman(pMan), m_current(0) {
@@ -60,17 +61,12 @@ namespace info {
 		}
 		return (false);
 	}
-	bool DBIndivProvider::indiv_at(const size_t pos, Indiv &oInd) {
+	bool DBIndivProvider::find(const IntType aIndex, Indiv &oInd) {
+		DLIB_ASSERT(aIndex != 0, "index cannot be zero");
 		bool bRet = false;
 		if (this->is_valid()) {
 			StatDBManager *pMan = this->m_pman;
 			DLIB_ASSERT(pMan != nullptr, "StatDataManager cannot be null");
-			ints_vector &v = this->m_ids;
-			if (pos >= v.size()) {
-				return (false);
-			}
-			IntType aIndex = v[pos];
-			DLIB_ASSERT(aIndex != 0, "index cannot be zero");
 			DBStatIndiv xInd(this->m_oset);
 			xInd.id(aIndex);
 			DLIB_ASSERT(this->m_oset.id() != 0, "Invalid dataset id");
@@ -96,6 +92,48 @@ namespace info {
 			return (true);
 		}// vamid
 		return (bRet);
+	}//bool
+	bool DBIndivProvider::get_random_indivs(const size_t n, indivs_vector &oRes) {
+		DLIB_ASSERT(n > 0, "Sample size must be greater than 0");
+		bool bRet = false;
+		oRes.clear();
+		if (this->is_valid()) {
+			StatDBManager *pMan = this->m_pman;
+			DLIB_ASSERT(pMan != nullptr, "StatDataManager cannot be null");
+			ints_vector &v = this->m_ids;
+			const size_t nn = v.size();
+			if (n > nn) {
+				return (false);
+			}
+			std::vector<size_t> temp(nn);
+			for (size_t i = 0; i < nn; ++i) {
+				temp[i] = i;
+			}
+			std::random_shuffle(temp.begin(), temp.end());
+			for (size_t i = 0; i < n; ++i) {
+				size_t pos = temp[i];
+				Indiv oInd;
+				if (!this->indiv_at(pos,oInd)) {
+					return (false);
+				}
+				oRes.push_back(oInd);
+			}// i
+		}// valid
+		return (true);
+	}//get_random_indivs
+	bool DBIndivProvider::indiv_at(const size_t pos, Indiv &oInd) {
+		bool bRet = false;
+		if (this->is_valid()) {
+			StatDBManager *pMan = this->m_pman;
+			DLIB_ASSERT(pMan != nullptr, "StatDataManager cannot be null");
+			ints_vector &v = this->m_ids;
+			if (pos >= v.size()) {
+				return (false);
+			}
+			IntType aIndex = v[pos];
+			return this->find(aIndex, oInd);
+		}// vamid
+		return (bRet);
 	}// indiv_at
 	bool DBIndivProvider::reset(void) {
 		if (this->is_valid()) {
@@ -109,7 +147,7 @@ namespace info {
 			size_t nCur = 0;
 			{
 				dlib::auto_mutex lock(this->_mutex);
-				size_t nCur = this->m_current;
+				nCur = this->m_current;
 				this->m_current = (size_t)(nCur + 1);
 			}
 			return this->indiv_at(nCur, oInd);

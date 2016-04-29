@@ -42,6 +42,7 @@ namespace info {
 		this->open(filename);
 	} // Database
 	void Database::internal_clear_error(void) {
+		dlib::auto_mutex oLock(this->_mutex);
 		this->m_errorcode = SQLITE_OK;
 		this->m_errorstring.clear();
 	} // internal_clear_error
@@ -51,7 +52,10 @@ namespace info {
 			this->m_errorcode = ::sqlite3_errcode(p);
 			const char *pSrc = ::sqlite3_errmsg(p);
 			if (pSrc != nullptr) {
-				this->m_errorstring = pSrc;
+				{
+					dlib::auto_mutex oLock(this->_mutex);
+					this->m_errorstring = pSrc;
+				}
 				dlog_database << dlib::LERROR << this->m_errorstring;
 			}
 		}
@@ -63,6 +67,7 @@ namespace info {
 		return (this->m_errorcode != 0);
 	} // has_error
 	bool Database::get_last_error(std::string &sErr) const {
+		dlib::auto_mutex oLock(this->_mutex);
 		if (this->m_errorcode != 0) {
 			sErr = this->m_errorstring;
 			return (true);
@@ -85,7 +90,10 @@ namespace info {
 		if (rc != SQLITE_OK) {
 			this->internal_get_error();
 		}
-		this->m_pDb = p;
+		{
+			dlib::auto_mutex oLock(this->_mutex);
+			this->m_pDb = p;
+		}
 		return (rc == SQLITE_OK);
 	} // open
 	bool Database::open(const wchar_t *pszFilename) {
@@ -127,6 +135,7 @@ namespace info {
 		::sqlite3 *p = this->m_pDb;
 		if (p != nullptr) {
 			dlog_database << dlib::LDEBUG << "Closing SQLite database...";
+			dlib::auto_mutex oLock(this->_mutex);
 			this->prepare_close();
 			if (::sqlite3_close_v2(p) != SQLITE_OK) {
 				this->internal_get_error();

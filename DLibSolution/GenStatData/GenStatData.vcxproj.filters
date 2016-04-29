@@ -66,6 +66,9 @@
     <ClInclude Include="include\dbindivprovider.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\indivcluster.h">
+      <Filter>include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -109,6 +112,9 @@
     </ClCompile>
     <ClCompile Include="tests\test_dbindivprovider.cpp">
       <Filter>tests</Filter>
+    </ClCompile>
+    <ClCompile Include="src\indivcluster.cpp">
+      <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

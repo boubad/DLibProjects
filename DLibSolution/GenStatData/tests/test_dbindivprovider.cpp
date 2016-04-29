@@ -7,6 +7,7 @@
 #include "infotestdata.h"
 #include <statdbmanager.h>
 #include <dbindivprovider.h>
+#include <indivcluster.h>
 ////////////////////////////////////////////
 // This is called an unnamed-namespace and it has the effect of making everything 
 // inside this file "private" so that everything you declare will have static linkage.  
@@ -87,7 +88,40 @@ namespace
 				double dist = oInd1.distance(oInd2);
 				DLIB_TEST(dist >= 0);
 			} while (true);
-		}
+			size_t nbClusters = 5;
+			std::vector<Indiv> oPoints;
+			bRet = pProvider->get_random_indivs(nbClusters, oPoints);
+			DLIB_TEST_MSG(bRet, "get_random_indivs failed");
+			DLIB_TEST(oPoints.size() == nbClusters);
+			std::vector<IndivCluster> oClusters(nbClusters);
+			for (size_t i = 0; i < nbClusters; ++i) {
+				IndivCluster c(oPoints[i],pProvider);
+				oClusters[i] = c;
+			}// i
+			pProvider->reset();
+			do {
+				Indiv oInd;
+				if (!pProvider->next(oInd)) {
+					break;
+				}
+				size_t imin = 0;
+				double dmin = 0;
+				for (size_t i = 0; i < nbClusters; ++i) {
+					IndivCluster &c = oClusters[i];
+					double d = c.distance(oInd);
+					if (i == 0) {
+						dmin = d;
+						imin = i;
+					}
+					else if (d < dmin) {
+						dmin = d;
+						imin = i;
+					}
+				}// i
+				IndivCluster &cc = oClusters[imin];
+				cc.add(oInd);
+			} while (true);
+		}// perform_test
 	};
 
 	// Create an instance of this object.  Doing this causes this test

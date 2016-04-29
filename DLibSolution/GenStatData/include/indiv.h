@@ -3,6 +3,7 @@
 #define __INDIV_H__
 ///////////////////////////////////////
 #include <map>
+#include <vector>
 ///////////////////////////////////////
 #include "dbstatitems.h"
 ///////////////////////////////////////////
@@ -33,9 +34,13 @@ namespace info {
 	////////////////////////////////////////////////
 	class IIndivProvider {
 	public:
+		typedef std::vector<Indiv> indivs_vector;
+	public:
 		virtual bool is_valid(void) = 0;
 		virtual bool indivs_count(size_t &nRows) = 0;
 		virtual bool indiv_at(const size_t pos, Indiv &oInd) = 0;
+		virtual bool find(const IntType aIndex, Indiv &oInd) = 0;
+		virtual bool get_random_indivs(const size_t n, indivs_vector &oRes) = 0;
 		virtual bool reset(void) = 0;
 		virtual bool next(Indiv &oInd) = 0;
 	}; // class IIndivProvider

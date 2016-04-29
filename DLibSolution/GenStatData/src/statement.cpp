@@ -33,7 +33,10 @@ namespace info {
 		int rc = ::sqlite3_prepare_v2(pdb, pszSQL, nbytes, &pRes, &pszTail);
 		if ((rc == SQLITE_OK) && (pRes != nullptr)) {
 			this->m_pstmt = pRes;
-			this->m_pBase->m_stmts.push_back(this);
+			{
+				dlib::auto_mutex oLock(this->m_pBase->_mutex);
+				this->m_pBase->m_stmts.push_back(this);
+			}
 		}
 		else {
 			this->m_pBase->internal_get_error();
@@ -308,6 +311,7 @@ namespace info {
 		}
 		Database *pBase = this->m_pBase;
 		if (pBase != nullptr) {
+			dlib::auto_mutex oLock(this->m_pBase->_mutex);
 			Database::statements_list &olist = pBase->m_stmts;
 			for (auto it = olist.begin(); it != olist.end(); ++it) {
 				PStatement p0 = *it;
