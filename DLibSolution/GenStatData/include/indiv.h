@@ -11,25 +11,28 @@ namespace info {
 	////////////////////////////////////////////////
 	class Indiv : public DBStatIndiv {
 	public:
-		typedef std::map<IntType, DbValue> DataMapType;
+		typedef std::map<IntType, DbValue> DbValueMap;
 	private:
-		DataMapType m_map;
+		DbValueMap m_map;
 	public:
 		Indiv();
 		Indiv(const IntType aIndex);
-		Indiv(const IntType aIndex, const DataMapType &oMap);
+		Indiv(const IntType aIndex, const DbValueMap &oMap);
 		Indiv(const DBStatIndiv &oBaseInd);
 		Indiv(const Indiv &other);
 		Indiv & operator=(const Indiv &other);
 		virtual ~Indiv();
 	public:
 		void swap(Indiv &other);
-		const DataMapType &data(void) const;
-		DataMapType &data(void);
+		const DbValueMap &data(void) const;
+		DbValueMap &data(void);
 		double distance(const Indiv &other) const;
 	public:
-		virtual void get_data(DataMapType &oMap) const;
-		virtual void set_data(const DataMapType &oMap);
+		virtual void get_data(DbValueMap &oMap) const;
+		virtual void set_data(const DbValueMap &oMap);
+		//
+		virtual std::ostream & write_to(std::ostream &os) const;
+		virtual std::istream & read_from(std::istream &in);
 	}; // class Indiv
 	////////////////////////////////////////////////
 	class IIndivProvider {
@@ -60,6 +63,12 @@ namespace info {
 ///////////////////////////////////////////////
 inline void swap(info::Indiv &v1, info::Indiv &v2) {
 	v1.swap(v2);
+}
+inline std::ostream & serialize(const info::Indiv &v, std::ostream &os) {
+	return v.write_to(os);
+}
+inline std::istream & deserialize(info::Indiv &v, std::istream &in) {
+	return v.read_from(in);
 }
 /////////////////////////////////////////
 #endif // !__INDIV_H__

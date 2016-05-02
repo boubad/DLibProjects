@@ -33,6 +33,20 @@ namespace info {
 		return (*this);
 	}
 	DBStatValue::~DBStatValue() {}
+	std::ostream & DBStatValue::write_to(std::ostream &os) const {
+		StatBaseItem::write_to(os);
+		dlib::serialize(this->m_varid, os);
+		dlib::serialize(this->m_indid, os);
+		serialize(this->m_val, os);
+		return (os);
+	}
+	std::istream & DBStatValue::read_from(std::istream &in) {
+		StatBaseItem::read_from(in);
+		dlib::deserialize(this->m_varid, in);
+		dlib::deserialize(this->m_indid, in);
+		deserialize(this->m_val, in);
+		return (in);
+	}
 	IntType DBStatValue::get_variable_id(void) const {
 		return (this->m_varid);
 	}
@@ -122,6 +136,23 @@ namespace info {
 	DBStatVariable::~DBStatVariable() {
 
 	}
+	bool DBStatVariable::is_writeable(void) const {
+		return ((!this->m_type.empty()) && DBStatDatasetChild::is_writeable());
+	}
+	std::ostream & DBStatVariable::write_to(std::ostream &os) const {
+		DBStatDatasetChild::write_to(os);
+		dlib::serialize(this->m_categ, os);
+		dlib::serialize(this->m_type, os);
+		dlib::serialize(this->m_genre, os);
+		return (os);
+	}
+	std::istream & DBStatVariable::read_from(std::istream &in) {
+		DBStatDatasetChild::read_from(in);
+		dlib::deserialize(this->m_categ, in);
+		dlib::deserialize(this->m_type, in);
+		dlib::deserialize(this->m_genre, in);
+		return (in);
+	}
 	bool DBStatVariable::is_categ(void) const {
 		return (this->m_categ);
 	}
@@ -194,6 +225,16 @@ namespace info {
 	}
 	bool DBStatDatasetChild::is_writeable(void) const {
 		return ((this->m_datasetid != 0) && StatNamedItem::is_writeable());
+	}
+	std::ostream & DBStatDatasetChild::write_to(std::ostream &os) const {
+		StatNamedItem::write_to(os);
+		dlib::serialize(this->m_datasetid, os);
+		return (os);
+	}
+	std::istream & DBStatDatasetChild::read_from(std::istream &in) {
+		StatNamedItem::read_from(in);
+		dlib::deserialize(this->m_datasetid, in);
+		return (in);
 	}
 	//////////////////////////////////////////
 	DBStatDataset::DBStatDataset() {
@@ -308,6 +349,20 @@ namespace info {
 	bool StatNamedItem::is_writeable(void) const {
 		return (!(this->m_sigle.empty()));
 	}
+	std::ostream & StatNamedItem::write_to(std::ostream &os) const {
+		StatBaseItem::write_to(os);
+		dlib::serialize(this->m_sigle, os);
+		dlib::serialize(this->m_name, os);
+		dlib::serialize(this->m_desc, os);
+		return (os);
+	}
+	std::istream & StatNamedItem::read_from(std::istream &in) {
+		StatBaseItem::read_from(in);
+		dlib::deserialize(this->m_sigle, in);
+		dlib::deserialize(this->m_name, in);
+		dlib::deserialize(this->m_desc, in);
+		return (in);
+	}
 	//////////////////////////////////////////
 	StatBaseItem::StatBaseItem() :m_id(0), m_version(0) {
 	}
@@ -331,6 +386,18 @@ namespace info {
 	}
 	StatBaseItem::~StatBaseItem() {
 
+	}
+	std::ostream & StatBaseItem::write_to(std::ostream &os) const {
+		dlib::serialize(this->m_id, os);
+		dlib::serialize(this->m_version, os);
+		dlib::serialize(this->m_status, os);
+		return (os);
+	}
+	std::istream & StatBaseItem::read_from(std::istream &in) {
+		dlib::deserialize(this->m_id, in);
+		dlib::deserialize(this->m_version, in);
+		dlib::deserialize(this->m_status, in);
+		return (in);
 	}
 	void StatBaseItem::get_status(std::string &s) const {
 		s = this->m_status;

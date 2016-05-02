@@ -11,8 +11,10 @@
 #include <cassert>
 #include <memory>
 #include <string>
+#include <iostream>
 //////////////////////
 #include <boost/any.hpp>
+#include <dlib/serialize.h>
 ////////////////////////////
 namespace info {
 //////////////////////////////////
@@ -109,6 +111,8 @@ public:
 	bool string_value(std::string &s) const;
 	bool string_value(std::wstring &s) const;
 	bool blob_value(Blob &oBlob) const;
+	std::ostream & write_to(std::ostream &os) const;
+	std::istream & read_from(std::istream &in);
 };
 //////////////////////////////////////
 } /* namespace sqlite */
@@ -116,5 +120,11 @@ public:
 inline void swap(info::DbValue &v1, info::DbValue &v2) {
 	v1.swap(v2);
 }// swap
+inline std::ostream & serialize(const info::DbValue &v, std::ostream &os) {
+	return v.write_to(os);
+}
+inline std::istream & deserialize(info::DbValue &v, std::istream &in) {
+	return v.read_from(in);
+}
 ///////////////////////////////////
 #endif /* DBVALUE_H_ */

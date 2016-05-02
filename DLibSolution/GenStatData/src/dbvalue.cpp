@@ -1516,5 +1516,17 @@ namespace info {
 		} // not empty
 		return (bRet);
 	} // blob_value
+	std::ostream & DbValue::write_to(std::ostream &os) const {
+		std::string s;
+		this->string_value(s);
+		dlib::serialize(s, os);
+		return (os);
+	}
+	std::istream & DbValue::read_from(std::istream &in) {
+		std::string s;
+		dlib::deserialize(s, in);
+		this->m_val = s;
+		return (in);
+	}
 	/////////////////////////////////////////////
 } /* namespace sqlite */
