@@ -165,6 +165,9 @@
     <ClInclude Include="include\dbvalue.h" />
     <ClInclude Include="include\indiv.h" />
     <ClInclude Include="include\indivcluster.h" />
+    <ClInclude Include="include\indivtreeitem.h" />
+    <ClInclude Include="include\info_constants.h" />
+    <ClInclude Include="include\serialindivprovider.h" />
     <ClInclude Include="include\statdbmanager.h" />
     <ClInclude Include="include\statement.h" />
     <ClInclude Include="include\stringconvert.h" />
@@ -182,6 +185,7 @@
     <ClCompile Include="src\dbvalue.cpp" />
     <ClCompile Include="src\indiv.cpp" />
     <ClCompile Include="src\indivcluster.cpp" />
+    <ClCompile Include="src\indivtreeitem.cpp" />
     <ClCompile Include="src\sqlite3.c">
       <SDLCheck Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</SDLCheck>
       <SDLCheck Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</SDLCheck>

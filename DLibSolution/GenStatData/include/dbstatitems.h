@@ -8,6 +8,8 @@ namespace info {
 	//////////////////////////////////////////
 	typedef unsigned long IntType;
 	///////////////////////////////////////////
+	enum class VariableMode { modeInvalid, modeNumeric, modeNominal, modeAll };
+	//////////////////////////////////////////////
 	class StatBaseItem {
 	protected:
 		StatBaseItem();
@@ -129,6 +131,7 @@ namespace info {
 		DBStatVariable & operator=(const DBStatVariable &other);
 		virtual ~DBStatVariable();
 	public:
+		bool is_numeric(void) const;
 		bool is_categ(void) const;
 		void is_categ(const bool b);
 		void get_vartype(std::wstring &s) const;

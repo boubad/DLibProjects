@@ -63,7 +63,7 @@ namespace info {
 				IIndivProvider *pProvider = this->m_provider;
 				DLIB_ASSERT(pProvider != nullptr, "Provider must not be null");
 				Indiv oInd1, oInd2;
-				bool bRet = pProvider->find(old.front(), oInd1) && pProvider->find(old.back(), oInd2);
+				bool bRet = pProvider->find_indiv(old.front(), oInd1) && pProvider->find_indiv(old.back(), oInd2);
 				DLIB_ASSERT(bRet, "Indivs not found by provider");
 				double d1 = oInd.distance(oInd1);
 				double d2 = oInd.distance(oInd2);
@@ -130,7 +130,7 @@ namespace info {
 			const IntType aIndex = *it;
 			DLIB_ASSERT(aIndex != 0, "Index cannot be null");
 			Indiv oInd;
-			bool bRet = pProvider->find(aIndex, oInd);
+			bool bRet = pProvider->find_indiv(aIndex, oInd);
 			DLIB_ASSERT(bRet, "Indiv not found");
 			DataMapType curData;
 			oInd.get_data(curData);

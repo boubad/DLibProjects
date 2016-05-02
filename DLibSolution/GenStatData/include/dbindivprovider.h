@@ -4,10 +4,8 @@
 ////////////////////////////////////
 #include "indiv.h"
 ////////////////////////////
-#include <vector>
-//////////////////////////////////////////
-#include <dlib/threads.h>
-////////////////////////////////////////////
+#include <map>
+////////////////////////////
 namespace info {
 	class StatDBManager;
 	//////////////////////////////////
@@ -17,13 +15,13 @@ namespace info {
 		typedef std::vector<DBStatValue> values_vector;
 		typedef std::map<IntType, DbValue> DataMapType;
 		typedef std::vector<Indiv> indivs_vector;
+		typedef std::vector<DBStatVariable> variables_vector;
+		typedef std::map<IntType,DBStatVariable> variables_map;
 	private:
 		StatDBManager *m_pman;
-		size_t   m_current;
-		ints_vector m_ids;
 		DBStatDataset m_oset;
-	private:
-		dlib::mutex _mutex;
+		ints_vector m_ids;
+		variables_map m_vars;
 	public:
 		DBIndivProvider(StatDBManager *pMan, const DBStatDataset &oSet);
 		DBIndivProvider(StatDBManager *pMan, const std::string &setName);
@@ -34,15 +32,21 @@ namespace info {
 	public:
 		// overrides
 		virtual bool is_valid(void);
-		virtual bool indivs_count(size_t &nRows);
-		virtual bool find(const IntType aIndex, Indiv &oInd);
-		virtual bool indiv_at(const size_t pos, Indiv &oInd);
-		virtual bool get_random_indivs(const size_t n, indivs_vector &oRes);
-		virtual bool reset(void);
-		virtual bool next(Indiv &oInd);
+		virtual bool indivs_count(size_t &nCount);
+		virtual bool all_indivs_ids(ints_vector &oIds);
+		virtual bool contains_id(const IntType aId);
+		virtual bool find_indiv(const IntType aIndex, Indiv &oInd,
+			const VariableMode mode = VariableMode::modeNumeric);
+		virtual bool find_indiv_at(const size_t pos, Indiv &oInd,
+			const VariableMode mode = VariableMode::modeNumeric);
+		virtual bool distance(const IntType aIndex1, const IntType &Index2,
+			double &dRes, const VariableMode mode = VariableMode::modeNumeric);
+		virtual bool distance_at(const size_t pos1, const size_t pos2,
+			double &dRes, const VariableMode mode = VariableMode::modeNumeric);
 	private:
 		void initialize(const std::string &setName);
 		void initialize(const std::wstring &setName);
+		void initialize(void);
 	};// class DBIndivProvider
 	/////////////////////////////////////
 }// namspace info

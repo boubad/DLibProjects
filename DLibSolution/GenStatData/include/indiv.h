@@ -34,17 +34,28 @@ namespace info {
 	////////////////////////////////////////////////
 	class IIndivProvider {
 	public:
-		typedef std::vector<Indiv> indivs_vector;
+		typedef std::vector<IntType> ints_vector;
 	public:
 		virtual bool is_valid(void) = 0;
-		virtual bool indivs_count(size_t &nRows) = 0;
-		virtual bool indiv_at(const size_t pos, Indiv &oInd) = 0;
-		virtual bool find(const IntType aIndex, Indiv &oInd) = 0;
-		virtual bool get_random_indivs(const size_t n, indivs_vector &oRes) = 0;
-		virtual bool reset(void) = 0;
-		virtual bool next(Indiv &oInd) = 0;
+		virtual bool indivs_count(size_t &nCount) = 0;
+		virtual bool all_indivs_ids(ints_vector &oIds) = 0;
+		virtual bool contains_id(const IntType aId) = 0;
+		virtual bool find_indiv(const IntType aIndex, Indiv &oInd,
+			const VariableMode mode = VariableMode::modeAll) = 0;
+		virtual bool find_indiv_at(const size_t pos, Indiv &oInd,
+			const VariableMode mode = VariableMode::modeAll) = 0;
+		virtual bool distance(const IntType aIndex1, const IntType &Index2,
+			double &dRes, const VariableMode mode = VariableMode::modeAll) = 0;
+		virtual bool distance_at(const size_t pos1, const size_t pos2,
+			double &dRes, const VariableMode mode = VariableMode::modeAll) = 0;
 	}; // class IIndivProvider
 	////////////////////////////////////////////////
+	class ISerialIndivProvider {
+	public:
+		virtual bool reset(void) = 0;
+		virtual bool next(Indiv &oInd, const VariableMode mode = VariableMode::modeAll) = 0;
+	};
+	/////////////////////////////////////////////////
 }// namespace info
 ///////////////////////////////////////////////
 inline void swap(info::Indiv &v1, info::Indiv &v2) {

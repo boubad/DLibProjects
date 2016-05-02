@@ -69,6 +69,15 @@
     <ClInclude Include="include\indivcluster.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\serialindivprovider.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\indivtreeitem.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\info_constants.h">
+      <Filter>include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -114,6 +123,9 @@
       <Filter>tests</Filter>
     </ClCompile>
     <ClCompile Include="src\indivcluster.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\indivtreeitem.cpp">
       <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>

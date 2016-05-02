@@ -132,7 +132,7 @@ namespace info {
 		s = this->m_type;
 	}
 	void DBStatVariable::get_vartype(std::wstring &s) const {
-		s = StringConvert::s2ws(this->m_type);
+		s = info_trim_lower(StringConvert::s2ws(this->m_type));
 	}
 	void DBStatVariable::set_vartype(const std::wstring &s) {
 		this->m_type = info_trim_lower(StringConvert::ws2s(s));
@@ -157,6 +157,14 @@ namespace info {
 		*this = other;
 		other = t;
 	}// swap
+	bool DBStatVariable::is_numeric(void) const {
+		if (this->is_categ()) {
+			return (false);
+		}
+		std::string s = this->m_type;
+		return ((s == "double") || (s == "float") || (s == "real") ||
+			(s == "int") || (s == "integer") || (s == "long"));
+	}// is_numeric
 	///////////////////////////////////////////
 	DBStatDatasetChild::DBStatDatasetChild() :m_datasetid(0) {
 	}

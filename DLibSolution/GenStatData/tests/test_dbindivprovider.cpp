@@ -7,21 +7,30 @@
 #include "infotestdata.h"
 #include <statdbmanager.h>
 #include <dbindivprovider.h>
+#include <serialindivprovider.h>
 #include <indivcluster.h>
+#include <indivtreeitem.h>
 ////////////////////////////////////////////
 // This is called an unnamed-namespace and it has the effect of making everything 
 // inside this file "private" so that everything you declare will have static linkage.  
 // Thus we won't have any multiply defined symbol errors coming out of the linker when 
 // we try to compile the test suite.
+using namespace std;
+using namespace test;
+using namespace info;
+using namespace dlib;
 namespace
 {
-	using namespace test;
-	using namespace info;
-	using namespace dlib;
 	// Declare the logger we will use in this test.  The name of the logger 
 	// should start with "test."
 	dlib::logger dlog_tprovider("test.dbindivprovider");
-
+	typedef std::vector<IntType> ints_vector;
+	typedef std::map<IntType, DbValue> DbValueMap;
+	typedef IndivTreeItem *PIndivTreeItem;
+	typedef std::vector<PIndivTreeItem> elems_vector;
+	typedef std::pair<size_t, size_t> SizetPair;
+	typedef std::vector<SizetPair> pairs_vector;
+	typedef std::map<size_t, ints_vector>  intsvector_map;
 
 	class dbindivprovider_tester : public tester
 	{
@@ -57,13 +66,15 @@ namespace
 			std::string setName;
 			InfoTestData::get_conso_name(setName);
 			DLIB_TEST_MSG(!setName.empty(), "set name cannot be empty");
-			DBIndivProvider oProvider(&oMan, setName);
-			IIndivProvider *pProvider = &oProvider;
-			DLIB_TEST_MSG(pProvider->is_valid(), "Provider is not valid");
+			DBIndivProvider oProviderBase(&oMan, setName);
+			IIndivProvider *pProviderBase = &oProviderBase;
+			DLIB_TEST_MSG(pProviderBase->is_valid(), "Provider is not valid");
+			SerialIndivProvider oSerial(pProviderBase);
+			ISerialIndivProvider *pProvider = &oSerial;
 			bool bRet = pProvider->reset();
 			DLIB_TEST_MSG(bRet, "reset method returns false");
 			size_t nCount = 0;
-			bRet = pProvider->indivs_count(nCount);
+			bRet = pProviderBase->indivs_count(nCount);
 			DLIB_TEST_MSG(bRet, "indivs_count method returs false");
 			DLIB_TEST_MSG(nCount > 0, "count must be greater than 0");
 			size_t nc = 0;
@@ -88,39 +99,12 @@ namespace
 				double dist = oInd1.distance(oInd2);
 				DLIB_TEST(dist >= 0);
 			} while (true);
-			size_t nbClusters = 5;
-			std::vector<Indiv> oPoints;
-			bRet = pProvider->get_random_indivs(nbClusters, oPoints);
-			DLIB_TEST_MSG(bRet, "get_random_indivs failed");
-			DLIB_TEST(oPoints.size() == nbClusters);
-			std::vector<IndivCluster> oClusters(nbClusters);
-			for (size_t i = 0; i < nbClusters; ++i) {
-				IndivCluster c(oPoints[i],pProvider);
-				oClusters[i] = c;
-			}// i
-			pProvider->reset();
-			do {
-				Indiv oInd;
-				if (!pProvider->next(oInd)) {
-					break;
-				}
-				size_t imin = 0;
-				double dmin = 0;
-				for (size_t i = 0; i < nbClusters; ++i) {
-					IndivCluster &c = oClusters[i];
-					double d = c.distance(oInd);
-					if (i == 0) {
-						dmin = d;
-						imin = i;
-					}
-					else if (d < dmin) {
-						dmin = d;
-						imin = i;
-					}
-				}// i
-				IndivCluster &cc = oClusters[imin];
-				cc.add(oInd);
-			} while (true);
+			//
+			IndivTree oTree;
+			bRet = oTree.aggregate(pProviderBase);
+			DLIB_TEST(bRet);
+			intsvector_map oRet;
+			oTree.get_result(oRet);
 		}// perform_test
 	};
 
