@@ -43,6 +43,7 @@ namespace info {
 			double &dRes, const VariableMode mode = VariableMode::modeNumeric);
 		virtual bool distance_at(const size_t pos1, const size_t pos2,
 			double &dRes, const VariableMode mode = VariableMode::modeNumeric);
+		virtual bool find_variables(variables_map &ovars);
 	private:
 		void initialize(const std::string &setName);
 		void initialize(const std::wstring &setName);

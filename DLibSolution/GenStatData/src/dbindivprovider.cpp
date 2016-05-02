@@ -79,6 +79,14 @@ namespace info {
 			(this->m_oset.id() != 0)
 			);
 	}
+	bool DBIndivProvider::find_variables(variables_map &ovars) {
+		DLIB_ASSERT(this->is_valid(), "this DBIndivProvider is not valid");
+		if (this->is_valid()) {
+			ovars = this->m_vars;
+			return (true);
+		}
+		return (false);
+	}
 	bool DBIndivProvider::indivs_count(size_t &nRows) {
 		DLIB_ASSERT(this->is_valid(), "this DBIndivProvider is not valid");
 		if (this->is_valid()) {

@@ -38,6 +38,7 @@ namespace info {
 	class IIndivProvider {
 	public:
 		typedef std::vector<IntType> ints_vector;
+		typedef std::map<IntType, DBStatVariable> variables_map;
 	public:
 		virtual bool is_valid(void) = 0;
 		virtual bool indivs_count(size_t &nCount) = 0;
@@ -51,6 +52,7 @@ namespace info {
 			double &dRes, const VariableMode mode = VariableMode::modeAll) = 0;
 		virtual bool distance_at(const size_t pos1, const size_t pos2,
 			double &dRes, const VariableMode mode = VariableMode::modeAll) = 0;
+		virtual bool find_variables(variables_map &ovars) = 0;
 	}; // class IIndivProvider
 	////////////////////////////////////////////////
 	class ISerialIndivProvider {
