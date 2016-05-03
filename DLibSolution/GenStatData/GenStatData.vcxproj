@@ -163,6 +163,7 @@
     <ClInclude Include="include\dbindivprovider.h" />
     <ClInclude Include="include\dbstatitems.h" />
     <ClInclude Include="include\dbvalue.h" />
+    <ClInclude Include="include\dlibstathelper.h" />
     <ClInclude Include="include\indiv.h" />
     <ClInclude Include="include\indivcluster.h" />
     <ClInclude Include="include\indivtreeitem.h" />
@@ -184,6 +185,7 @@
     <ClCompile Include="src\dbindivprovider.cpp" />
     <ClCompile Include="src\dbstatitems.cpp" />
     <ClCompile Include="src\dbvalue.cpp" />
+    <ClCompile Include="src\dlibstathelper.cpp" />
     <ClCompile Include="src\indiv.cpp" />
     <ClCompile Include="src\indivcluster.cpp" />
     <ClCompile Include="src\indivtreeitem.cpp" />

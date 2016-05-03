@@ -81,6 +81,9 @@
     <ClInclude Include="include\workerindivprovider.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\dlibstathelper.h">
+      <Filter>include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -135,6 +138,9 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="src\serialindivprovider.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\dlibstathelper.cpp">
       <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>
