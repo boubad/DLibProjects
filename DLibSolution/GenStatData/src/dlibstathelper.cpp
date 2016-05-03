@@ -8,17 +8,6 @@
 /////////////////////////////////
 namespace info {
 	/////////////////////////////////////
-	/*
-	IntType _index;
-	double _vmin;
-	double _vmax;
-	double _vmean;
-	double _vstd;
-	size_t _count;
-	size_t _somme1;
-	size_t _somme2;
-	*/
-	///////////////////////////////////////
 	InfoStatData::InfoStatData(IntType aIndex) :_index(aIndex), _vmin(0), _vmax(0), _vmean(0), _vstd(0), _count(0),
 		_somme1(0), _somme2(0) {
 
@@ -69,7 +58,6 @@ namespace info {
 		this->_somme2 += dval * dval;
 	}
 	void InfoStatData::compute(void) {
-		dlib::auto_mutex oLock(this->_mutex);
 		size_t nc = this->_count;
 		if (nc > 0) {
 			const double s1 = this->_somme1 / nc;
@@ -80,7 +68,6 @@ namespace info {
 		}// nc
 	}
 	void InfoStatData::get(IntType &index, double &vmin, double &vmax, double &vmean, double &vstd) const {
-		dlib::auto_mutex oLock(this->_mutex);
 		index = this->_index;
 		vmin = this->_vmin;
 		vmax = this->_vmax;
@@ -101,6 +88,7 @@ namespace info {
 		IIndivProvider *pProvider = this->m_provider;
 		DLIB_ASSERT(pProvider != nullptr, "Provider cannot be null");
 		bool bRet = pProvider->indivs_count(nc);
+		DLIB_ASSERT(bRet, "Cannot get indivs count");
 		infostatdata_map &oSet = this->m_stats;
 		dlib::mutex _mutex;
 		size_t num_threads = INFO_NUM_THREADS;
@@ -163,6 +151,93 @@ namespace info {
 				});
 			}// do
 		}// not done
+		ints_vector &oIds = this->m_ids;
+		oIds.clear();
+		variables_map &oVars = this->m_vars;
+		oVars.clear();
+		variables_map xVars;
+		bRet = pProvider->find_variables(xVars);
+		DLIB_ASSERT(bRet, "Cannot get variables");
+		std::for_each(oSet.begin(), oSet.end(), [&](const std::pair<IntType, InfoStatDataPtr> &oPair) {
+			IntType key = oPair.first;
+			auto it = xVars.find(key);
+			if (it != xVars.end()) {
+				oIds.push_back(key);
+				oVars[key] = xVars[key];
+			}// found
+		});
 	}// initialize
+	void DLibStatHelper::convert_indiv(const Indiv &oInd, double_ptr &xarray) const {
+		const ints_vector &oIds = this->m_ids;
+		const size_t n = oIds.size();
+		const DbValueMap &src = oInd.data();
+		const infostatdata_map &oStats = this->m_stats;
+		xarray.reset(new double[n]);
+		double *pData = xarray.get();
+		DLIB_ASSERT(pData != nullptr, "pData cannot be null");
+		for (size_t i = 0; i < n; ++i) {
+			const IntType key = oIds[i];
+			double dval = 0;
+			auto it = src.find(key);
+			if (it != src.end()) {
+				DbValue v = (*it).second;
+				dval = v.double_value();
+			}
+			else {
+				auto jt = oStats.find(key);
+				if (jt != oStats.end()) {
+					const InfoStatDataPtr &st = (*jt).second;
+					const InfoStatData *ps = st.get();
+					dval = ps->average();
+				}
+			}
+			pData[i] = dval;
+		}// i
+	}// convert_indiv
+	size_t  DLibStatHelper::convert_indivs(std::vector<double_ptr> &ovec) {
+		ovec.clear();
+		size_t nc = 0;
+		IIndivProvider *pProvider = this->m_provider;
+		DLIB_ASSERT(pProvider != nullptr, "Provider cannot be null");
+		bool bRet = pProvider->indivs_count(nc);
+		DLIB_ASSERT(bRet, "Cannot get indivs count");
+		infostatdata_map &oSet = this->m_stats;
+		dlib::mutex _mutex;
+		size_t num_threads = INFO_NUM_THREADS;
+		VariableMode mode = VariableMode::modeNumeric;
+		dlib::parallel_for(num_threads, (size_t)0, nc, [&](size_t i) {
+			Indiv oInd;
+			if (pProvider->find_indiv_at(i, oInd, mode)) {
+				double_ptr xind;
+				this->convert_indiv(oInd, xind);
+				{
+					dlib::auto_mutex oLock(_mutex);
+					ovec.push_back(xind);
+				}
+			}// find
+		});
+		return (ovec.size());
+	}// convert_indivs
+	void  DLibStatHelper::convert_indivs(size_t &nRows, size_t &nCols,
+		double_ptr &oPtr) {
+		std::vector<double_ptr> ovec;
+		nRows = this->convert_indivs(ovec);
+		nCols = this->m_ids.size();
+		if ((nRows < 1) || (nCols < 1)) {
+			oPtr.reset();
+			return;
+		}
+		oPtr.reset(new double[nRows * nCols]);
+		double *pp = oPtr.get();
+		DLIB_ASSERT(pp != nullptr, "pp cannot be null");
+		for (size_t i = 0; i < nRows; ++i) {
+			const double_ptr &o = ovec[i];
+			const double *pSrc = o.get();
+			DLIB_ASSERT(pSrc != nullptr, "pSrc cannot be null");
+			for (size_t j = 0; j < nCols; ++j) {
+				pp[i * nCols + j] = pSrc[j];
+			}// j
+		}// i
+	}//convert_indivs
 ///////////////////////////////////////
 }// namespace info

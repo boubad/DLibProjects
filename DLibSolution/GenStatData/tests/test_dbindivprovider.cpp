@@ -10,6 +10,7 @@
 #include <serialindivprovider.h>
 #include <indivcluster.h>
 #include <indivtreeitem.h>
+#include <dlibstathelper.h>
 ////////////////////////////////////////////
 // This is called an unnamed-namespace and it has the effect of making everything 
 // inside this file "private" so that everything you declare will have static linkage.  
@@ -31,7 +32,13 @@ namespace
 	typedef std::pair<size_t, size_t> SizetPair;
 	typedef std::vector<SizetPair> pairs_vector;
 	typedef std::map<size_t, ints_vector>  intsvector_map;
-
+	//
+	typedef std::shared_ptr<InfoStatData> InfoStatDataPtr;
+	typedef std::map<IntType, InfoStatDataPtr> infostatdata_map;
+	typedef std::map<IntType, DbValue> DbValueMap;
+	typedef std::map<IntType, DBStatVariable> variables_map;
+	typedef std::shared_ptr<double> double_ptr;
+	//
 	class dbindivprovider_tester : public tester
 	{
 		/*!
@@ -105,6 +112,17 @@ namespace
 			DLIB_TEST(bRet);
 			intsvector_map oRet;
 			oTree.get_result(oRet);
+			//
+			DLibStatHelper oHelper(pProviderBase);
+			std::vector<double_ptr> xinds;
+			oHelper.convert_indivs(xinds);
+			size_t xr = 0, xc = 0;
+			double_ptr oData;
+			oHelper.convert_indivs(xr, xc, oData);
+			DLIB_TEST(xr > 0);
+			DLIB_TEST(xc > 0);
+			DLIB_TEST(oData.get() != nullptr);
+			//
 		}// perform_test
 	};
 
