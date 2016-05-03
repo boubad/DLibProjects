@@ -4,6 +4,7 @@
 ///////////////////////////////////
 #include <vector>
 #include <set>
+#include <memory>
 /////////////////////////////////////
 #include <dlib/matrix.h>
 #include <dlib/threads.h>
@@ -52,10 +53,14 @@ namespace info {
 	////////////////////////////////////////
 	class DLibStatHelper {
 	public:
-		typedef std::set<InfoStatData> infostatdata_set;
+		typedef std::shared_ptr<InfoStatData> InfoStatDataPtr;
+		typedef std::map<IntType,InfoStatDataPtr> infostatdata_map;
+		typedef std::map<IntType, DbValue> DbValueMap;
 	private:
 		IIndivProvider		*m_provider;
-		infostatdata_set	m_stats;
+		infostatdata_map	m_stats;
+		//
+		void initialize(void);
 	public:
 		DLibStatHelper(IIndivProvider *pProvider);
 		~DLibStatHelper();
