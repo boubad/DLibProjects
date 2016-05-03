@@ -194,6 +194,31 @@ namespace info {
 			pData[i] = dval;
 		}// i
 	}// convert_indiv
+	void DLibStatHelper::convert_indiv(const Indiv &oInd, indiv_type &xarray) const {
+		const ints_vector &oIds = this->m_ids;
+		const size_t n = oIds.size();
+		xarray.set_size(1, n);
+		const DbValueMap &src = oInd.data();
+		const infostatdata_map &oStats = this->m_stats;
+		for (size_t i = 0; i < n; ++i) {
+			const IntType key = oIds[i];
+			double dval = 0;
+			auto it = src.find(key);
+			if (it != src.end()) {
+				DbValue v = (*it).second;
+				dval = v.double_value();
+			}
+			else {
+				auto jt = oStats.find(key);
+				if (jt != oStats.end()) {
+					const InfoStatDataPtr &st = (*jt).second;
+					const InfoStatData *ps = st.get();
+					dval = ps->average();
+				}
+			}
+			xarray(i) = dval;
+		}// i
+	}// convert_indiv
 	size_t  DLibStatHelper::convert_indivs(std::vector<double_ptr> &ovec) {
 		ovec.clear();
 		size_t nc = 0;
@@ -209,6 +234,32 @@ namespace info {
 			Indiv oInd;
 			if (pProvider->find_indiv_at(i, oInd, mode)) {
 				double_ptr xind;
+				this->convert_indiv(oInd, xind);
+				{
+					dlib::auto_mutex oLock(_mutex);
+					ovec.push_back(xind);
+				}
+			}// find
+		});
+		return (ovec.size());
+	}// convert_indivs
+	size_t DLibStatHelper::convert_indivs(std::vector<indiv_type> &ovec) {
+		ovec.clear();
+		size_t nc = 0;
+		size_t nbVars = this->m_ids.size();
+		IIndivProvider *pProvider = this->m_provider;
+		DLIB_ASSERT(pProvider != nullptr, "Provider cannot be null");
+		bool bRet = pProvider->indivs_count(nc);
+		DLIB_ASSERT(bRet, "Cannot get indivs count");
+		infostatdata_map &oSet = this->m_stats;
+		dlib::mutex _mutex;
+		size_t num_threads = INFO_NUM_THREADS;
+		VariableMode mode = VariableMode::modeNumeric;
+		dlib::parallel_for(num_threads, (size_t)0, nc, [&](size_t i) {
+			Indiv oInd;
+			if (pProvider->find_indiv_at(i, oInd, mode)) {
+				indiv_type xind;
+				xind.set_size(1, nbVars);
 				this->convert_indiv(oInd, xind);
 				{
 					dlib::auto_mutex oLock(_mutex);

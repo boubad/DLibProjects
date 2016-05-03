@@ -13,7 +13,7 @@
 //////////////////////////////////////////
 namespace info {
 	//////////////////////////////////////////
-	typedef dlib::matrix<double, 0, 1> indiv_type;
+	typedef dlib::matrix<double, 1, 0> indiv_type;
 	typedef std::vector<indiv_type> indivtype_vector;
 	typedef std::set<IntType> ints_set;
 	///////////////////////////////////////////
@@ -97,6 +97,8 @@ namespace info {
 		void get_variables_map(variables_map &oMap) const {
 			oMap = this->m_vars;
 		}
+		void convert_indiv(const Indiv &oInd, indiv_type &oData) const;
+		size_t convert_indivs(std::vector<indiv_type> &ovec);
 		void convert_indiv(const Indiv &oInd, double_ptr &oData) const;
 		size_t convert_indivs(std::vector<double_ptr> &ovec);
 		void convert_indivs(size_t &nRows, size_t &nCols, double_ptr &oPtr);

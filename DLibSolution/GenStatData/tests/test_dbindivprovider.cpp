@@ -123,6 +123,9 @@ namespace
 			DLIB_TEST(xc > 0);
 			DLIB_TEST(oData.get() != nullptr);
 			//
+			std::vector<indiv_type> xindsa;
+			oHelper.convert_indivs(xindsa);
+			DLIB_TEST(xindsa.size() > 0);
 		}// perform_test
 	};
 
