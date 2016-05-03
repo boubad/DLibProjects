@@ -17,15 +17,15 @@ namespace info {
 	}
 	IndivCluster::IndivCluster(const IndivCluster &other) {
 		IndivCluster &o = const_cast<IndivCluster &>(other);
-		dlib::auto_mutex oLock2(other._mutex);
+		dlib::auto_unlock_readonly oLock2(other._mutex);
 		Indiv::operator=(other);
 		this->m_provider = other.m_provider;
 		this->m_members = other.m_members;
 	}
 	IndivCluster & IndivCluster::operator=(const IndivCluster &other) {
 		if (this != &other) {
-			dlib::auto_mutex oLock1(this->_mutex);
-			dlib::auto_mutex oLock2(other._mutex);
+			dlib::auto_unlock oLock1(this->_mutex);
+			dlib::auto_unlock_readonly oLock2(other._mutex);
 			Indiv::operator=(other);
 			this->m_provider = other.m_provider;
 			this->m_members = other.m_members;
@@ -47,7 +47,7 @@ namespace info {
 			return (false);
 		}
 		{
-			dlib::auto_mutex oLock(this->_mutex);
+			dlib::auto_unlock_readonly oLock1(this->_mutex);
 			old = this->m_members;
 		}
 		for (auto it = old.begin(); it != old.end(); ++it) {
@@ -79,7 +79,7 @@ namespace info {
 			old.push_back(aIndex);
 		}
 		{
-			dlib::auto_mutex oLock(this->_mutex);
+			dlib::auto_unlock oLock1(this->_mutex);
 			this->m_members = old;
 		}
 		return (true);
@@ -91,12 +91,12 @@ namespace info {
 	void IndivCluster::get_data(DataMapType &oMap) const {
 		IndivCluster &o = const_cast<IndivCluster &>(*this);
 		{
-			dlib::auto_mutex oLock(o._mutex);
+			dlib::auto_unlock_readonly oLock1(o._mutex);
 			Indiv::get_data(oMap);
 		}
 	}
 	void IndivCluster::set_data(const DataMapType &oMap) {
-		dlib::auto_mutex oLock(this->_mutex);
+		dlib::auto_unlock oLock1(this->_mutex);
 		Indiv::set_data(oMap);
 	}
 	IIndivProvider *IndivCluster::get_provider(void) const {
@@ -108,12 +108,12 @@ namespace info {
 	void IndivCluster::get_members(ints_deque &oRes) const {
 		IndivCluster &o = const_cast<IndivCluster &>(*this);
 		{
-			dlib::auto_mutex oLock(o._mutex);
+			dlib::auto_unlock_readonly oLock1(o._mutex);
 			oRes = this->m_members;
 		}
 	}
 	void IndivCluster::clear_members(void) {
-		dlib::auto_mutex oLock(this->_mutex);
+		dlib::auto_unlock oLock1(this->_mutex);
 		this->m_members.clear();
 	}
 	void IndivCluster::update_center(void) {

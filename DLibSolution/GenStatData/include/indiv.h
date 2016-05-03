@@ -55,12 +55,12 @@ namespace info {
 		virtual bool find_variables(variables_map &ovars) = 0;
 	}; // class IIndivProvider
 	////////////////////////////////////////////////
-	class ISerialIndivProvider {
+	class ISerialIndivProvider : public IIndivProvider {
 	public:
 		virtual bool reset(void) = 0;
 		virtual bool next(Indiv &oInd, const VariableMode mode = VariableMode::modeAll) = 0;
 	};
-	/////////////////////////////////////////////////
+	////////////////////////////////////////////////
 }// namespace info
 ///////////////////////////////////////////////
 inline void swap(info::Indiv &v1, info::Indiv &v2) {

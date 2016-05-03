@@ -171,6 +171,7 @@
     <ClInclude Include="include\statdbmanager.h" />
     <ClInclude Include="include\statement.h" />
     <ClInclude Include="include\stringconvert.h" />
+    <ClInclude Include="include\workerindivprovider.h" />
     <ClInclude Include="src\sqlite3.h" />
     <ClInclude Include="src\sqlite3ext.h" />
     <ClInclude Include="stdafx.h" />
@@ -186,6 +187,7 @@
     <ClCompile Include="src\indiv.cpp" />
     <ClCompile Include="src\indivcluster.cpp" />
     <ClCompile Include="src\indivtreeitem.cpp" />
+    <ClCompile Include="src\serialindivprovider.cpp" />
     <ClCompile Include="src\sqlite3.c">
       <SDLCheck Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</SDLCheck>
       <SDLCheck Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</SDLCheck>
@@ -194,6 +196,7 @@
     </ClCompile>
     <ClCompile Include="src\statdbmanager.cpp" />
     <ClCompile Include="src\statement.cpp" />
+    <ClCompile Include="src\workerindivprovider.cpp" />
     <ClCompile Include="stdafx.cpp" />
     <ClCompile Include="tester.cpp" />
     <ClCompile Include="tests\infotestdata.cpp" />

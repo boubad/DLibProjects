@@ -18,7 +18,7 @@ namespace info {
 		IIndivProvider *m_provider;
 		ints_deque m_members;
 	private:
-		dlib::mutex _mutex;
+		dlib::read_write_mutex _mutex;
 	public:
 		IndivCluster(IIndivProvider *pProvider = nullptr);
 		IndivCluster(const IntType aIndex, const DataMapType &oMap, IIndivProvider *pProvider = nullptr);

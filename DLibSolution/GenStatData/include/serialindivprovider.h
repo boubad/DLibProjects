@@ -15,47 +15,23 @@ namespace info {
 	private:
 		dlib::mutex _mutex;
 	public:
-		SerialIndivProvider(IIndivProvider *pProvider) :m_provider(pProvider), m_current(0) {
-		}
-		virtual bool reset(void) {
-			IIndivProvider *p = this->m_provider;
-			if (p == nullptr) {
-				return (false);
-			}
-			if (!p->is_valid()) {
-				return (false);
-			}
-			{
-				dlib::auto_mutex oLock(this->_mutex);
-				this->m_current = 0;
-			}
-			return (true);
-		}
-		virtual bool next(Indiv &oInd, const VariableMode mode = VariableMode::modeAll) {
-			IIndivProvider *p = this->m_provider;
-			if (p == nullptr) {
-				return (false);
-			}
-			if (!p->is_valid()) {
-				return (false);
-			}
-			size_t nMax = 0;
-			if (!p->indivs_count(nMax)) {
-				return (false);
-			}
-			bool bRet = false;
-			{
-				dlib::auto_mutex oLock(this->_mutex);
-				size_t n = this->m_current;
-				if (n < nMax) {
-					bRet = p->find_indiv_at(n, oInd, mode);
-				}
-				if (bRet) {
-					this->m_current = n + 1;
-				}
-			}
-			return (bRet);
-		} // next
+		SerialIndivProvider(IIndivProvider *pProvider);
+		~SerialIndivProvider();
+		virtual bool reset(void);
+		virtual bool next(Indiv &oInd, const VariableMode mode = VariableMode::modeAll);
+		virtual bool is_valid(void);
+		virtual bool indivs_count(size_t &nCount);
+		virtual bool all_indivs_ids(ints_vector &oIds);
+		virtual bool contains_id(const IntType aId);
+		virtual bool find_indiv(const IntType aIndex, Indiv &oInd,
+			const VariableMode mode = VariableMode::modeAll);
+		virtual bool find_indiv_at(const size_t pos, Indiv &oInd,
+			const VariableMode mode = VariableMode::modeAll);
+		virtual bool distance(const IntType aIndex1, const IntType &Index2,
+			double &dRes, const VariableMode mode = VariableMode::modeAll);
+		virtual bool distance_at(const size_t pos1, const size_t pos2,
+			double &dRes, const VariableMode mode = VariableMode::modeAll);
+		virtual bool find_variables(variables_map &ovars);
 	};// class SerialIndivProvider
 	////////////////////////////////////
 }// namespace info
