@@ -195,7 +195,16 @@ namespace info {
 	}
 	bool WorkerIndivProvider::find_variables(variables_map &ovars) {
 		DLIB_ASSERT(this->is_valid(), "this is not valid");
-		ovars = this->m_vars;
+		const variables_map &srcMap = this->m_vars;
+		const ints_set &oSet = this->m_filter;
+		ovars.clear();
+		std::for_each(oSet.begin(), oSet.end(), [&](const IntType &key) {
+			auto it = srcMap.find(key);
+			if (it != srcMap.end()) {
+				DBStatVariable v = (*it).second;
+				ovars[key] = v;
+			}
+		});
 		return (true);
 	}
 	///////////////////////////////////////////////
