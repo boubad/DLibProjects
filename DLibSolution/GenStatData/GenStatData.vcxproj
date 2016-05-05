@@ -71,21 +71,21 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>./include;D:\VS2015\include;C:\VS2015\include;$(IncludePath)</IncludePath>
+    <IncludePath>./include;./src;D:\VS2015\include;C:\VS2015\include;$(IncludePath)</IncludePath>
     <LibraryPath>D:\VS2015\lib\x86\Debug;C:\VS2015\lib\x86\Debug;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>./include;D:\VS2015\include;C:\VS2015\include;$(IncludePath)</IncludePath>
+    <IncludePath>./include;./src;D:\VS2015\include;C:\VS2015\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>./include;D:\VS2015\include;C:\VS2015\include;$(IncludePath)</IncludePath>
+    <IncludePath>./include;./src;D:\VS2015\include;C:\VS2015\include;$(IncludePath)</IncludePath>
     <LibraryPath>D:\VS2015\lib\x86\Release;C:\VS2015\lib\x86\Release;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>./include;D:\VS2015\include;C:\VS2015\include;$(IncludePath)</IncludePath>
+    <IncludePath>./include;./src;D:\VS2015\include;C:\VS2015\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -161,9 +161,11 @@
   <ItemGroup>
     <ClInclude Include="include\database.h" />
     <ClInclude Include="include\dbindivprovider.h" />
+    <ClInclude Include="include\sqlitestathelper.h" />
     <ClInclude Include="include\dbstatitems.h" />
     <ClInclude Include="include\dbvalue.h" />
     <ClInclude Include="include\dlibstathelper.h" />
+    <ClInclude Include="include\istorehelper.h" />
     <ClInclude Include="include\indiv.h" />
     <ClInclude Include="include\indivcluster.h" />
     <ClInclude Include="include\indivtreeitem.h" />
@@ -196,6 +198,7 @@
       <SDLCheck Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</SDLCheck>
       <SDLCheck Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</SDLCheck>
     </ClCompile>
+    <ClCompile Include="src\sqlitestathelper.cpp" />
     <ClCompile Include="src\statdbmanager.cpp" />
     <ClCompile Include="src\statement.cpp" />
     <ClCompile Include="src\workerindivprovider.cpp" />

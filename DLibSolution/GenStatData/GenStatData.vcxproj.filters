@@ -84,6 +84,12 @@
     <ClInclude Include="include\dlibstathelper.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\sqlitestathelper.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\istorehelper.h">
+      <Filter>include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -141,6 +147,9 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="src\dlibstathelper.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sqlitestathelper.cpp">
       <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>
