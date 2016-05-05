@@ -206,6 +206,7 @@
     <ClCompile Include="tester.cpp" />
     <ClCompile Include="tests\infotestdata.cpp" />
     <ClCompile Include="tests\test_dbindivprovider.cpp" />
+    <ClCompile Include="tests\test_sqlitestathelper.cpp" />
     <ClCompile Include="tests\test_statdatamanager.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

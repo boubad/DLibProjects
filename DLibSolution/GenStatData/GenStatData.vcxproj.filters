@@ -152,5 +152,8 @@
     <ClCompile Include="src\sqlitestathelper.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="tests\test_sqlitestathelper.cpp">
+      <Filter>tests</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
