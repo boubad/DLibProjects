@@ -8,6 +8,9 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "datalib", "datalib\datalib.vcxproj", "{3DD38E3A-2EEB-4DC7-8AFE-9BF020E1F6A9}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "UnitTestDatalib", "UnitTestDatalib\UnitTestDatalib.vcxproj", "{BA899227-FB54-4256-B112-085704302917}"
+	ProjectSection(ProjectDependencies) = postProject
+		{3DD38E3A-2EEB-4DC7-8AFE-9BF020E1F6A9} = {3DD38E3A-2EEB-4DC7-8AFE-9BF020E1F6A9}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -219,6 +219,7 @@ namespace info {
 			this->m_intransaction = false;
 		}
 		catch (...) {}
+		this->m_intransaction = false;
 	} // rollback_transaction
 	///////////////////////////////////////
 	bool SQLiteStatHelper::find_dataset_variables_types(const DBStatDataset &oSet, std::map<IntType, std::string> &oMap) {
@@ -1307,22 +1308,39 @@ namespace info {
 	////////////////////////////////
 	SQLiteStatHelper::SQLiteStatHelper(const std::string &sDatabaseName /*= DEFAULT_DATABASE_NAME*/) {
 		try {
+			this->m_intransaction = false;
 			this->m_base.open(sDatabaseName);
 			if (this->m_base.is_open()) {
 				this->check_schema();
 			}
 		}
-		catch (...) {}
+		catch (dlib::sqlite_error &err) {
+			log_error(err);
+		}
+		catch (std::exception &ex) {
+			log_error(ex);
+		}
+		catch (...) {
+			dlog << dlib::LERROR << "Unknown exception in open...";
+		}
 	}
 	SQLiteStatHelper::SQLiteStatHelper(const std::wstring &sName /*= DEFAULT_DATABASE_NAME*/) {
 		try {
+			this->m_intransaction = false;
 			std::string file = StringConvert::ws2s(sName);
 			this->m_base.open(file);
 			if (this->m_base.is_open()) {
 				this->check_schema();
 			}
 		}
-		catch (...) {}
+		catch (dlib::sqlite_error &err) {
+			log_error(err);
+		}
+		catch (std::exception &ex) {
+			log_error(ex);
+		} catch(...){
+			dlog << dlib::LERROR << "Unknown exception in open...";
+		}
 	}
 	void SQLiteStatHelper::check_schema(void) {
 		try {
