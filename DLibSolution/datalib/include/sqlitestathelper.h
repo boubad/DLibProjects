@@ -71,7 +71,7 @@ namespace info {
 			int skip = 0, int count = 100);
 		virtual bool find_variable_values(DBStatVariable &oVar, std::vector<DBStatValue> &oList,
 			int skip = 0, int count = 100);
-		virtual bool find_variable_distinct_values(DBStatVariable &oVar, std::vector<DBStatValue> &oList,
+		virtual bool find_variable_distinct_values(DBStatVariable &oVar, std::vector<std::string> &oList,
 			int skip = 0, int count = 100);
 		virtual bool find_indiv_values(DBStatIndiv &oInd, std::vector<DBStatValue> &oList,
 			int skip = 0, int count = 100);

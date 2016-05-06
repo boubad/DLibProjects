@@ -135,7 +135,8 @@ namespace info {
 			const bool bCateg, const std::string &sType, const std::string &sGenre);
 		DBStatVariable();
 		DBStatVariable(const IntType nId);
-		DBStatVariable(const DBStatDataset &oSet);
+		DBStatVariable(const DBStatDataset &oSet, const std::string &sSigle = std::string());
+		DBStatVariable(const DBStatDataset &oSet, const std::wstring &sSigle = std::wstring());
 		DBStatVariable(const DBStatVariable &other);
 		DBStatVariable & operator=(const DBStatVariable &other);
 		virtual ~DBStatVariable();
@@ -166,7 +167,8 @@ namespace info {
 			const std::string &sSigle, const std::string &sName, const std::string &sDesc, const IntType nDatasetId);
 		DBStatIndiv();
 		DBStatIndiv(const IntType nId);
-		DBStatIndiv(const DBStatDataset &oSet);
+		DBStatIndiv(const DBStatDataset &oSet, const std::string &sSigle = std::string());
+		DBStatIndiv(const DBStatDataset &oSet, const std::wstring &sSigle = std::wstring());
 		DBStatIndiv(const DBStatIndiv &other);
 		DBStatIndiv & operator=(const DBStatIndiv &other);
 		virtual ~DBStatIndiv();

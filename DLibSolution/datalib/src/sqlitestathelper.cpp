@@ -146,7 +146,7 @@ namespace info {
 		"UPDATE dbindiv SET optlock = OPTLOCK + 1,"
 		" sigle = :sigle, nom = :name, description = :desc, status = :status WHERE individ = :id";
 	static const char *SQL_REMOVE_INDIV =
-		"REMOVE FROM dbindiv WHERE individ = :id";
+		"DELETE FROM dbindiv WHERE individ = :id";
 	//
 	static const char *SQL_VALUE_BY_ID =
 		"SELECT valueid,optlock,variableid,individ,stringval,status"
@@ -344,7 +344,7 @@ namespace info {
 			q.bind(1, nDatasetId);
 			q.exec();
 			if (q.move_next()) {
-				q.get_column(1, nCount);
+				q.get_column(0, nCount);
 			}
 			return (true);
 		}// try
@@ -430,7 +430,7 @@ namespace info {
 	}
 
 	bool  SQLiteStatHelper::find_variable_distinct_values(DBStatVariable &oVar,
-		std::vector<DBStatValue> &oList,
+		std::vector<std::string> &oList,
 		int skip /*= 0*/, int count /*= 100*/) {
 		oList.clear();
 		try {
@@ -451,9 +451,11 @@ namespace info {
 			q.bind(3, skip);
 			q.exec();
 			while (q.move_next()) {
-				DBStatValue cur;
-				this->read_value(q, cur);
-				oList.push_back(cur);
+				std::string s;
+				q.get_column(0, s);
+				if (!s.empty()) {
+					oList.push_back(s);
+				}
 			}
 			return (true);
 		}// try
@@ -594,7 +596,7 @@ namespace info {
 			q2.exec();
 			if (q2.move_next()) {
 				DBStatValue cur;
-				this->read_value(q, cur);
+				this->read_value(q2, cur);
 				return (true);
 			}
 		}// try

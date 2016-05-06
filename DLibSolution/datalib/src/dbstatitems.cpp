@@ -84,8 +84,17 @@ namespace info {
 	}
 	DBStatIndiv::DBStatIndiv(const IntType n) : DBStatDatasetChild(n) {}
 	DBStatIndiv::DBStatIndiv() {}
-	DBStatIndiv::DBStatIndiv(const DBStatDataset &oSet) {
+	DBStatIndiv::DBStatIndiv(const DBStatDataset &oSet, const std::string &sSigle) {
 		this->set_dataset_id(oSet.id());
+		this->set_sigle(sSigle);
+		this->set_name(sSigle);
+		this->set_desc(sSigle);
+	}
+	DBStatIndiv::DBStatIndiv(const DBStatDataset &oSet, const std::wstring &sSigle) {
+		this->set_dataset_id(oSet.id());
+		this->set_sigle(sSigle);
+		this->set_name(sSigle);
+		this->set_desc(sSigle);
 	}
 	DBStatIndiv::DBStatIndiv(const DBStatIndiv &other) : DBStatDatasetChild(other) {}
 	DBStatIndiv & DBStatIndiv::operator=(const DBStatIndiv &other) {
@@ -119,8 +128,23 @@ namespace info {
 	}
 	DBStatVariable::DBStatVariable(const IntType nId) : DBStatDatasetChild(nId), m_categ(false) {}
 	DBStatVariable::DBStatVariable() : m_categ(false) {}
-	DBStatVariable::DBStatVariable(const DBStatDataset &oSet) : m_categ(false) {
+	DBStatVariable::DBStatVariable(const DBStatDataset &oSet, const std::string &sSigle) : m_categ(false) {
 		this->set_dataset_id(oSet.id());
+		this->set_sigle(sSigle);
+		this->set_name(sSigle);
+		this->set_desc(sSigle);
+		this->set_vartype("float");
+		this->set_genre("initial");
+		this->is_categ(false);
+	}
+	DBStatVariable::DBStatVariable(const DBStatDataset &oSet, const std::wstring &sSigle) : m_categ(false) {
+		this->set_dataset_id(oSet.id());
+		this->set_sigle(sSigle);
+		this->set_name(sSigle);
+		this->set_desc(sSigle);
+		this->set_vartype("float");
+		this->set_genre("initial");
+		this->is_categ(false);
 	}
 	DBStatVariable::DBStatVariable(const DBStatVariable &other) : DBStatDatasetChild(other),
 		m_categ(other.m_categ), m_type(other.m_type), m_genre(other.m_genre) {}
