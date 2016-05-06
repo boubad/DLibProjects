@@ -1,20 +1,13 @@
 #include "../include/sqlitestathelper.h"
 #include "../include/stringconvert.h"
+#include "../include/sqlite_statement.h"
 /////////////////////////////////////
-#include <dlib/assert.h>
-#include <dlib/logger.h>
-//////////////////////////////////////
 #include <algorithm>
+#include <iostream>
 ///////////////////////////////////
 namespace info {
 	//////////////////////////////////////
-	static dlib::logger dlog("sqlitestathelper");
-	///////////////////////////
 	const std::string SQLiteStatHelper::DEFAULT_DATABASE_NAME("info_sets.sqlite");
-	///////////////////////////////////
-	static const char *SQL_COMMIT_TRANSACTION = "COMMIT TRANSACTION";
-	static const char *SQL_BEGIN_TRANSACTION = "BEGIN TRANSACTION";
-	static const char *SQL_ROLLBACK_TRANSACTION = "ROLLBACK TRANSACTION";
 	/////////////////////////////////////
 	static const char *SQL_CREATE_DATASET =
 		"CREATE TABLE IF NOT EXISTS dbdataset("
@@ -74,148 +67,147 @@ namespace info {
 	static const char *SQL_FIND_ALL_DATASETS_IDS =
 		"SELECT datasetid"
 		" FROM dbdataset ORDER BY datasetid"
-		" LIMIT :taken OFFSET :skip";
+		" LIMIT :taken OFFSET ?";
 	static const char *SQL_FIND_ALL_DATASETS =
 		"SELECT datasetid,optlock,sigle,nom,description,status"
 		" FROM dbdataset ORDER BY sigle"
-		" LIMIT :taken OFFSET :skip";
+		" LIMIT ? OFFSET ?";
 	static const char *SQL_FIND_DATASET_BY_ID =
 		"SELECT datasetid,optlock,sigle,nom,description,status"
-		" FROM dbdataset WHERE datasetid = :id";
+		" FROM dbdataset WHERE datasetid = ?";
 	static const char *SQL_FIND_DATASET_BY_SIGLE =
 		"SELECT datasetid,optlock,sigle,nom,description,status"
-		" FROM dbdataset WHERE UPPER(LTRIM(RTRIM(sigle))) = :sigle";
+		" FROM dbdataset WHERE UPPER(LTRIM(RTRIM(sigle))) = ?";
 	static const char *SQL_INSERT_DATASET =
 		"INSERT INTO dbdataset (sigle,nom,description,status)"
-		" VALUES (:sigle,:name,:desc,:status)";
+		" VALUES (?,?,?,?)";
 	static const char *SQL_UPDATE_DATASET =
 		"UPDATE dbdataset SET optlock = optlock + 1,"
-		" sigle = :sigle, nom = :name, description = :desc, status = :status WHERE datasetid = :id";
+		" sigle = ?, nom = ?, description = ?, status = ? WHERE datasetid = ?";
 	static const char *SQL_REMOVE_DATASET =
-		"DELETE FROM dbdataset WHERE datasetid = :id";
+		"DELETE FROM dbdataset WHERE datasetid = ?";
 	static const char *SQL_FIND_DATASETS_COUNT =
 		"SELECT COUNT(*) FROM dbdataset";
 	//
 	static const char *SQL_FIND_DATASET_VARIABLES =
 		"SELECT variableid, optlock, datasetid , sigle, vartype, categvar, nom, description, genre, status"
-		" FROM dbvariable WHERE datasetid = :datasetid"
+		" FROM dbvariable WHERE datasetid = ?"
 		" ORDER BY categvar DESC, sigle ASC"
-		" LIMIT :taken OFFSET :skip";
+		" LIMIT ? OFFSET ?";
 	static const char *SQL_FIND_DATASET_VARIABLES_IDS =
-		"SELECT variableid FROM dbvariable WHERE datasetid = :datasetid"
+		"SELECT variableid FROM dbvariable WHERE datasetid = ?"
 		" ORDER BY variableid"
-		" LIMIT :taken OFFSET :skip";
+		" LIMIT ? OFFSET ?";
 	static const char *SQL_VARIABLE_BY_ID =
 		"SELECT variableid,optlock,datasetid,sigle,vartype,categvar,nom,description,genre,status"
-		" FROM dbvariable WHERE variableid = :id";
+		" FROM dbvariable WHERE variableid = ?";
 	static const char *SQL_VARIABLE_BY_DATASET_AND_SIGLE =
 		"SELECT variableid,optlock,datasetid,sigle,vartype,categvar,nom,description,genre,status"
-		" FROM dbvariable WHERE datasetid = :datasetid AND UPPER(LTRIM(RTRIM(sigle))) = :sigle";
+		" FROM dbvariable WHERE datasetid = ? AND UPPER(LTRIM(RTRIM(sigle))) = ?";
 	static const char *SQL_INSERT_VARIABLE =
 		"INSERT INTO dbvariable (datasetid,sigle,vartype,categvar,nom,description,genre,status)"
-		" VALUES (:datasetid,:sigle,:vartype,:categ,:name,:desc,:genre,:status)";
+		" VALUES (?,?,?,?,?,?,?,?)";
 	static const char *SQL_UPDATE_VARIABLE =
 		"UPDATE dbvariable SET optlock = optlock + 1,"
-		" sigle = :sigle, vartype = :vartype, categvar = :categ, nom = :name, description = :desc, genre = :genre, status = :status WHERE variableid = :id";
+		" sigle = ?, vartype = ?, categvar = ?, nom = ?, description = ?, genre = ?, status = ? WHERE variableid = ?";
 	static const char *SQL_REMOVE_VARIABLE =
-		"DELETE FROM dbvariable WHERE variableid = :id";
+		"DELETE FROM dbvariable WHERE variableid = ?";
 	static const char *SQL_FIND_DATASET_VARIABLES_COUNT =
-		"SELECT COUNT(*) FROM dbvariable WHERE datasetid = :datasetid";
+		"SELECT COUNT(*) FROM dbvariable WHERE datasetid = ?";
 	//
 	static const char *SQL_FIND_DATASET_INDIVS_COUNT =
 		"SELECT COUNT(*) FROM dbindiv"
-		" WHERE datasetid = :datasetid";
+		" WHERE datasetid = ?";
 	static const char *SQL_GET_DATASET_INDIV_IDS =
 		"SELECT individ FROM dbindiv"
-		" WHERE datasetid = :datasetid ORDER BY individ ASC"
-		" LIMIT :taken OFFSET :skip";
+		" WHERE datasetid = ? ORDER BY individ ASC"
+		" LIMIT ? OFFSET ?";
 	static const char *SQL_FIND_DATASET_INDIVS =
 		"SELECT individ,optlock,datasetid,sigle,nom,description,status"
-		" FROM dbindiv WHERE datasetid = :datasetid ORDER BY sigle"
-		" LIMIT :taken OFFSET :skip";
+		" FROM dbindiv WHERE datasetid = ? ORDER BY sigle"
+		" LIMIT ? OFFSET ?";
 	static const char *SQL_INDIV_BY_ID =
 		"SELECT individ,optlock,datasetid,sigle,nom,description,status"
-		" FROM dbindiv WHERE individ = :id";
+		" FROM dbindiv WHERE individ = ?";
 	static const char *SQL_INDIV_BY_DATASET_AND_SIGLE =
 		"SELECT individ,optlock,datasetid,sigle,nom,description,status"
-		" FROM dbindiv WHERE datasetid = :datasetid AND UPPER(LTRIM(RTRIM(sigle))) = :sigle";
+		" FROM dbindiv WHERE datasetid = ? AND UPPER(LTRIM(RTRIM(sigle))) = ?";
 	static const char *SQL_INSERT_INDIV =
 		"INSERT INTO dbindiv (datasetid,sigle,nom,description,status)"
-		" VALUES(:datasetid,:sigle,:name,:desc,:status)";
+		" VALUES(?,?,?,?,?)";
 	static const char *SQL_UPDATE_INDIV =
 		"UPDATE dbindiv SET optlock = OPTLOCK + 1,"
-		" sigle = :sigle, nom = :name, description = :desc, status = :status WHERE individ = :id";
+		" sigle = ?, nom = ?, description = ?, status = ? WHERE individ = ?";
 	static const char *SQL_REMOVE_INDIV =
-		"DELETE FROM dbindiv WHERE individ = :id";
+		"DELETE FROM dbindiv WHERE individ = ?";
 	//
 	static const char *SQL_VALUE_BY_ID =
 		"SELECT valueid,optlock,variableid,individ,stringval,status"
-		" FROM dbvalue WHERE valueid = :id";
+		" FROM dbvalue WHERE valueid = ?";
 	static const char *SQL_VALUES_BY_VARIABLE_INDIV =
 		"SELECT valueid,optlock,variableid,individ,stringval,status"
-		" FROM dbvalue WHERE variableid = :varid AND individ = :indid";
+		" FROM dbvalue WHERE variableid = ? AND individ = ?";
 	static const char *SQL_INSERT_VALUE =
 		"INSERT INTO dbvalue (variableid,individ,stringval,status)"
-		" VALUES(:varid,:indid,:stringval,:status)";
+		" VALUES(?,?,?,?)";
 	static const char *SQL_UPDATE_VALUE =
 		"UPDATE dbvalue SET optlock = optlock + 1,"
-		" stringval = :stringval, status = :status WHERE valueid = :id ";
+		" stringval = ?, status = ? WHERE valueid = ? ";
 	static const char *SQL_REMOVE_VALUE =
-		"DELETE from dbvalue WHERE valueid = :id";
+		"DELETE from dbvalue WHERE valueid = ?";
 	static const char *SQL_FIND_DATASET_VALUES_COUNT = "SELECT COUNT(*)"
 		" FROM dbvalue a, dbvariable b"
-		" WHERE a.variableid = b.variableid AND b.datasetid = :datasetid";
+		" WHERE a.variableid = b.variableid AND b.datasetid = ?";
 	static const char *SQL_FIND_DATASET_VALUES =
 		"SELECT a.valueid,a.optlock,a.variableid,a.individ,a.stringval,a.status"
 		" FROM dbvalue a, dbvariable b"
-		" WHERE a.variableid = b.variableid AND b.datasetid = :datasetid"
+		" WHERE a.variableid = b.variableid AND b.datasetid = ?"
 		" ORDER BY a.variableid ASC, a.individ ASC"
-		" LIMIT :taken OFFSET :skip";
+		" LIMIT ? OFFSET ?";
 	static const char *SQL_VALUES_BY_VARIABLEID =
 		"SELECT valueid,optlock,variableid,individ,stringval,status"
-		" FROM dbvalue WHERE variableid = :varid"
-		" LIMIT :taken OFFSET :skip";
+		" FROM dbvalue WHERE variableid = ?"
+		" LIMIT ? OFFSET ?";
 	static const char *SQL_VALUES_BY_INDIVID =
 		"SELECT valueid,optlock,variableid,individ,stringval,status"
-		" FROM dbvalue WHERE individ = :indid"
-		" LIMIT :taken OFFSET :skip";
+		" FROM dbvalue WHERE individ = ?"
+		" LIMIT ? OFFSET ?";
 	static const char *SQL_VARIABLE_VALUES_DISTINCT =
-		"SELECT DISTINCT stringval FROM dbvalue WHERE variableid = :varid"
-		" LIMIT :taken OFFSET :skip";
+		"SELECT DISTINCT stringval FROM dbvalue WHERE variableid = ?"
+		" LIMIT ? OFFSET ?";
 	static const char *SQL_DELETE_VARIABLE_VALUES =
-		"DELETE FROM dbvalue where variableid = :varid";
+		"DELETE FROM dbvalue where variableid = ?";
 	static const char *SQL_DELETE_INDIV_VALUES =
-		"DELETE FROM dbvalue where individ = :indid";
+		"DELETE FROM dbvalue where individ = ?";
 	static const char *SQL_FIND_DATASET_VARIABLES_TYPES =
-		"SELECT variableid,vartype FROM dbvariable WHERE datasetid = :datasetid";
+		"SELECT variableid,vartype FROM dbvariable WHERE datasetid = ?";
 	///////////////////////////////////////
 	static void log_error(const std::exception &err) {
-		dlog << dlib::LERROR << err.what();
+		std::cerr << "ERROR: " << err.what() << std::endl;
 	}
-	static void log_error(const dlib::sqlite_error &err) {
-		dlog << dlib::LERROR << " SQLite error: " << err.what();
+	static void log_error(sqlite_error &err) {
+		std::cerr << "ERROR: SQLite error: " << err.what() << std::endl;
 	}
 	void SQLiteStatHelper::begin_transaction(void) {
 		if (this->m_intransaction) {
 			return;
 		}
-		this->m_base.exec(SQL_BEGIN_TRANSACTION);
+		this->m_base.begin_transaction();
 		this->m_intransaction = true;
 	} // begin_transaction
 	void SQLiteStatHelper::commit_transaction(void) {
 		if (!this->m_intransaction) {
 			return;
 		}
-		this->m_base.exec(SQL_COMMIT_TRANSACTION);
+		this->m_base.commit_transaction();
 		this->m_intransaction = false;
 	} // commit_transaction
 	void SQLiteStatHelper::rollback_transaction(void) {
 		if (!this->m_intransaction) {
 			return;
 		}
-		dlog << dlib::LDEBUG << "SQLite database transaction rollback";
 		try {
-			this->m_base.exec(SQL_ROLLBACK_TRANSACTION);
+			this->m_base.rollback_transaction();
 			this->m_intransaction = false;
 		}
 		catch (...) {}
@@ -223,7 +215,6 @@ namespace info {
 	} // rollback_transaction
 	///////////////////////////////////////
 	bool SQLiteStatHelper::find_dataset_variables_types(const DBStatDataset &oSet, std::map<IntType, std::string> &oMap) {
-		DLIB_ASSERT(this->is_valid(), "this is not valid");
 		DBStatDataset xSet(oSet);
 		oMap.clear();
 		if (!this->find_dataset(xSet)) {
@@ -231,24 +222,19 @@ namespace info {
 		}
 		try {
 			IntType nDatasetId = xSet.id();
-			DLIB_ASSERT(nDatasetId != 0, "Dataset id is not valid");
-			dlib::statement q(this->m_base, SQL_FIND_DATASET_VARIABLES_TYPES);
-			unsigned long nPar = q.get_parameter_id(":datasetid");
-			DLIB_ASSERT(nPar > 0, "parameter not found");
-			q.bind(nPar, nDatasetId);
+			SQLite_Statement q(this->m_base, SQL_FIND_DATASET_VARIABLES_TYPES);
+			q.bind(1, nDatasetId);
 			q.exec();
 			while (q.move_next()) {
 				IntType key = 0;
 				q.get_column(0, key);
-				DLIB_ASSERT(key != 0, "key cannot be 0");
 				std::string val;
 				q.get_column(1, val);
-				DLIB_ASSERT(!val.empty(), "val cannot ne empty");
 				oMap[key] = val;
 			}
 			return (true);
 		}
-		catch (dlib::sqlite_error &err) {
+		catch (sqlite_error &err) {
 			log_error(err);
 		}
 		catch (std::exception &ex) {
@@ -269,10 +255,10 @@ namespace info {
 				return (false);
 			}
 			IntType nId = xind.id();
-			dlib::statement q1(this->m_base, SQL_DELETE_INDIV_VALUES);
+			SQLite_Statement q1(this->m_base, SQL_DELETE_INDIV_VALUES);
 			q1.bind(1, nId);
 			q1.exec();
-			dlib::statement q2(this->m_base, SQL_REMOVE_INDIV);
+			SQLite_Statement q2(this->m_base, SQL_REMOVE_INDIV);
 			q2.bind(1, nId);
 			q2.exec();
 			if (bInTrans  && bCommit) {
@@ -280,7 +266,7 @@ namespace info {
 			}
 			return (true);
 		}// try
-		catch (dlib::sqlite_error &err) {
+		catch (sqlite_error &err) {
 			log_error(err);
 			if (bInTrans) {
 				this->rollback_transaction();
@@ -306,10 +292,10 @@ namespace info {
 				return (false);
 			}
 			IntType nId = xind.id();
-			dlib::statement q1(this->m_base, SQL_DELETE_VARIABLE_VALUES);
+			SQLite_Statement q1(this->m_base, SQL_DELETE_VARIABLE_VALUES);
 			q1.bind(1, nId);
 			q1.exec();
-			dlib::statement q2(this->m_base, SQL_REMOVE_VARIABLE);
+			SQLite_Statement q2(this->m_base, SQL_REMOVE_VARIABLE);
 			q2.bind(1, nId);
 			q2.exec();
 			if (bInTrans  && bCommit) {
@@ -317,7 +303,7 @@ namespace info {
 			}
 			return (true);
 		}// try
-		catch (dlib::sqlite_error &err) {
+		catch (sqlite_error &err) {
 			log_error(err);
 			if (bInTrans) {
 				this->rollback_transaction();
@@ -340,7 +326,7 @@ namespace info {
 				return (false);
 			}
 			IntType nDatasetId = xSet.id();
-			dlib::statement q(this->m_base, SQL_FIND_DATASET_VALUES_COUNT);
+			SQLite_Statement q(this->m_base, SQL_FIND_DATASET_VALUES_COUNT);
 			q.bind(1, nDatasetId);
 			q.exec();
 			if (q.move_next()) {
@@ -348,7 +334,7 @@ namespace info {
 			}
 			return (true);
 		}// try
-		catch (dlib::sqlite_error &err) {
+		catch (sqlite_error &err) {
 			log_error(err);
 		}
 		catch (std::exception &ex) {
@@ -373,7 +359,7 @@ namespace info {
 				return (false);
 			}
 			IntType nDatasetId = xSet.id();
-			dlib::statement q(this->m_base, SQL_FIND_DATASET_VALUES);
+			SQLite_Statement q(this->m_base, SQL_FIND_DATASET_VALUES);
 			q.bind(1, nDatasetId);
 			q.bind(2, count);
 			q.bind(3, skip);
@@ -385,7 +371,7 @@ namespace info {
 			}
 			return (true);
 		}// try
-		catch (dlib::sqlite_error &err) {
+		catch (sqlite_error &err) {
 			log_error(err);
 		}
 		catch (std::exception &ex) {
@@ -408,7 +394,7 @@ namespace info {
 				return (false);
 			}
 			IntType nId = oVar.id();
-			dlib::statement q(this->m_base, SQL_VALUES_BY_VARIABLEID);
+			SQLite_Statement q(this->m_base, SQL_VALUES_BY_VARIABLEID);
 			q.bind(1, nId);
 			q.bind(2, count);
 			q.bind(3, skip);
@@ -420,7 +406,7 @@ namespace info {
 			}
 			return (true);
 		}// try
-		catch (dlib::sqlite_error &err) {
+		catch (sqlite_error &err) {
 			log_error(err);
 		}
 		catch (std::exception &ex) {
@@ -445,7 +431,7 @@ namespace info {
 				return (false);
 			}
 			IntType nId = oVar.id();
-			dlib::statement q(this->m_base, SQL_VARIABLE_VALUES_DISTINCT);
+			SQLite_Statement q(this->m_base, SQL_VARIABLE_VALUES_DISTINCT);
 			q.bind(1, nId);
 			q.bind(2, count);
 			q.bind(3, skip);
@@ -459,7 +445,7 @@ namespace info {
 			}
 			return (true);
 		}// try
-		catch (dlib::sqlite_error &err) {
+		catch (sqlite_error &err) {
 			log_error(err);
 		}
 		catch (std::exception &ex) {
@@ -483,7 +469,7 @@ namespace info {
 				return (false);
 			}
 			IntType nId = oInd.id();
-			dlib::statement q(this->m_base, SQL_VALUES_BY_INDIVID);
+			SQLite_Statement q(this->m_base, SQL_VALUES_BY_INDIVID);
 			q.bind(1, nId);
 			q.bind(2, count);
 			q.bind(3, skip);
@@ -495,7 +481,7 @@ namespace info {
 			}
 			return (true);
 		}// try
-		catch (dlib::sqlite_error &err) {
+		catch (sqlite_error &err) {
 			log_error(err);
 		}
 		catch (std::exception &ex) {
@@ -514,9 +500,9 @@ namespace info {
 				this->begin_transaction();
 				bInTrans = true;
 			}
-			dlib::statement qInsert(this->m_base, SQL_INSERT_VALUE);
-			dlib::statement qUpdate(this->m_base, SQL_UPDATE_VALUE);
-			dlib::statement qRemove(this->m_base, SQL_REMOVE_VALUE);
+			SQLite_Statement qInsert(this->m_base, SQL_INSERT_VALUE);
+			SQLite_Statement qUpdate(this->m_base, SQL_UPDATE_VALUE);
+			SQLite_Statement qRemove(this->m_base, SQL_REMOVE_VALUE);
 			//
 			std::for_each(oVals.begin(), oVals.end(), [&](const DBStatValue &oVal) {
 				bool mustRemove = bRemove;
@@ -562,7 +548,7 @@ namespace info {
 			}
 			return (true);
 		}// try
-		catch (dlib::sqlite_error &err) {
+		catch (sqlite_error &err) {
 			log_error(err);
 			if (bInTrans) {
 				this->rollback_transaction();
@@ -580,7 +566,7 @@ namespace info {
 	bool SQLiteStatHelper::find_value(DBStatValue &cur) {
 		try {
 			IntType nId = cur.id();
-			dlib::statement q(this->m_base, SQL_VALUE_BY_ID);
+			SQLite_Statement q(this->m_base, SQL_VALUE_BY_ID);
 			q.bind(1, nId);
 			q.exec();
 			if (q.move_next()) {
@@ -590,7 +576,7 @@ namespace info {
 			}
 			IntType nVarId = cur.get_variable_id();
 			IntType nIndId = cur.get_indiv_id();
-			dlib::statement q2(this->m_base, SQL_VALUES_BY_VARIABLE_INDIV);
+			SQLite_Statement q2(this->m_base, SQL_VALUES_BY_VARIABLE_INDIV);
 			q2.bind(1, nVarId);
 			q2.bind(2, nIndId);
 			q2.exec();
@@ -600,7 +586,7 @@ namespace info {
 				return (true);
 			}
 		}// try
-		catch (dlib::sqlite_error &err) {
+		catch (sqlite_error &err) {
 			log_error(err);
 		}
 		catch (std::exception &ex) {
@@ -617,7 +603,7 @@ namespace info {
 				return (false);
 			}
 			IntType nDatasetId = xSet.id();
-			dlib::statement q(this->m_base, SQL_FIND_DATASET_INDIVS_COUNT);
+			SQLite_Statement q(this->m_base, SQL_FIND_DATASET_INDIVS_COUNT);
 			q.bind(1, nDatasetId);
 			q.exec();
 			if (q.move_next()) {
@@ -625,7 +611,7 @@ namespace info {
 			}
 			return (true);
 		}// try
-		catch (dlib::sqlite_error &err) {
+		catch (sqlite_error &err) {
 			log_error(err);
 		}
 		catch (std::exception &ex) {
@@ -644,8 +630,8 @@ namespace info {
 				this->begin_transaction();
 				bInTrans = true;
 			}
-			dlib::statement qInsert(this->m_base, SQL_INSERT_INDIV);
-			dlib::statement qUpdate(this->m_base, SQL_UPDATE_INDIV);
+			SQLite_Statement qInsert(this->m_base, SQL_INSERT_INDIV);
+			SQLite_Statement qUpdate(this->m_base, SQL_UPDATE_INDIV);
 			//
 			std::for_each(oInds.begin(), oInds.end(), [&](const DBStatIndiv &oInd) {
 				DBStatIndiv xInd(oInd);
@@ -686,7 +672,7 @@ namespace info {
 			}
 			return (true);
 		}// try
-		catch (dlib::sqlite_error &err) {
+		catch (sqlite_error &err) {
 			log_error(err);
 			if (bInTrans) {
 				this->rollback_transaction();
@@ -716,7 +702,7 @@ namespace info {
 				return (false);
 			}
 			IntType nDatasetId = xSet.id();
-			dlib::statement q(this->m_base, SQL_GET_DATASET_INDIV_IDS);
+			SQLite_Statement q(this->m_base, SQL_GET_DATASET_INDIV_IDS);
 			q.bind(1, nDatasetId);
 			q.bind(2, count);
 			q.bind(3, skip);
@@ -730,7 +716,7 @@ namespace info {
 			}
 			return (true);
 		}// try
-		catch (dlib::sqlite_error &err) {
+		catch (sqlite_error &err) {
 			log_error(err);
 		}
 		catch (std::exception &ex) {
@@ -754,7 +740,7 @@ namespace info {
 				return (false);
 			}
 			IntType nDatasetId = xSet.id();
-			dlib::statement q(this->m_base, SQL_FIND_DATASET_INDIVS);
+			SQLite_Statement q(this->m_base, SQL_FIND_DATASET_INDIVS);
 			q.bind(1, nDatasetId);
 			q.bind(2, count);
 			q.bind(3, skip);
@@ -766,7 +752,7 @@ namespace info {
 			}
 			return (true);
 		}// try
-		catch (dlib::sqlite_error &err) {
+		catch (sqlite_error &err) {
 			log_error(err);
 		}
 		catch (std::exception &ex) {
@@ -779,7 +765,7 @@ namespace info {
 		try {
 			IntType nId = cur.id();
 			if (nId != 0) {
-				dlib::statement q(this->m_base, SQL_INDIV_BY_ID);
+				SQLite_Statement q(this->m_base, SQL_INDIV_BY_ID);
 				q.bind(1, nId);
 				q.exec();
 				if (q.move_next()) {
@@ -791,7 +777,7 @@ namespace info {
 			cur.get_sigle(sigle);
 			IntType nDatasetId = cur.get_dataset_id();
 			if ((!sigle.empty()) && (nDatasetId != 0)) {
-				dlib::statement q(this->m_base, SQL_INDIV_BY_DATASET_AND_SIGLE);
+				SQLite_Statement q(this->m_base, SQL_INDIV_BY_DATASET_AND_SIGLE);
 				q.bind(1, nDatasetId);
 				q.bind(2, sigle);
 				q.exec();
@@ -802,7 +788,7 @@ namespace info {
 			}
 			return (false);
 		}// try
-		catch (dlib::sqlite_error &err) {
+		catch (sqlite_error &err) {
 			log_error(err);
 		}
 		catch (std::exception &ex) {
@@ -819,7 +805,7 @@ namespace info {
 				return (false);
 			}
 			IntType nDatasetId = xSet.id();
-			dlib::statement q(this->m_base, SQL_FIND_DATASET_VARIABLES_COUNT);
+			SQLite_Statement q(this->m_base, SQL_FIND_DATASET_VARIABLES_COUNT);
 			q.bind(1, nDatasetId);
 			q.exec();
 			if (q.move_next()) {
@@ -827,7 +813,7 @@ namespace info {
 			}
 			return (true);
 		}// try
-		catch (dlib::sqlite_error &err) {
+		catch (sqlite_error &err) {
 			log_error(err);
 		}
 		catch (std::exception &ex) {
@@ -845,8 +831,8 @@ namespace info {
 				this->begin_transaction();
 				bInTrans = true;
 			}
-			dlib::statement qInsert(this->m_base, SQL_INSERT_VARIABLE);
-			dlib::statement qUpdate(this->m_base, SQL_UPDATE_VARIABLE);
+			SQLite_Statement qInsert(this->m_base, SQL_INSERT_VARIABLE);
+			SQLite_Statement qUpdate(this->m_base, SQL_UPDATE_VARIABLE);
 			//
 			std::for_each(oVars.begin(), oVars.end(), [&](const DBStatVariable &oVar) {
 				DBStatVariable xVar(oVar);
@@ -896,7 +882,7 @@ namespace info {
 			}
 			return (true);
 		}// try
-		catch (dlib::sqlite_error &err) {
+		catch (sqlite_error &err) {
 			log_error(err);
 			if (bInTrans) {
 				this->rollback_transaction();
@@ -926,7 +912,7 @@ namespace info {
 				return (false);
 			}
 			IntType nDatasetId = xSet.id();
-			dlib::statement q(this->m_base, SQL_FIND_DATASET_VARIABLES_IDS);
+			SQLite_Statement q(this->m_base, SQL_FIND_DATASET_VARIABLES_IDS);
 			q.bind(1, nDatasetId);
 			q.bind(2, count);
 			q.bind(3, skip);
@@ -940,7 +926,7 @@ namespace info {
 			}
 			return (true);
 		}// try
-		catch (dlib::sqlite_error &err) {
+		catch (sqlite_error &err) {
 			log_error(err);
 		}
 		catch (std::exception &ex) {
@@ -964,7 +950,7 @@ namespace info {
 				return (false);
 			}
 			IntType nDatasetId = xSet.id();
-			dlib::statement q(this->m_base, SQL_FIND_DATASET_VARIABLES);
+			SQLite_Statement q(this->m_base, SQL_FIND_DATASET_VARIABLES);
 			q.bind(1, nDatasetId);
 			q.bind(2, count);
 			q.bind(3, skip);
@@ -976,7 +962,7 @@ namespace info {
 			}
 			return (true);
 		}// try
-		catch (dlib::sqlite_error &err) {
+		catch (sqlite_error &err) {
 			log_error(err);
 		}
 		catch (std::exception &ex) {
@@ -990,7 +976,7 @@ namespace info {
 		try {
 			IntType nId = cur.id();
 			if (nId != 0) {
-				dlib::statement q(this->m_base, SQL_VARIABLE_BY_ID);
+				SQLite_Statement q(this->m_base, SQL_VARIABLE_BY_ID);
 				q.bind(1, nId);
 				q.exec();
 				if (q.move_next()) {
@@ -1002,7 +988,7 @@ namespace info {
 			cur.get_sigle(sigle);
 			IntType nDatasetId = cur.get_dataset_id();
 			if ((!sigle.empty()) && (nDatasetId != 0)) {
-				dlib::statement q(this->m_base, SQL_VARIABLE_BY_DATASET_AND_SIGLE);
+				SQLite_Statement q(this->m_base, SQL_VARIABLE_BY_DATASET_AND_SIGLE);
 				q.bind(1, nDatasetId);
 				q.bind(2, sigle);
 				q.exec();
@@ -1013,7 +999,7 @@ namespace info {
 			}
 			return (false);
 		}// try
-		catch (dlib::sqlite_error &err) {
+		catch (sqlite_error &err) {
 			log_error(err);
 		}
 		catch (std::exception &ex) {
@@ -1059,7 +1045,7 @@ namespace info {
 					});
 				}
 			}
-			dlib::statement qq(this->m_base, SQL_REMOVE_DATASET);
+			SQLite_Statement qq(this->m_base, SQL_REMOVE_DATASET);
 			qq.bind(1, nId);
 			qq.exec();
 			if (bCommit && bInTrans) {
@@ -1067,7 +1053,7 @@ namespace info {
 			}
 			return (true);
 		}// try
-		catch (dlib::sqlite_error &err) {
+		catch (sqlite_error &err) {
 			log_error(err);
 			if (bInTrans) {
 				this->rollback_transaction();
@@ -1101,7 +1087,7 @@ namespace info {
 			cur.get_desc(desc);
 			cur.get_status(status);
 			if (nId != 0) {
-				dlib::statement q(this->m_base, SQL_UPDATE_DATASET);
+				SQLite_Statement q(this->m_base, SQL_UPDATE_DATASET);
 				q.bind(1, sigle);
 				q.bind(2, name);
 				q.bind(3, desc);
@@ -1110,7 +1096,7 @@ namespace info {
 				q.exec();
 			}
 			else {
-				dlib::statement q(this->m_base, SQL_INSERT_DATASET);
+				SQLite_Statement q(this->m_base, SQL_INSERT_DATASET);
 				q.bind(1, sigle);
 				q.bind(2, name);
 				q.bind(3, desc);
@@ -1122,7 +1108,7 @@ namespace info {
 			}
 			return (this->find_dataset(cur));
 		}// try
-		catch (dlib::sqlite_error &err) {
+		catch (sqlite_error &err) {
 			log_error(err);
 			if (bInTrans) {
 				this->rollback_transaction();
@@ -1141,7 +1127,7 @@ namespace info {
 		try {
 			IntType nId = cur.id();
 			if (nId != 0) {
-				dlib::statement q(this->m_base, SQL_FIND_DATASET_BY_ID);
+				SQLite_Statement q(this->m_base, SQL_FIND_DATASET_BY_ID);
 				q.bind(1, nId);
 				q.exec();
 				if (q.move_next()) {
@@ -1152,7 +1138,7 @@ namespace info {
 			std::string sigle;
 			cur.get_sigle(sigle);
 			if (!sigle.empty()) {
-				dlib::statement q(this->m_base, SQL_FIND_DATASET_BY_SIGLE);
+				SQLite_Statement q(this->m_base, SQL_FIND_DATASET_BY_SIGLE);
 				q.bind(1, sigle);
 				q.exec();
 				if (q.move_next()) {
@@ -1162,7 +1148,7 @@ namespace info {
 			}
 			return (false);
 		}// try
-		catch (dlib::sqlite_error &err) {
+		catch (sqlite_error &err) {
 			log_error(err);
 		}
 		catch (std::exception &ex) {
@@ -1181,7 +1167,7 @@ namespace info {
 			if (count < 1) {
 				count = 100;
 			}
-			dlib::statement q(this->m_base, SQL_FIND_ALL_DATASETS);
+			SQLite_Statement q(this->m_base, SQL_FIND_ALL_DATASETS);
 			q.bind(1, count);
 			q.bind(2, skip);
 			q.exec();
@@ -1192,7 +1178,7 @@ namespace info {
 			}
 			return (true);
 		}// try
-		catch (dlib::sqlite_error &err) {
+		catch (sqlite_error &err) {
 			log_error(err);
 		}
 		catch (std::exception &ex) {
@@ -1211,7 +1197,7 @@ namespace info {
 			if (count < 1) {
 				count = 100;
 			}
-			dlib::statement q(this->m_base, SQL_FIND_ALL_DATASETS_IDS);
+			SQLite_Statement q(this->m_base, SQL_FIND_ALL_DATASETS_IDS);
 			q.bind(1, count);
 			q.bind(2, skip);
 			q.exec();
@@ -1224,7 +1210,7 @@ namespace info {
 			}
 			return (true);
 		}// try
-		catch (dlib::sqlite_error &err) {
+		catch (sqlite_error &err) {
 			log_error(err);
 		}
 		catch (std::exception &ex) {
@@ -1235,14 +1221,14 @@ namespace info {
 	bool SQLiteStatHelper::find_all_datasets_count(int &nCount) {
 		try {
 			nCount = 0;
-			dlib::statement q(this->m_base, SQL_FIND_DATASETS_COUNT);
+			SQLite_Statement q(this->m_base, SQL_FIND_DATASETS_COUNT);
 			q.exec();
 			if (q.move_next()) {
 				q.get_column(0, nCount);
 			}
 			return (true);
 		}// try
-		catch (dlib::sqlite_error &err) {
+		catch (sqlite_error &err) {
 			log_error(err);
 		}
 		catch (std::exception &ex) {
@@ -1251,7 +1237,7 @@ namespace info {
 		return (false);
 	}//find_dataset_variables_count
 	 ////////////////////////////////////
-	void SQLiteStatHelper::read_dataset(dlib::statement &q, DBStatDataset &cur) {
+	void SQLiteStatHelper::read_dataset(SQLite_Statement &q, DBStatDataset &cur) {
 		std::string sSigle, sName, status, sDesc;
 		IntType nId, nVersion;
 		q.get_column(0, nId);
@@ -1263,7 +1249,7 @@ namespace info {
 		cur = DBStatDataset(nId, nVersion, status, sSigle, sName, sDesc);
 	}
 
-	void SQLiteStatHelper::read_variable(dlib::statement &q, DBStatVariable &cur) {
+	void SQLiteStatHelper::read_variable(SQLite_Statement &q, DBStatVariable &cur) {
 		std::string sSigle, sName, status, sDesc, sGenre, sType;
 		IntType nId, nVersion, nCateg, nDatasetId;
 		q.get_column(0, nId);
@@ -1281,7 +1267,7 @@ namespace info {
 			bCateg, sType, sGenre);
 	}
 
-	void SQLiteStatHelper::read_indiv(dlib::statement &q, DBStatIndiv &cur) {
+	void SQLiteStatHelper::read_indiv(SQLite_Statement &q, DBStatIndiv &cur) {
 		std::string sSigle, sName, status, sDesc;
 		IntType nId, nVersion, nDatasetId;
 		q.get_column(0, nId);
@@ -1295,7 +1281,7 @@ namespace info {
 		cur = DBStatIndiv(nId, nVersion, status, sSigle, sName, sDesc, nDatasetId);
 	}
 
-	void SQLiteStatHelper::read_value(dlib::statement &q, DBStatValue &cur) {
+	void SQLiteStatHelper::read_value(SQLite_Statement &q, DBStatValue &cur) {
 		std::string status, sval;
 		IntType nId, nVersion, nVarId, nIndId;
 		q.get_column(0, nId);
@@ -1316,14 +1302,14 @@ namespace info {
 				this->check_schema();
 			}
 		}
-		catch (dlib::sqlite_error &err) {
+		catch (sqlite_error &err) {
 			log_error(err);
 		}
 		catch (std::exception &ex) {
 			log_error(ex);
 		}
 		catch (...) {
-			dlog << dlib::LERROR << "Unknown exception in open...";
+			std::cerr << "ERROR : Unknown exception in open..." << std::endl;
 		}
 	}
 	SQLiteStatHelper::SQLiteStatHelper(const std::wstring &sName /*= DEFAULT_DATABASE_NAME*/) {
@@ -1335,13 +1321,13 @@ namespace info {
 				this->check_schema();
 			}
 		}
-		catch (dlib::sqlite_error &err) {
+		catch (sqlite_error &err) {
 			log_error(err);
 		}
 		catch (std::exception &ex) {
 			log_error(ex);
 		} catch(...){
-			dlog << dlib::LERROR << "Unknown exception in open...";
+			std::cerr << "ERROR : Unknown exception in open..." << std::endl;
 		}
 	}
 	void SQLiteStatHelper::check_schema(void) {
@@ -1354,7 +1340,7 @@ namespace info {
 				i++;
 			}// i
 		}// try
-		catch (dlib::sqlite_error &err) {
+		catch (sqlite_error &err) {
 			log_error(err);
 		}
 		catch (std::exception &ex) {

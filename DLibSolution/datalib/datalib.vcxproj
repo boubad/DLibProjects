@@ -150,6 +150,8 @@
     <ClInclude Include="include\info_constants.h" />
     <ClInclude Include="include\istorehelper.h" />
     <ClInclude Include="include\sqlitestathelper.h" />
+    <ClInclude Include="include\sqlite_database.h" />
+    <ClInclude Include="include\sqlite_statement.h" />
     <ClInclude Include="include\stringconvert.h" />
     <ClInclude Include="src\sqlite3.h" />
     <ClInclude Include="src\sqlite3ext.h" />
@@ -164,6 +166,8 @@
       <SDLCheck Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</SDLCheck>
     </ClCompile>
     <ClCompile Include="src\sqlitestathelper.cpp" />
+    <ClCompile Include="src\sqlite_database.cpp" />
+    <ClCompile Include="src\sqlite_statement.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

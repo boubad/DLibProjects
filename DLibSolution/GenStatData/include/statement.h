@@ -10,6 +10,8 @@
 //////////////////////////////
 #include <vector>
 #include "dbvalue.h"
+//////////////////////////////////
+#include <dlib/threads.h>
 /////////////////////////////////
 typedef struct sqlite3_stmt sqlite3_stmt;
 ///////////////////////////////
@@ -27,6 +29,7 @@ private:
 	int m_lastcode;
 	values_vector m_vals;
 	strings_vector m_names;
+	dlib::mutex _mutex;
 private:
 	void init(Database &oBase, const char *pszSQL);
 	void init(Database *pBase, const char *pszSQL);

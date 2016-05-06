@@ -48,6 +48,12 @@
     <ClInclude Include="src\sqlite3ext.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="include\sqlite_database.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\sqlite_statement.h">
+      <Filter>include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\dbstatitems.cpp">
@@ -60,6 +66,12 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="src\sqlitestathelper.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sqlite_database.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sqlite_statement.cpp">
       <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>

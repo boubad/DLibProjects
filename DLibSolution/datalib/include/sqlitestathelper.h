@@ -2,7 +2,7 @@
 #ifndef __SQLITESTATHELPER_H__
 #define __SQLITESTATHELPER_H__
 ////////////////////////////////
-#include <dlib/sqlite.h>
+#include "sqlite_database.h"
 /////////////////////////////////////
 #include "istorehelper.h"
 //////////////////////////////////
@@ -15,13 +15,13 @@ namespace info {
 		SQLiteStatHelper & operator=(const SQLiteStatHelper &other);
 	private:
 		bool m_intransaction;
-		dlib::database m_base;
+		SQLite_Database m_base;
 		//
 		void check_schema(void);
-		void read_dataset(dlib::statement &q, DBStatDataset &cur);
-		void read_variable(dlib::statement &q, DBStatVariable &cur);
-		void read_indiv(dlib::statement &q, DBStatIndiv &cur);
-		void read_value(dlib::statement &q, DBStatValue &cur);
+		void read_dataset(SQLite_Statement &q, DBStatDataset &cur);
+		void read_variable(SQLite_Statement &q, DBStatVariable &cur);
+		void read_indiv(SQLite_Statement &q, DBStatIndiv &cur);
+		void read_value(SQLite_Statement &q, DBStatValue &cur);
 	public:
 		static const std::string DEFAULT_DATABASE_NAME;
 	public:
