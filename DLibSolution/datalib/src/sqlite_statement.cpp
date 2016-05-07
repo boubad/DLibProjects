@@ -272,6 +272,14 @@ namespace info {
 		} // icol
 		return (true);
 	} // next
+	int SQLite_Statement::get_parameters_count(void) {
+		int nRet = 0;
+		::sqlite3_stmt *p = this->m_pstmt;
+		if (p != nullptr) {
+			nRet = ::sqlite3_bind_parameter_count(p);
+		}
+		return (nRet);
+	}// get_parameters_count
 	bool SQLite_Statement::close(void) {
 		bool bRet = true;
 		::sqlite3_stmt *p = this->m_pstmt;

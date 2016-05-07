@@ -1,9 +1,12 @@
 #include "../include/sqlitestathelper.h"
+#include "../include/sqlite_database.h"
 #include "../include/stringconvert.h"
 #include "../include/sqlite_statement.h"
 /////////////////////////////////////
-#include <algorithm>
 #include <iostream>
+////////////////////////////////////
+#include <boost/assert.hpp>
+#include <boost/foreach.hpp>
 ///////////////////////////////////
 namespace info {
 	//////////////////////////////////////
@@ -188,28 +191,31 @@ namespace info {
 		std::cerr << "ERROR: " << err.what() << std::endl;
 	}
 	static void log_error(sqlite_error &err) {
-		std::cerr << "ERROR: SQLite error: " << err.what() << std::endl;
+		std::cerr << "ERROR: SQLite error: " << err.code() << " , " << err.what() << std::endl;
 	}
 	void SQLiteStatHelper::begin_transaction(void) {
+		BOOST_ASSERT(this->is_valid());
 		if (this->m_intransaction) {
 			return;
 		}
-		this->m_base.begin_transaction();
+		this->m_base->begin_transaction();
 		this->m_intransaction = true;
 	} // begin_transaction
 	void SQLiteStatHelper::commit_transaction(void) {
+		BOOST_ASSERT(this->is_valid());
 		if (!this->m_intransaction) {
 			return;
 		}
-		this->m_base.commit_transaction();
+		this->m_base->commit_transaction();
 		this->m_intransaction = false;
 	} // commit_transaction
 	void SQLiteStatHelper::rollback_transaction(void) {
+		BOOST_ASSERT(this->is_valid());
 		if (!this->m_intransaction) {
 			return;
 		}
 		try {
-			this->m_base.rollback_transaction();
+			this->m_base->rollback_transaction();
 			this->m_intransaction = false;
 		}
 		catch (...) {}
@@ -217,6 +223,7 @@ namespace info {
 	} // rollback_transaction
 	///////////////////////////////////////
 	bool SQLiteStatHelper::find_dataset_variables_types(const DBStatDataset &oSet, std::map<IntType, std::string> &oMap) {
+		BOOST_ASSERT(this->is_valid());
 		DBStatDataset xSet(oSet);
 		oMap.clear();
 		if (!this->find_dataset(xSet)) {
@@ -224,9 +231,11 @@ namespace info {
 		}
 		try {
 			IntType nDatasetId = xSet.id();
-			SQLite_Statement q(this->m_base, SQL_FIND_DATASET_VARIABLES_TYPES);
+			SQLite_Statement q(*(this->m_base), SQL_FIND_DATASET_VARIABLES_TYPES);
+			BOOST_ASSERT(q.get_parameters_count() == 1);
 			q.bind(1, nDatasetId);
 			q.exec();
+			BOOST_ASSERT(q.get_num_columns() == 2);
 			while (q.move_next()) {
 				IntType key = 0;
 				q.get_column(0, key);
@@ -246,6 +255,7 @@ namespace info {
 	}//find_dataset_variables_types
 
 	bool SQLiteStatHelper::remove_indiv(const DBStatIndiv &oInd, bool bCommit /*= true*/) {
+		BOOST_ASSERT(this->is_valid());
 		bool bInTrans = false;
 		try {
 			if (bCommit) {
@@ -257,10 +267,12 @@ namespace info {
 				return (false);
 			}
 			IntType nId = xind.id();
-			SQLite_Statement q1(this->m_base, SQL_DELETE_INDIV_VALUES);
+			SQLite_Statement q1(*(this->m_base), SQL_DELETE_INDIV_VALUES);
+			BOOST_ASSERT(q1.get_parameters_count() == 1);
 			q1.bind(1, nId);
 			q1.exec();
-			SQLite_Statement q2(this->m_base, SQL_REMOVE_INDIV);
+			SQLite_Statement q2(*(this->m_base), SQL_REMOVE_INDIV);
+			BOOST_ASSERT(q2.get_parameters_count() == 1);
 			q2.bind(1, nId);
 			q2.exec();
 			if (bInTrans  && bCommit) {
@@ -283,6 +295,7 @@ namespace info {
 		return (false);
 	}//remove_indiv
 	bool SQLiteStatHelper::remove_variable(const DBStatVariable &oVar, bool bCommit /*= true*/) {
+		BOOST_ASSERT(this->is_valid());
 		bool bInTrans = false;
 		try {
 			if (bCommit) {
@@ -294,10 +307,12 @@ namespace info {
 				return (false);
 			}
 			IntType nId = xind.id();
-			SQLite_Statement q1(this->m_base, SQL_DELETE_VARIABLE_VALUES);
+			SQLite_Statement q1(*(this->m_base), SQL_DELETE_VARIABLE_VALUES);
+			BOOST_ASSERT(q1.get_parameters_count() == 1);
 			q1.bind(1, nId);
 			q1.exec();
-			SQLite_Statement q2(this->m_base, SQL_REMOVE_VARIABLE);
+			SQLite_Statement q2(*(this->m_base), SQL_REMOVE_VARIABLE);
+			BOOST_ASSERT(q2.get_parameters_count() == 1);
 			q2.bind(1, nId);
 			q2.exec();
 			if (bInTrans  && bCommit) {
@@ -321,6 +336,7 @@ namespace info {
 	}//remove_variable
 	 //////////////////// VALUES /////////////////////
 	bool  SQLiteStatHelper::find_dataset_values_count(const DBStatDataset &oSet, int &nCount) {
+		BOOST_ASSERT(this->is_valid());
 		try {
 			DBStatDataset xSet(oSet);
 			nCount = 0;
@@ -328,9 +344,11 @@ namespace info {
 				return (false);
 			}
 			IntType nDatasetId = xSet.id();
-			SQLite_Statement q(this->m_base, SQL_FIND_DATASET_VALUES_COUNT);
+			SQLite_Statement q(*(this->m_base), SQL_FIND_DATASET_VALUES_COUNT);
+			BOOST_ASSERT(q.get_parameters_count() == 1);
 			q.bind(1, nDatasetId);
 			q.exec();
+			BOOST_ASSERT(q.get_num_columns() == 1);
 			if (q.move_next()) {
 				q.get_column(0, nCount);
 			}
@@ -348,20 +366,22 @@ namespace info {
 	bool  SQLiteStatHelper::find_dataset_values(const DBStatDataset &oSet,
 		std::vector<DBStatValue> &oList,
 		int skip /*= 0*/, int count /*= 100*/) {
+		BOOST_ASSERT(this->is_valid());
 		try {
 			oList.clear();
 			if (skip < 0) {
 				skip = 0;
 			}
 			if (count < 1) {
-				count = 100;
+				count = DATATRANSFER_CHUNK_SIZE;
 			}
 			DBStatDataset xSet(oSet);
 			if (!this->find_dataset(xSet)) {
 				return (false);
 			}
 			IntType nDatasetId = xSet.id();
-			SQLite_Statement q(this->m_base, SQL_FIND_DATASET_VALUES);
+			SQLite_Statement q(*(this->m_base), SQL_FIND_DATASET_VALUES);
+			BOOST_ASSERT(q.get_parameters_count() == 3);
 			q.bind(1, nDatasetId);
 			q.bind(2, count);
 			q.bind(3, skip);
@@ -384,19 +404,21 @@ namespace info {
 
 	bool  SQLiteStatHelper::find_variable_values(DBStatVariable &oVar, std::vector<DBStatValue> &oList,
 		int skip /*= 0*/, int count /*= 100*/) {
+		BOOST_ASSERT(this->is_valid());
 		try {
 			oList.clear();
 			if (skip < 0) {
 				skip = 0;
 			}
 			if (count < 1) {
-				count = 100;
+				count = DATATRANSFER_CHUNK_SIZE;
 			}
 			if (!this->find_variable(oVar)) {
 				return (false);
 			}
 			IntType nId = oVar.id();
-			SQLite_Statement q(this->m_base, SQL_VALUES_BY_VARIABLEID);
+			SQLite_Statement q(*(this->m_base), SQL_VALUES_BY_VARIABLEID);
+			BOOST_ASSERT(q.get_parameters_count() == 3);
 			q.bind(1, nId);
 			q.bind(2, count);
 			q.bind(3, skip);
@@ -420,6 +442,7 @@ namespace info {
 	bool  SQLiteStatHelper::find_variable_distinct_values(DBStatVariable &oVar,
 		std::vector<std::string> &oList,
 		int skip /*= 0*/, int count /*= 100*/) {
+		BOOST_ASSERT(this->is_valid());
 		oList.clear();
 		try {
 			oList.clear();
@@ -427,13 +450,14 @@ namespace info {
 				skip = 0;
 			}
 			if (count < 1) {
-				count = 100;
+				count = DATATRANSFER_CHUNK_SIZE;
 			}
 			if (!this->find_variable(oVar)) {
 				return (false);
 			}
 			IntType nId = oVar.id();
-			SQLite_Statement q(this->m_base, SQL_VARIABLE_VALUES_DISTINCT);
+			SQLite_Statement q(*(this->m_base), SQL_VARIABLE_VALUES_DISTINCT);
+			BOOST_ASSERT(q.get_parameters_count() == 3);
 			q.bind(1, nId);
 			q.bind(2, count);
 			q.bind(3, skip);
@@ -458,6 +482,7 @@ namespace info {
 
 	bool  SQLiteStatHelper::find_indiv_values(DBStatIndiv &oInd, std::vector<DBStatValue> &oList,
 		int skip /*= 0*/, int count /*= 100*/) {
+		BOOST_ASSERT(this->is_valid());
 		oList.clear();
 		try {
 			oList.clear();
@@ -465,13 +490,14 @@ namespace info {
 				skip = 0;
 			}
 			if (count < 1) {
-				count = 100;
+				count = DATATRANSFER_CHUNK_SIZE;
 			}
 			if (!this->find_indiv(oInd)) {
 				return (false);
 			}
 			IntType nId = oInd.id();
-			SQLite_Statement q(this->m_base, SQL_VALUES_BY_INDIVID);
+			SQLite_Statement q(*(this->m_base), SQL_VALUES_BY_INDIVID);
+			BOOST_ASSERT(q.get_parameters_count() == 3);
 			q.bind(1, nId);
 			q.bind(2, count);
 			q.bind(3, skip);
@@ -496,17 +522,22 @@ namespace info {
 	bool SQLiteStatHelper::maintains_values(const std::vector<DBStatValue> &oVals,
 		bool bCommit /*= true*/,
 		bool bRemove /*= false*/) {
+		BOOST_ASSERT(this->is_valid());
 		bool bInTrans = false;
 		try {
 			if (bCommit) {
 				this->begin_transaction();
 				bInTrans = true;
 			}
-			SQLite_Statement qInsert(this->m_base, SQL_INSERT_VALUE);
-			SQLite_Statement qUpdate(this->m_base, SQL_UPDATE_VALUE);
-			SQLite_Statement qRemove(this->m_base, SQL_REMOVE_VALUE);
+			SQLite_Statement qInsert(*(this->m_base), SQL_INSERT_VALUE);
+			BOOST_ASSERT(qInsert.get_parameters_count() == 4);
+			SQLite_Statement qUpdate(*(this->m_base), SQL_UPDATE_VALUE);
+			BOOST_ASSERT(qUpdate.get_parameters_count() == 3);
+			SQLite_Statement qRemove(*(this->m_base), SQL_REMOVE_VALUE);
+			BOOST_ASSERT(qRemove.get_parameters_count() == 1);
 			//
-			std::for_each(oVals.begin(), oVals.end(), [&](const DBStatValue &oVal) {
+			BOOST_FOREACH(const DBStatValue &oVal, oVals)
+			{
 				bool mustRemove = bRemove;
 				DBStatValue xVal(oVal);
 				this->find_value(xVal);
@@ -544,7 +575,8 @@ namespace info {
 						qInsert.exec();
 					}
 				} // writeable
-			});
+			}// oVal
+			//
 			if (bCommit && bInTrans) {
 				this->commit_transaction();
 			}
@@ -566,9 +598,11 @@ namespace info {
 	}//maintains_values
 
 	bool SQLiteStatHelper::find_value(DBStatValue &cur) {
+		BOOST_ASSERT(this->is_valid());
 		try {
 			IntType nId = cur.id();
-			SQLite_Statement q(this->m_base, SQL_VALUE_BY_ID);
+			SQLite_Statement q(*(this->m_base), SQL_VALUE_BY_ID);
+			BOOST_ASSERT(q.get_parameters_count() == 1);
 			q.bind(1, nId);
 			q.exec();
 			if (q.move_next()) {
@@ -578,7 +612,8 @@ namespace info {
 			}
 			IntType nVarId = cur.get_variable_id();
 			IntType nIndId = cur.get_indiv_id();
-			SQLite_Statement q2(this->m_base, SQL_VALUES_BY_VARIABLE_INDIV);
+			SQLite_Statement q2(*(this->m_base), SQL_VALUES_BY_VARIABLE_INDIV);
+			BOOST_ASSERT(q2.get_parameters_count() == 2);
 			q2.bind(1, nVarId);
 			q2.bind(2, nIndId);
 			q2.exec();
@@ -598,6 +633,7 @@ namespace info {
 	}//find_value
 	 /////////////////////////////// INDIVS ///////////////
 	bool SQLiteStatHelper::find_dataset_indivs_count(const DBStatDataset &oSet, int &nCount) {
+		BOOST_ASSERT(this->is_valid());
 		try {
 			DBStatDataset xSet(oSet);
 			nCount = 0;
@@ -605,7 +641,8 @@ namespace info {
 				return (false);
 			}
 			IntType nDatasetId = xSet.id();
-			SQLite_Statement q(this->m_base, SQL_FIND_DATASET_INDIVS_COUNT);
+			SQLite_Statement q(*(this->m_base), SQL_FIND_DATASET_INDIVS_COUNT);
+			BOOST_ASSERT(q.get_parameters_count() == 1);
 			q.bind(1, nDatasetId);
 			q.exec();
 			if (q.move_next()) {
@@ -625,6 +662,7 @@ namespace info {
 	bool SQLiteStatHelper::maintains_indivs(const std::vector<DBStatIndiv> &oInds,
 		bool bCommit /*= true*/,
 		bool bRemove /*= false*/) {
+		BOOST_ASSERT(this->is_valid());
 		bool bInTrans = false;
 		//
 		try {
@@ -632,10 +670,13 @@ namespace info {
 				this->begin_transaction();
 				bInTrans = true;
 			}
-			SQLite_Statement qInsert(this->m_base, SQL_INSERT_INDIV);
-			SQLite_Statement qUpdate(this->m_base, SQL_UPDATE_INDIV);
+			SQLite_Statement qInsert(*(this->m_base), SQL_INSERT_INDIV);
+			BOOST_ASSERT(qInsert.get_parameters_count() == 6);
+			SQLite_Statement qUpdate(*(this->m_base), SQL_UPDATE_INDIV);
+			BOOST_ASSERT(qUpdate.get_parameters_count() == 6);
 			//
-			std::for_each(oInds.begin(), oInds.end(), [&](const DBStatIndiv &oInd) {
+			BOOST_FOREACH(const DBStatIndiv &oInd, oInds)
+			{
 				DBStatIndiv xInd(oInd);
 				this->find_indiv(xInd);
 				IntType nId = xInd.id();
@@ -674,7 +715,7 @@ namespace info {
 						qInsert.exec();
 					}
 				}
-			});
+			}// oInd
 			if (bCommit && bInTrans) {
 				this->commit_transaction();
 			}
@@ -697,24 +738,27 @@ namespace info {
 
 	bool SQLiteStatHelper::find_dataset_indivs_ids(const DBStatDataset &oSet, std::vector<IntType> &oList,
 		int skip /*=0*/, int count /*=100*/) {
+		BOOST_ASSERT(this->is_valid());
 		try {
 			oList.clear();
 			if (skip < 0) {
 				skip = 0;
 			}
 			if (count < 1) {
-				count = 100;
+				count = DATATRANSFER_CHUNK_SIZE;
 			}
 			DBStatDataset xSet(oSet);
 			if (!this->find_dataset(xSet)) {
 				return (false);
 			}
 			IntType nDatasetId = xSet.id();
-			SQLite_Statement q(this->m_base, SQL_GET_DATASET_INDIV_IDS);
+			SQLite_Statement q(*(this->m_base), SQL_GET_DATASET_INDIV_IDS);
+			BOOST_ASSERT(q.get_parameters_count() == 3);
 			q.bind(1, nDatasetId);
 			q.bind(2, count);
 			q.bind(3, skip);
 			q.exec();
+			BOOST_ASSERT(q.get_num_columns() == 1);
 			while (q.move_next()) {
 				IntType nId = 0;
 				q.get_column(0, nId);
@@ -735,20 +779,22 @@ namespace info {
 	bool SQLiteStatHelper::find_dataset_indivs(const DBStatDataset &oSet,
 		std::vector<DBStatIndiv> &oList,
 		int skip /*=0*/, int count /*=100*/) {
+		BOOST_ASSERT(this->is_valid());
 		try {
 			oList.clear();
 			if (skip < 0) {
 				skip = 0;
 			}
 			if (count < 1) {
-				count = 100;
+				count = DATATRANSFER_CHUNK_SIZE;
 			}
 			DBStatDataset xSet(oSet);
 			if (!this->find_dataset(xSet)) {
 				return (false);
 			}
 			IntType nDatasetId = xSet.id();
-			SQLite_Statement q(this->m_base, SQL_FIND_DATASET_INDIVS);
+			SQLite_Statement q(*(this->m_base), SQL_FIND_DATASET_INDIVS);
+			BOOST_ASSERT(q.get_parameters_count() == 3);
 			q.bind(1, nDatasetId);
 			q.bind(2, count);
 			q.bind(3, skip);
@@ -770,10 +816,12 @@ namespace info {
 	}//find_dataset_indivs
 	 ////////////////////////////////////
 	bool SQLiteStatHelper::find_indiv(DBStatIndiv &cur) {
+		BOOST_ASSERT(this->is_valid());
 		try {
 			IntType nId = cur.id();
 			if (nId != 0) {
-				SQLite_Statement q(this->m_base, SQL_INDIV_BY_ID);
+				SQLite_Statement q(*(this->m_base), SQL_INDIV_BY_ID);
+				BOOST_ASSERT(q.get_parameters_count() == 1);
 				q.bind(1, nId);
 				q.exec();
 				if (q.move_next()) {
@@ -785,7 +833,8 @@ namespace info {
 			cur.get_sigle(sigle);
 			IntType nDatasetId = cur.get_dataset_id();
 			if ((!sigle.empty()) && (nDatasetId != 0)) {
-				SQLite_Statement q(this->m_base, SQL_INDIV_BY_DATASET_AND_SIGLE);
+				SQLite_Statement q(*(this->m_base), SQL_INDIV_BY_DATASET_AND_SIGLE);
+				BOOST_ASSERT(q.get_parameters_count() == 2);
 				q.bind(1, nDatasetId);
 				q.bind(2, sigle);
 				q.exec();
@@ -806,6 +855,7 @@ namespace info {
 	}//find_indiv
 	 ////////////////////////////// VARIABLES /////
 	bool SQLiteStatHelper::find_dataset_variables_count(const DBStatDataset &oSet, int &nCount) {
+		BOOST_ASSERT(this->is_valid());
 		try {
 			DBStatDataset xSet(oSet);
 			nCount = 0;
@@ -813,9 +863,11 @@ namespace info {
 				return (false);
 			}
 			IntType nDatasetId = xSet.id();
-			SQLite_Statement q(this->m_base, SQL_FIND_DATASET_VARIABLES_COUNT);
+			SQLite_Statement q(*(this->m_base), SQL_FIND_DATASET_VARIABLES_COUNT);
+			BOOST_ASSERT(q.get_parameters_count() == 1);
 			q.bind(1, nDatasetId);
 			q.exec();
+			BOOST_ASSERT(q.get_num_columns() == 1);
 			if (q.move_next()) {
 				q.get_column(0, nCount);
 			}
@@ -833,16 +885,20 @@ namespace info {
 	bool SQLiteStatHelper::maintains_variables(const std::vector<DBStatVariable> &oVars,
 		bool bCommit /*= true*/,
 		bool bRemove /*= false*/) {
+		BOOST_ASSERT(this->is_valid());
 		bool bInTrans = false;
 		try {
 			if (bCommit) {
 				this->begin_transaction();
 				bInTrans = true;
 			}
-			SQLite_Statement qInsert(this->m_base, SQL_INSERT_VARIABLE);
-			SQLite_Statement qUpdate(this->m_base, SQL_UPDATE_VARIABLE);
+			SQLite_Statement qInsert(*(this->m_base), SQL_INSERT_VARIABLE);
+			BOOST_ASSERT(qInsert.get_parameters_count() == 9);
+			SQLite_Statement qUpdate(*(this->m_base), SQL_UPDATE_VARIABLE);
+			BOOST_ASSERT(qUpdate.get_parameters_count() == 9);
 			//
-			std::for_each(oVars.begin(), oVars.end(), [&](const DBStatVariable &oVar) {
+			BOOST_FOREACH(const DBStatVariable &oVar, oVars)
+			{
 				DBStatVariable xVar(oVar);
 				this->find_variable(xVar);
 				IntType nId = xVar.id();
@@ -890,7 +946,7 @@ namespace info {
 						qInsert.exec();
 					}
 				}// writeable
-			});
+			}//oVar
 			if (bCommit && bInTrans) {
 				this->commit_transaction();
 			}
@@ -913,24 +969,27 @@ namespace info {
 
 	bool SQLiteStatHelper::find_dataset_variables_ids(const DBStatDataset &oSet, std::vector<IntType> &oList,
 		int skip /*=0*/, int count /*=100*/) {
+		BOOST_ASSERT(this->is_valid());
 		try {
 			oList.clear();
 			if (skip < 0) {
 				skip = 0;
 			}
 			if (count < 1) {
-				count = 100;
+				count = DATATRANSFER_CHUNK_SIZE;
 			}
 			DBStatDataset xSet(oSet);
 			if (!this->find_dataset(xSet)) {
 				return (false);
 			}
 			IntType nDatasetId = xSet.id();
-			SQLite_Statement q(this->m_base, SQL_FIND_DATASET_VARIABLES_IDS);
+			SQLite_Statement q(*(this->m_base), SQL_FIND_DATASET_VARIABLES_IDS);
+			BOOST_ASSERT(q.get_parameters_count() == 3);
 			q.bind(1, nDatasetId);
 			q.bind(2, count);
 			q.bind(3, skip);
 			q.exec();
+			BOOST_ASSERT(q.get_num_columns() == 1);
 			while (q.move_next()) {
 				IntType nId = 0;
 				q.get_column(0, nId);
@@ -951,20 +1010,22 @@ namespace info {
 
 	bool SQLiteStatHelper::find_dataset_variables(const DBStatDataset &oSet, std::vector<DBStatVariable> &oList,
 		int skip /*=0*/, int count /*=100*/) {
+		BOOST_ASSERT(this->is_valid());
 		try {
 			oList.clear();
 			if (skip < 0) {
 				skip = 0;
 			}
 			if (count < 1) {
-				count = 100;
+				count = DATATRANSFER_CHUNK_SIZE;
 			}
 			DBStatDataset xSet(oSet);
 			if (!this->find_dataset(xSet)) {
 				return (false);
 			}
 			IntType nDatasetId = xSet.id();
-			SQLite_Statement q(this->m_base, SQL_FIND_DATASET_VARIABLES);
+			SQLite_Statement q(*(this->m_base), SQL_FIND_DATASET_VARIABLES);
+			BOOST_ASSERT(q.get_parameters_count() == 3);
 			q.bind(1, nDatasetId);
 			q.bind(2, count);
 			q.bind(3, skip);
@@ -987,10 +1048,12 @@ namespace info {
 
 	 ////////////////////////////////////
 	bool SQLiteStatHelper::find_variable(DBStatVariable &cur) {
+		BOOST_ASSERT(this->is_valid());
 		try {
 			IntType nId = cur.id();
 			if (nId != 0) {
-				SQLite_Statement q(this->m_base, SQL_VARIABLE_BY_ID);
+				SQLite_Statement q(*(this->m_base), SQL_VARIABLE_BY_ID);
+				BOOST_ASSERT(q.get_parameters_count() == 1);
 				q.bind(1, nId);
 				q.exec();
 				if (q.move_next()) {
@@ -1002,7 +1065,8 @@ namespace info {
 			cur.get_sigle(sigle);
 			IntType nDatasetId = cur.get_dataset_id();
 			if ((!sigle.empty()) && (nDatasetId != 0)) {
-				SQLite_Statement q(this->m_base, SQL_VARIABLE_BY_DATASET_AND_SIGLE);
+				SQLite_Statement q(*(this->m_base), SQL_VARIABLE_BY_DATASET_AND_SIGLE);
+				BOOST_ASSERT(q.get_parameters_count() == 2);
 				q.bind(1, nDatasetId);
 				q.bind(2, sigle);
 				q.exec();
@@ -1024,6 +1088,7 @@ namespace info {
 	 /////////////////////////////////////////////////////
 	bool SQLiteStatHelper::remove_dataset(const DBStatDataset &cur,
 		bool bCommit /*= true*/) {
+		BOOST_ASSERT(this->is_valid());
 		bool bInTrans = false;
 		try {
 			if (bCommit) {
@@ -1059,7 +1124,8 @@ namespace info {
 					});
 				}
 			}
-			SQLite_Statement qq(this->m_base, SQL_REMOVE_DATASET);
+			SQLite_Statement qq(*(this->m_base), SQL_REMOVE_DATASET);
+			BOOST_ASSERT(qq.get_parameters_count() == 1);
 			qq.bind(1, nId);
 			qq.exec();
 			if (bCommit && bInTrans) {
@@ -1083,6 +1149,7 @@ namespace info {
 	}// remove_dataset
 
 	bool SQLiteStatHelper::maintains_dataset(DBStatDataset &cur, bool bCommit) {
+		BOOST_ASSERT(this->is_valid());
 		if (!cur.is_writeable()) {
 			return (false);
 		}
@@ -1101,7 +1168,8 @@ namespace info {
 			cur.get_desc(desc);
 			cur.get_status(status);
 			if (nId != 0) {
-				SQLite_Statement q(this->m_base, SQL_UPDATE_DATASET);
+				SQLite_Statement q(*(this->m_base), SQL_UPDATE_DATASET);
+				BOOST_ASSERT(q.get_parameters_count() == 5);
 				q.bind(1, sigle);
 				q.bind(2, name);
 				q.bind(3, desc);
@@ -1110,7 +1178,8 @@ namespace info {
 				q.exec();
 			}
 			else {
-				SQLite_Statement q(this->m_base, SQL_INSERT_DATASET);
+				SQLite_Statement q(*(this->m_base), SQL_INSERT_DATASET);
+				BOOST_ASSERT(q.get_parameters_count() == 4);
 				q.bind(1, sigle);
 				q.bind(2, name);
 				q.bind(3, desc);
@@ -1138,10 +1207,12 @@ namespace info {
 
 	}// maintains_datase
 	bool SQLiteStatHelper::find_dataset(DBStatDataset &cur) {
+		BOOST_ASSERT(this->is_valid());
 		try {
 			IntType nId = cur.id();
 			if (nId != 0) {
-				SQLite_Statement q(this->m_base, SQL_FIND_DATASET_BY_ID);
+				SQLite_Statement q(*(this->m_base), SQL_FIND_DATASET_BY_ID);
+				BOOST_ASSERT(q.get_parameters_count() == 1);
 				q.bind(1, nId);
 				q.exec();
 				if (q.move_next()) {
@@ -1152,7 +1223,8 @@ namespace info {
 			std::string sigle;
 			cur.get_sigle(sigle);
 			if (!sigle.empty()) {
-				SQLite_Statement q(this->m_base, SQL_FIND_DATASET_BY_SIGLE);
+				SQLite_Statement q(*(this->m_base), SQL_FIND_DATASET_BY_SIGLE);
+				BOOST_ASSERT(q.get_parameters_count() == 1);
 				q.bind(1, sigle);
 				q.exec();
 				if (q.move_next()) {
@@ -1173,15 +1245,17 @@ namespace info {
 	bool  SQLiteStatHelper::find_all_datasets(std::vector<DBStatDataset> &oList,
 		int skip /* = 0*/,
 		int count /* = 100 */) {
+		BOOST_ASSERT(this->is_valid());
 		try {
 			oList.clear();
 			if (skip < 0) {
 				skip = 0;
 			}
 			if (count < 1) {
-				count = 100;
+				count = DATATRANSFER_CHUNK_SIZE;
 			}
-			SQLite_Statement q(this->m_base, SQL_FIND_ALL_DATASETS);
+			SQLite_Statement q(*(this->m_base), SQL_FIND_ALL_DATASETS);
+			BOOST_ASSERT(q.get_parameters_count() == 2);
 			q.bind(1, count);
 			q.bind(2, skip);
 			q.exec();
@@ -1203,15 +1277,17 @@ namespace info {
 	bool  SQLiteStatHelper::find_all_datasets_ids(std::vector<IntType> &oList,
 		int skip /* = 0*/,
 		int count /* = 100 */) {
+		BOOST_ASSERT(this->is_valid());
 		try {
 			oList.clear();
 			if (skip < 0) {
 				skip = 0;
 			}
 			if (count < 1) {
-				count = 100;
+				count = DATATRANSFER_CHUNK_SIZE;
 			}
-			SQLite_Statement q(this->m_base, SQL_FIND_ALL_DATASETS_IDS);
+			SQLite_Statement q(*(this->m_base), SQL_FIND_ALL_DATASETS_IDS);
+			BOOST_ASSERT(q.get_parameters_count() == 2);
 			q.bind(1, count);
 			q.bind(2, skip);
 			q.exec();
@@ -1233,10 +1309,12 @@ namespace info {
 		return (false);
 	}//find_all_datasets_ids
 	bool SQLiteStatHelper::find_all_datasets_count(int &nCount) {
+		BOOST_ASSERT(this->is_valid());
 		try {
 			nCount = 0;
-			SQLite_Statement q(this->m_base, SQL_FIND_DATASETS_COUNT);
+			SQLite_Statement q(*(this->m_base), SQL_FIND_DATASETS_COUNT);
 			q.exec();
+			BOOST_ASSERT(q.get_num_columns() == 1);
 			if (q.move_next()) {
 				q.get_column(0, nCount);
 			}
@@ -1252,6 +1330,7 @@ namespace info {
 	}//find_dataset_variables_count
 	 ////////////////////////////////////
 	void SQLiteStatHelper::read_dataset(SQLite_Statement &q, DBStatDataset &cur) {
+		BOOST_ASSERT(q.get_num_columns() == 6);
 		std::string sSigle, sName, status, sDesc;
 		IntType nId, nVersion;
 		q.get_column(0, nId);
@@ -1264,6 +1343,7 @@ namespace info {
 	}
 
 	void SQLiteStatHelper::read_variable(SQLite_Statement &q, DBStatVariable &cur) {
+		BOOST_ASSERT(q.get_num_columns() == 11);
 		std::string sSigle, sName, status, sDesc, sGenre, sType;
 		IntType nId, nVersion, nCateg, nDatasetId;
 		double w = 1.0;
@@ -1284,6 +1364,7 @@ namespace info {
 	}
 
 	void SQLiteStatHelper::read_indiv(SQLite_Statement &q, DBStatIndiv &cur) {
+		BOOST_ASSERT(q.get_num_columns() == 8);
 		std::string sSigle, sName, status, sDesc;
 		IntType nId, nVersion, nDatasetId;
 		double w = 1.0;
@@ -1300,6 +1381,7 @@ namespace info {
 	}
 
 	void SQLiteStatHelper::read_value(SQLite_Statement &q, DBStatValue &cur) {
+		BOOST_ASSERT(q.get_num_columns() == 6);
 		std::string status, sval;
 		IntType nId, nVersion, nVarId, nIndId;
 		q.get_column(0, nId);
@@ -1315,8 +1397,9 @@ namespace info {
 	SQLiteStatHelper::SQLiteStatHelper(const std::string &sDatabaseName /*= DEFAULT_DATABASE_NAME*/) {
 		try {
 			this->m_intransaction = false;
-			this->m_base.open(sDatabaseName);
-			if (this->m_base.is_open()) {
+			this->m_base = std::make_unique<SQLite_Database>(sDatabaseName);
+			BOOST_ASSERT(this->m_base.get() != nullptr);
+			if (this->m_base->is_open()) {
 				this->check_schema();
 			}
 		}
@@ -1334,8 +1417,9 @@ namespace info {
 		try {
 			this->m_intransaction = false;
 			std::string file = StringConvert::ws2s(sName);
-			this->m_base.open(file);
-			if (this->m_base.is_open()) {
+			this->m_base = std::make_unique<SQLite_Database>(file);
+			BOOST_ASSERT(this->m_base.get() != nullptr);
+			if (this->m_base->is_open()) {
 				this->check_schema();
 			}
 		}
@@ -1349,12 +1433,14 @@ namespace info {
 		}
 	}
 	void SQLiteStatHelper::check_schema(void) {
+		BOOST_ASSERT(this->is_valid());
 		try {
 			int i = 0;
+			SQLite_Database &base = *(this->m_base);
 			while (CREATE_SQL[i] != nullptr) {
 				const char *pszSQL = CREATE_SQL[i];
 				std::string sql(pszSQL);
-				this->m_base.exec(sql);
+				base.exec(sql);
 				i++;
 			}// i
 		}// try
@@ -1367,7 +1453,8 @@ namespace info {
 
 	}// check_schema
 	bool SQLiteStatHelper::is_valid(void) {
-		return (this->m_base.is_open());
+		SQLite_Database *p = this->m_base.get();
+		return ((p != nullptr) && p->is_open());
 	}
 	SQLiteStatHelper::~SQLiteStatHelper() {
 

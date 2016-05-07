@@ -54,6 +54,7 @@ namespace info {
 		bool is_valid(void) const;
 		bool close(void);
 		bool reset(void);
+		int get_parameters_count(void);
 		//
 		bool set_parameter_null(int iParam);
 		bool set_parameter(int iParam, int ivalue);

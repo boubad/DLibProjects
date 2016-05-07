@@ -39,16 +39,7 @@ namespace UnitTestDatalib
 			Assert::IsTrue(m_st_rownames.size() >= m_st_nbrows);
 			Assert::IsTrue(m_st_data.size() >= (size_t)(m_st_nbcols * m_st_nbrows));
 			//
-			InfoTestData::get_database_filename(m_st_filename);
-			Assert::IsFalse(m_st_filename.empty());
-			SQLiteStatHelper oMan(m_st_filename);
-			Assert::IsTrue(oMan.is_valid());
 			DBStatDataset oSet(m_st_name);
-			if (!oMan.find_dataset(oSet)) {
-				bool bRet = oMan.maintains_dataset(oSet);
-				Assert::IsTrue(bRet);
-			}
-			Assert::IsTrue(oSet.id() != 0);
 			m_st_oset = oSet;
 		}
 		TEST_CLASS_CLEANUP(ClassCleanup)
