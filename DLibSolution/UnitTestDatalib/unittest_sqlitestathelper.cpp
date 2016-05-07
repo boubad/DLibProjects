@@ -2,6 +2,7 @@
 #include "CppUnitTest.h"
 /////////////////////////////////
 #include <sqlitestathelper.h>
+#include <storeindivprovider.h>
 /////////////////////////////////
 #include "infotestdata.h"
 /////////////////////////////////
@@ -61,7 +62,7 @@ namespace UnitTestDatalib
 				Assert::IsTrue(bRet);
 			}
 			Assert::IsTrue(this->m_oset.id() != 0);
-			std::vector<DBStatVariable> oVars;
+			variables_vector oVars;
 			for (size_t i = 0; i < m_st_nbcols; ++i) {
 				std::string sigle = m_st_colnames[i];
 				DBStatVariable v(this->m_oset, sigle);
@@ -73,7 +74,7 @@ namespace UnitTestDatalib
 				bRet = p->maintains_variables(oVars);
 				Assert::IsTrue(bRet);
 			}
-			std::vector<DBStatIndiv> oInds;
+			indivs_vector oInds;
 			for (size_t i = 0; i < m_st_nbrows; ++i) {
 				std::string sigle = m_st_rownames[i];
 				DBStatIndiv v(this->m_oset, sigle);
@@ -94,7 +95,7 @@ namespace UnitTestDatalib
 			Assert::IsTrue(bRet);
 			Assert::AreEqual(m_st_nbcols, oVars.size());
 			//
-			std::map<std::string, DBStatVariable *> pVars;
+			boost::container::flat_map<std::string, DBStatVariable *> pVars;
 			std::for_each(m_st_colnames.begin(), m_st_colnames.end(), [&](const std::string &s) {
 				std::string sigle = s;
 				std::string rsigle;
@@ -113,7 +114,7 @@ namespace UnitTestDatalib
 				Assert::IsNotNull(p);
 				pVars[sigle] = p;
 			});
-			std::map<std::string, DBStatIndiv *> pInds;
+			boost::container::flat_map<std::string, DBStatIndiv *> pInds;
 			std::for_each(m_st_rownames.begin(), m_st_rownames.end(), [&](const std::string &s) {
 				std::string sigle = s;
 				std::string rsigle;
@@ -132,7 +133,7 @@ namespace UnitTestDatalib
 				Assert::IsNotNull(p);
 				pInds[sigle] = p;
 			});
-			std::vector<DBStatValue> oVals;
+			values_vector oVals;
 			for (size_t i = 0; i < m_st_nbrows; ++i) {
 				std::string sigleind = m_st_rownames[i];
 				DBStatIndiv *pInd = pInds[sigleind];
@@ -169,12 +170,12 @@ namespace UnitTestDatalib
 			bool bRet = pMan->find_all_datasets_count(count);
 			Assert::IsTrue(bRet);
 			Assert::IsTrue(count > 0);
-			std::vector<DBStatDataset> oSets;
+			datasets_vector oSets;
 			bRet = pMan->find_all_datasets(oSets, 0, count);
 			Assert::IsTrue(bRet);
 			Assert::AreEqual((size_t)count, oSets.size());
 			//
-			std::vector<IntType> oIds;
+			ints_vector oIds;
 			bRet = pMan->find_all_datasets_ids(oIds, 0, count);
 			Assert::IsTrue(bRet);
 			Assert::AreEqual((size_t)count, oIds.size());
@@ -202,17 +203,17 @@ namespace UnitTestDatalib
 			Assert::IsTrue(bRet);
 			Assert::AreEqual(m_st_nbcols, (size_t)count);
 			//
-			std::vector<IntType> oIds;
+			ints_vector oIds;
 			bRet = pMan->find_dataset_variables_ids(oSet, oIds, 0, count);
 			Assert::IsTrue(bRet);
 			Assert::AreEqual((size_t)count, oIds.size());
 			//
-			std::vector<DBStatVariable> oVars;
+			variables_vector oVars;
 			bRet = pMan->find_dataset_variables(oSet, oVars, 0, count);
 			Assert::IsTrue(bRet);
 			Assert::AreEqual((size_t)count, oVars.size());
 			//
-			std::map<IntType, std::string> oMap;
+			inttype_string_map oMap;
 			bRet = pMan->find_dataset_variables_types(oSet, oMap);
 			Assert::IsTrue(bRet);
 			Assert::AreEqual((size_t)count, oMap.size());
@@ -238,12 +239,12 @@ namespace UnitTestDatalib
 			Assert::IsTrue(bRet);
 			Assert::AreEqual(m_st_nbrows, (size_t)count);
 			//
-			std::vector<IntType> oIds;
+			ints_vector oIds;
 			bRet = pMan->find_dataset_indivs_ids(oSet, oIds, 0, count);
 			Assert::IsTrue(bRet);
 			Assert::AreEqual((size_t)count, oIds.size());
 			//
-			std::vector<DBStatIndiv> oInds;
+			indivs_vector oInds;
 			bRet = pMan->find_dataset_indivs(oSet, oInds, 0, count);
 			Assert::IsTrue(bRet);
 			Assert::AreEqual((size_t)count, oInds.size());
@@ -270,25 +271,25 @@ namespace UnitTestDatalib
 			Assert::IsTrue(bRet);
 			Assert::AreEqual(nTotal, count);
 			//
-			std::vector<DBStatValue> oVals;
+			values_vector oVals;
 			bRet = pMan->find_dataset_values(oSet, oVals, 0, count);
 			Assert::IsTrue(bRet);
 			Assert::AreEqual((size_t)count, oVals.size());
 			//
-			std::vector<DBStatVariable> oListVars;
+			variables_vector oListVars;
 			bRet = pMan->find_dataset_variables(oSet, oListVars, 0, 1);
 			Assert::IsTrue(bRet);
 			Assert::IsFalse(oListVars.empty());
 			DBStatVariable &vv = oListVars[0];
-			std::vector<DBStatValue> vals;
+			values_vector vals;
 			bRet = pMan->find_variable_values(vv, vals, 0, 1000);
 			Assert::IsTrue(bRet);
 			Assert::AreEqual(m_st_nbrows, vals.size());
-			std::vector<std::string> ss;
+			strings_vector ss;
 			bRet = pMan->find_variable_distinct_values(vv, ss);
 			Assert::IsTrue(bRet);
 			//
-			std::vector<DBStatIndiv> oListInds;
+			indivs_vector oListInds;
 			bRet = pMan->find_dataset_indivs(oSet, oListInds, 0, 1);
 			Assert::IsTrue(bRet);
 			Assert::IsFalse(oListInds.empty());
@@ -314,6 +315,77 @@ namespace UnitTestDatalib
 			Assert::IsTrue(bRet);
 			Assert::IsTrue(nz < count);
 		}//TestDBValues
+		TEST_METHOD(TestStoreIndivProvider)
+		{
+			IStoreHelper *pMan = m_man.get();
+			Assert::IsNotNull(pMan);
+			Assert::IsTrue(pMan->is_valid());
+			DBStatDataset &oSet = this->m_oset;
+			Assert::IsTrue(oSet.id() != 0);
+			//
+			StoreIndivProvider oProvider(pMan, oSet);
+			Assert::IsTrue(oProvider.is_valid());
+			//
+			size_t nc = 0;
+			bool bRet = oProvider.indivs_count(nc);
+			Assert::IsTrue(bRet);
+			Assert::AreEqual(m_st_nbrows, nc);
+			//
+			variables_map vars;
+			bRet = oProvider.get_variables_map(vars);
+			Assert::IsTrue(bRet);
+			Assert::AreEqual(m_st_nbcols, vars.size());
+			//
+			for (size_t i = 0; i < nc; ++i) {
+				Indiv oInd;
+				bRet = oProvider.find_indiv_at(i, oInd);
+				Assert::IsTrue(bRet);
+				IntType aIndex = oInd.id();
+				Assert::IsTrue(aIndex != 0);
+			}// i
+		}//TestStoreIndivProvider
+		TEST_METHOD(TestSerialStoreIndivProvider)
+		{
+			IStoreHelper *pMan = m_man.get();
+			Assert::IsNotNull(pMan);
+			Assert::IsTrue(pMan->is_valid());
+			DBStatDataset &oSet = this->m_oset;
+			Assert::IsTrue(oSet.id() != 0);
+			//
+			SerialStoreIndivProvider oProvider(pMan, oSet);
+			Assert::IsTrue(oProvider.is_valid());
+			//
+			bool bRet = oProvider.reset();
+			Assert::IsTrue(bRet);
+			size_t nc = 0;
+			do {
+				Indiv oInd1;
+				bRet = oProvider.next(oInd1);
+				if (!bRet) {
+					Assert::AreEqual(m_st_nbrows, nc);
+					Assert::IsTrue(oInd1.id() == 0);
+					break;
+				}
+				++nc;
+				IntType aIndex1 = oInd1.id();
+				Assert::IsTrue(aIndex1 != 0);
+				Indiv oInd2;
+				bRet = oProvider.next(oInd2);
+				if (!bRet) {
+					Assert::AreEqual(m_st_nbrows, nc);
+					Assert::IsTrue(oInd2.id() == 0);
+					break;
+				}
+				++nc;
+				IntType aIndex2 = oInd1.id();
+				Assert::IsTrue(aIndex2 != 0);
+				double d1 = oInd1.distance(oInd2);
+				Assert::IsTrue(d1 >= 0);
+				double d2 = oInd2.distance(oInd1);
+				Assert::IsTrue(d2 >= 0);
+				Assert::AreEqual(d1, d2);
+			} while (true);
+		}//TestSerialStoreIndivProvider
 	};
 	size_t UnitTestSQLiteStatHelper::m_st_nbcols = 0;
 	size_t UnitTestSQLiteStatHelper::m_st_nbrows = 0;

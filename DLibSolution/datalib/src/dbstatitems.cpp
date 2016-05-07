@@ -59,6 +59,12 @@ namespace info {
 		*this = other;
 		other = t;
 	}// swap
+	void DBStatValue::clear(void) {
+		StatBaseItem::clear();
+		this->m_indid = 0;
+		this->m_varid = 0;
+		this->m_val = DbValue();
+	}
 	/////////////////////////////////////////////////////
 	DBStatIndiv::DBStatIndiv(const IntType nId, const IntType nVersion, const std::wstring &status,
 		const std::wstring &sSigle, const std::wstring &sName, const std::wstring &sDesc, const IntType nDatasetId, const double f) :
@@ -128,6 +134,12 @@ namespace info {
 		this->set_sigle(sSigle);
 		this->set_name(sSigle);
 		this->set_desc(sSigle);
+		this->set_vartype("float");
+		this->set_genre("initial");
+		this->is_categ(false);
+	}
+	void DBStatVariable::clear(void) {
+		DBStatDatasetChild::clear();
 		this->set_vartype("float");
 		this->set_genre("initial");
 		this->is_categ(false);
@@ -219,6 +231,11 @@ namespace info {
 	IntType DBStatDatasetChild::get_dataset_id(void) const {
 		return (this->m_datasetid);
 	}
+	void DBStatDatasetChild::clear(void) {
+		StatNamedItem::clear();
+		this->m_datasetid = 0;
+		this->m_weight = 1.0;
+	}
 	void  DBStatDatasetChild::set_dataset_id(const IntType n) {
 		this->m_datasetid = n;
 	}
@@ -305,6 +322,12 @@ namespace info {
 	StatNamedItem::~StatNamedItem() {
 
 	}
+	void StatNamedItem::clear(void) {
+		StatBaseItem::clear();
+		this->m_desc.clear();
+		this->m_name.clear();
+		this->m_sigle.clear();
+	}
 	void StatNamedItem::get_sigle(std::wstring &s) const {
 		s = StringConvert::s2ws(this->m_sigle);
 	}
@@ -369,6 +392,11 @@ namespace info {
 	}
 	StatBaseItem::~StatBaseItem() {
 
+	}
+	void StatBaseItem::clear(void) {
+		this->m_status.clear();
+		this->m_id = 0;
+		this->m_version = 0;
 	}
 	void StatBaseItem::get_status(std::string &s) const {
 		s = this->m_status;

@@ -2,19 +2,17 @@
 #ifndef __DBSTATITEMS_H__
 #define __DBSTATITEMS_H__
 /////////////////////////////////////////
+#include "info_constants.h"
 #include "dbvalue.h"
 /////////////////////////////////////////
 namespace info {
+	class Indiv;
 	class SQLiteStatHelper;
 	class StoreIndivProvider;
 	//////////////////////////////////////////
-	typedef unsigned long IntType;
-	///////////////////////////////////////////
-	enum class VariableMode { modeInvalid, modeNumeric, modeNominal, modeAll };
-	//////////////////////////////////////////////
 	class StatBaseItem {
 		friend class SQLiteStatHelper;
-		class StoreIndivProvider;
+		friend class StoreIndivProvider;
 	protected:
 		StatBaseItem();
 		StatBaseItem(const IntType nId);
@@ -44,11 +42,12 @@ namespace info {
 		virtual bool is_writeable(void) const;
 		virtual bool is_updateable(void) const;
 		virtual bool is_removeable(void) const;
+		virtual void clear(void);
 	};// class StatBaseItem
 	///////////////////////////////////////////////
 	class StatNamedItem : public StatBaseItem {
 		friend class SQLiteStatHelper;
-		class StoreIndivProvider;
+		friend class StoreIndivProvider;
 	protected:
 		StatNamedItem();
 		StatNamedItem(const IntType nId);
@@ -81,11 +80,12 @@ namespace info {
 		void set_desc(const std::string &s);
 	public:
 		virtual bool is_writeable(void) const;
+		virtual void clear(void);
 	};
 	////////////////////////////////////////////////
 	class DBStatDataset : public StatNamedItem {
 		friend class SQLiteStatHelper;
-		class StoreIndivProvider;
+		friend class StoreIndivProvider;
 	public:
 		DBStatDataset(const IntType nId);
 		DBStatDataset(const std::wstring &sigle);
@@ -103,7 +103,7 @@ namespace info {
 	///////////////////////////////////////////////
 	class DBStatDatasetChild : public StatNamedItem {
 		friend class SQLiteStatHelper;
-		class StoreIndivProvider;
+		friend class StoreIndivProvider;
 	private:
 		int m_datasetid;
 		double m_weight;
@@ -125,11 +125,12 @@ namespace info {
 		double weight(void) const;
 		void weight(double d);
 		virtual bool is_writeable(void) const;
+		virtual void clear(void);
 	}; // class DBStatDatasetChild
 	 ///////////////////////////////////////////////
 	class DBStatVariable : public DBStatDatasetChild {
 		friend class SQLiteStatHelper;
-		class StoreIndivProvider;
+		friend class StoreIndivProvider;
 	private:
 		bool m_categ;
 		std::string m_type;
@@ -163,11 +164,13 @@ namespace info {
 		void swap(DBStatVariable &other);
 		//
 		virtual bool is_writeable(void) const;
+		virtual void clear(void);
 	}; // class DBStatVariable
 	///////////////////////////////////////////////////
 	class DBStatIndiv : public DBStatDatasetChild {
 		friend class SQLiteStatHelper;
-		class StoreIndivProvider;
+		friend class StoreIndivProvider;
+		friend class Indiv;
 	public:
 		DBStatIndiv(const IntType nId, const IntType nVersion, const std::wstring &status,
 			const std::wstring &sSigle, const std::wstring &sName, const std::wstring &sDesc, const IntType nDatasetId, const double f);
@@ -185,7 +188,7 @@ namespace info {
 	///////////////////////////////////////////////////
 	class DBStatValue : public StatBaseItem {
 		friend class SQLiteStatHelper;
-		class StoreIndivProvider;
+		friend class StoreIndivProvider;
 	private:
 		IntType m_varid;
 		IntType m_indid;
@@ -211,7 +214,14 @@ namespace info {
 		void set_value(const DbValue &v);
 		virtual bool is_writeable(void) const;
 		void swap(DBStatValue &other);
+		virtual void clear(void);
 	}; // class DBStatValue
+	////////////////////////////////////////////////////
+	typedef boost::container::vector<DBStatDataset> datasets_vector;
+	typedef boost::container::vector<DBStatVariable> variables_vector;
+	typedef boost::container::vector<DBStatIndiv> indivs_vector;
+	typedef boost::container::vector<DBStatValue> values_vector;
+	typedef boost::container::flat_map<IntType, DBStatVariable> variables_map;
 	////////////////////////////////////////////////////
 }// namespace info
 //////////////////////////////////////////

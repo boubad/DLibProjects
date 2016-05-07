@@ -4,11 +4,14 @@
 #include <string>
 //////////////////////
 #include <boost/any.hpp>
+//////////////////////////////
+#include "info_constants.h"
 ////////////////////////////
 namespace info
 {
 //////////////////////////////////
 typedef unsigned char byte;
+
 ////////////////////////////////////
 enum class DbValueType : short
 {
@@ -76,6 +79,8 @@ public:
     bool string_value(std::string &s) const;
     bool string_value(std::wstring &s) const;
 };
+//////////////////////////////////////////
+typedef boost::container::flat_map<IntType, DbValue> DbValueMap;
 //////////////////////////////////////
 } /* namespace info */
 /////////////////////////////////////////

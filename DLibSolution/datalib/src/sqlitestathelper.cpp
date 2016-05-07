@@ -222,7 +222,7 @@ namespace info {
 		this->m_intransaction = false;
 	} // rollback_transaction
 	///////////////////////////////////////
-	bool SQLiteStatHelper::find_dataset_variables_types(const DBStatDataset &oSet, std::map<IntType, std::string> &oMap) {
+	bool SQLiteStatHelper::find_dataset_variables_types(const DBStatDataset &oSet, inttype_string_map &oMap) {
 		BOOST_ASSERT(this->is_valid());
 		DBStatDataset xSet(oSet);
 		oMap.clear();
@@ -364,7 +364,7 @@ namespace info {
 	}//find_dataset_values_count
 
 	bool  SQLiteStatHelper::find_dataset_values(const DBStatDataset &oSet,
-		std::vector<DBStatValue> &oList,
+		values_vector &oList,
 		int skip /*= 0*/, int count /*= 100*/) {
 		BOOST_ASSERT(this->is_valid());
 		try {
@@ -402,7 +402,7 @@ namespace info {
 		return (false);
 	}//find_dataset_values
 
-	bool  SQLiteStatHelper::find_variable_values(DBStatVariable &oVar, std::vector<DBStatValue> &oList,
+	bool  SQLiteStatHelper::find_variable_values(DBStatVariable &oVar, values_vector &oList,
 		int skip /*= 0*/, int count /*= 100*/) {
 		BOOST_ASSERT(this->is_valid());
 		try {
@@ -440,7 +440,7 @@ namespace info {
 	}
 
 	bool  SQLiteStatHelper::find_variable_distinct_values(DBStatVariable &oVar,
-		std::vector<std::string> &oList,
+		strings_vector &oList,
 		int skip /*= 0*/, int count /*= 100*/) {
 		BOOST_ASSERT(this->is_valid());
 		oList.clear();
@@ -480,7 +480,7 @@ namespace info {
 		return (false);
 	}//find_variable_distinct_values
 
-	bool  SQLiteStatHelper::find_indiv_values(DBStatIndiv &oInd, std::vector<DBStatValue> &oList,
+	bool  SQLiteStatHelper::find_indiv_values(DBStatIndiv &oInd, values_vector &oList,
 		int skip /*= 0*/, int count /*= 100*/) {
 		BOOST_ASSERT(this->is_valid());
 		oList.clear();
@@ -519,7 +519,7 @@ namespace info {
 	}//find_indiv_values
 
 	 ///
-	bool SQLiteStatHelper::maintains_values(const std::vector<DBStatValue> &oVals,
+	bool SQLiteStatHelper::maintains_values(const values_vector &oVals,
 		bool bCommit /*= true*/,
 		bool bRemove /*= false*/) {
 		BOOST_ASSERT(this->is_valid());
@@ -659,7 +659,7 @@ namespace info {
 		return (false);
 	}//find_dataset_indivs_count
 
-	bool SQLiteStatHelper::maintains_indivs(const std::vector<DBStatIndiv> &oInds,
+	bool SQLiteStatHelper::maintains_indivs(const indivs_vector &oInds,
 		bool bCommit /*= true*/,
 		bool bRemove /*= false*/) {
 		BOOST_ASSERT(this->is_valid());
@@ -736,7 +736,7 @@ namespace info {
 		return (false);
 	}//maintains_indivs
 
-	bool SQLiteStatHelper::find_dataset_indivs_ids(const DBStatDataset &oSet, std::vector<IntType> &oList,
+	bool SQLiteStatHelper::find_dataset_indivs_ids(const DBStatDataset &oSet, ints_vector &oList,
 		int skip /*=0*/, int count /*=100*/) {
 		BOOST_ASSERT(this->is_valid());
 		try {
@@ -777,7 +777,7 @@ namespace info {
 		return (false);
 	}//find_dataset_indivs_ids
 	bool SQLiteStatHelper::find_dataset_indivs(const DBStatDataset &oSet,
-		std::vector<DBStatIndiv> &oList,
+		indivs_vector &oList,
 		int skip /*=0*/, int count /*=100*/) {
 		BOOST_ASSERT(this->is_valid());
 		try {
@@ -882,7 +882,7 @@ namespace info {
 		return (false);
 	}//find_dataset_variables_count
 
-	bool SQLiteStatHelper::maintains_variables(const std::vector<DBStatVariable> &oVars,
+	bool SQLiteStatHelper::maintains_variables(const variables_vector &oVars,
 		bool bCommit /*= true*/,
 		bool bRemove /*= false*/) {
 		BOOST_ASSERT(this->is_valid());
@@ -967,7 +967,7 @@ namespace info {
 		return (false);
 	}//maintains_variables
 
-	bool SQLiteStatHelper::find_dataset_variables_ids(const DBStatDataset &oSet, std::vector<IntType> &oList,
+	bool SQLiteStatHelper::find_dataset_variables_ids(const DBStatDataset &oSet, ints_vector &oList,
 		int skip /*=0*/, int count /*=100*/) {
 		BOOST_ASSERT(this->is_valid());
 		try {
@@ -1008,7 +1008,7 @@ namespace info {
 		return (false);
 	}//find_dataset_variables_ids
 
-	bool SQLiteStatHelper::find_dataset_variables(const DBStatDataset &oSet, std::vector<DBStatVariable> &oList,
+	bool SQLiteStatHelper::find_dataset_variables(const DBStatDataset &oSet, variables_vector &oList,
 		int skip /*=0*/, int count /*=100*/) {
 		BOOST_ASSERT(this->is_valid());
 		try {
@@ -1104,7 +1104,7 @@ namespace info {
 				int nCount = 0;
 				this->find_dataset_indivs_count(xSet, nCount);
 				if (nCount > 0) {
-					std::vector<IntType> oIds;
+					ints_vector oIds;
 					this->find_dataset_indivs_ids(xSet, oIds, 0, nCount);
 					std::for_each(oIds.begin(), oIds.end(), [&](const IntType &aId) {
 						DBStatIndiv xInd(aId);
@@ -1116,7 +1116,7 @@ namespace info {
 				int nCount = 0;
 				this->find_dataset_variables_count(xSet, nCount);
 				if (nCount > 0) {
-					std::vector<IntType> oIds;
+					ints_vector oIds;
 					this->find_dataset_variables_ids(xSet, oIds, 0, nCount);
 					std::for_each(oIds.begin(), oIds.end(), [&](const IntType &aId) {
 						DBStatVariable xInd(aId);
@@ -1242,7 +1242,7 @@ namespace info {
 		}
 		return (false);
 	}// find_dataset
-	bool  SQLiteStatHelper::find_all_datasets(std::vector<DBStatDataset> &oList,
+	bool  SQLiteStatHelper::find_all_datasets(datasets_vector &oList,
 		int skip /* = 0*/,
 		int count /* = 100 */) {
 		BOOST_ASSERT(this->is_valid());
@@ -1274,7 +1274,7 @@ namespace info {
 		}
 		return (false);
 	}//find_all_datasets
-	bool  SQLiteStatHelper::find_all_datasets_ids(std::vector<IntType> &oList,
+	bool  SQLiteStatHelper::find_all_datasets_ids(ints_vector &oList,
 		int skip /* = 0*/,
 		int count /* = 100 */) {
 		BOOST_ASSERT(this->is_valid());

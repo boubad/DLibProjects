@@ -147,11 +147,13 @@
   <ItemGroup>
     <ClInclude Include="include\dbstatitems.h" />
     <ClInclude Include="include\dbvalue.h" />
+    <ClInclude Include="include\indiv.h" />
     <ClInclude Include="include\info_constants.h" />
     <ClInclude Include="include\istorehelper.h" />
     <ClInclude Include="include\sqlitestathelper.h" />
     <ClInclude Include="include\sqlite_database.h" />
     <ClInclude Include="include\sqlite_statement.h" />
+    <ClInclude Include="include\storeindivprovider.h" />
     <ClInclude Include="include\stringconvert.h" />
     <ClInclude Include="src\sqlite\sqlite3.h" />
     <ClInclude Include="src\sqlite\sqlite3ext.h" />
@@ -159,6 +161,7 @@
   <ItemGroup>
     <ClCompile Include="src\dbstatitems.cpp" />
     <ClCompile Include="src\dbvalue.cpp" />
+    <ClCompile Include="src\indiv.cpp" />
     <ClCompile Include="src\sqlitestathelper.cpp" />
     <ClCompile Include="src\sqlite\sqlite3.c">
       <SDLCheck Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</SDLCheck>
@@ -172,6 +175,7 @@
     </ClCompile>
     <ClCompile Include="src\sqlite_database.cpp" />
     <ClCompile Include="src\sqlite_statement.cpp" />
+    <ClCompile Include="src\storeindivprovider.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
