@@ -5,12 +5,16 @@
 #include "dbvalue.h"
 /////////////////////////////////////////
 namespace info {
+	class SQLiteStatHelper;
+	class StoreIndivProvider;
 	//////////////////////////////////////////
 	typedef unsigned long IntType;
 	///////////////////////////////////////////
 	enum class VariableMode { modeInvalid, modeNumeric, modeNominal, modeAll };
 	//////////////////////////////////////////////
 	class StatBaseItem {
+		friend class SQLiteStatHelper;
+		class StoreIndivProvider;
 	protected:
 		StatBaseItem();
 		StatBaseItem(const IntType nId);
@@ -18,6 +22,8 @@ namespace info {
 		StatBaseItem(const IntType nId, const IntType nVersion, const std::wstring &status);
 		StatBaseItem(const StatBaseItem &other);
 		StatBaseItem & operator=(const StatBaseItem &other);
+		void id(const IntType n);
+		void version(const IntType n);
 	private:
 		IntType m_id;
 		IntType m_version;
@@ -29,9 +35,7 @@ namespace info {
 		bool operator<(const StatBaseItem &other) const;
 		IntType operator()(void) const;
 		IntType id(void) const;
-		void id(const IntType n);
 		IntType version(void) const;
-		void version(const IntType n);
 		void get_status(std::string &s) const;
 		void get_status(std::wstring &s) const;
 		void set_status(const std::string &s);
@@ -43,6 +47,8 @@ namespace info {
 	};// class StatBaseItem
 	///////////////////////////////////////////////
 	class StatNamedItem : public StatBaseItem {
+		friend class SQLiteStatHelper;
+		class StoreIndivProvider;
 	protected:
 		StatNamedItem();
 		StatNamedItem(const IntType nId);
@@ -78,6 +84,8 @@ namespace info {
 	};
 	////////////////////////////////////////////////
 	class DBStatDataset : public StatNamedItem {
+		friend class SQLiteStatHelper;
+		class StoreIndivProvider;
 	public:
 		DBStatDataset(const IntType nId);
 		DBStatDataset(const std::wstring &sigle);
@@ -94,35 +102,44 @@ namespace info {
 	}; // class DBStatDataset
 	///////////////////////////////////////////////
 	class DBStatDatasetChild : public StatNamedItem {
+		friend class SQLiteStatHelper;
+		class StoreIndivProvider;
 	private:
 		int m_datasetid;
+		double m_weight;
 	protected:
 		DBStatDatasetChild();
 		DBStatDatasetChild(const IntType nId);
 		DBStatDatasetChild(const IntType nId, const IntType nVersion, const std::wstring &status,
-			const std::wstring &sSigle, const std::wstring &sName, const std::wstring &sDesc, const IntType nDatasetId);
+			const std::wstring &sSigle, const std::wstring &sName, const std::wstring &sDesc,
+			const IntType nDatasetId,const double f);
 		DBStatDatasetChild(const IntType nId,const IntType nVersion, const std::string &status,
-			const std::string &sSigle, const std::string &sName, const std::string &sDesc, const IntType nDatasetId);
+			const std::string &sSigle, const std::string &sName, const std::string &sDesc,
+			const IntType nDatasetId,const double f);
 		DBStatDatasetChild(const DBStatDatasetChild &other);
 		DBStatDatasetChild & operator=(const DBStatDatasetChild &other);
+		void set_dataset_id(const IntType n);
 	public:
 		virtual ~DBStatDatasetChild();
 		IntType get_dataset_id(void) const;
-		void set_dataset_id(const IntType n);
+		double weight(void) const;
+		void weight(double d);
 		virtual bool is_writeable(void) const;
 	}; // class DBStatDatasetChild
 	 ///////////////////////////////////////////////
 	class DBStatVariable : public DBStatDatasetChild {
+		friend class SQLiteStatHelper;
+		class StoreIndivProvider;
 	private:
 		bool m_categ;
 		std::string m_type;
 		std::string m_genre;
 	public:
 		DBStatVariable(const IntType nId, const IntType nVersion, const std::wstring &status,
-			const std::wstring &sSigle, const std::wstring &sName, const std::wstring &sDesc, const IntType nDatasetId,
+			const std::wstring &sSigle, const std::wstring &sName, const std::wstring &sDesc, const IntType nDatasetId,const double f,
 			const bool bCateg, const std::wstring &sType, const std::wstring &sGenre);
 		DBStatVariable(const IntType nId, const IntType nVersion, const std::string &status,
-			const std::string &sSigle, const std::string &sName, const std::string &sDesc, const IntType nDatasetId,
+			const std::string &sSigle, const std::string &sName, const std::string &sDesc, const IntType nDatasetId, const double f,
 			const bool bCateg, const std::string &sType, const std::string &sGenre);
 		DBStatVariable();
 		DBStatVariable(const IntType nId);
@@ -149,11 +166,13 @@ namespace info {
 	}; // class DBStatVariable
 	///////////////////////////////////////////////////
 	class DBStatIndiv : public DBStatDatasetChild {
+		friend class SQLiteStatHelper;
+		class StoreIndivProvider;
 	public:
 		DBStatIndiv(const IntType nId, const IntType nVersion, const std::wstring &status,
-			const std::wstring &sSigle, const std::wstring &sName, const std::wstring &sDesc, const IntType nDatasetId);
+			const std::wstring &sSigle, const std::wstring &sName, const std::wstring &sDesc, const IntType nDatasetId, const double f);
 		DBStatIndiv(const IntType nId, const IntType nVersion, const std::string &status,
-			const std::string &sSigle, const std::string &sName, const std::string &sDesc, const IntType nDatasetId);
+			const std::string &sSigle, const std::string &sName, const std::string &sDesc, const IntType nDatasetId, const double f);
 		DBStatIndiv();
 		DBStatIndiv(const IntType nId);
 		DBStatIndiv(const DBStatDataset &oSet, const std::string &sSigle = std::string());
@@ -165,6 +184,8 @@ namespace info {
 	}; // class DBStatIndiv
 	///////////////////////////////////////////////////
 	class DBStatValue : public StatBaseItem {
+		friend class SQLiteStatHelper;
+		class StoreIndivProvider;
 	private:
 		IntType m_varid;
 		IntType m_indid;
@@ -197,15 +218,12 @@ namespace info {
 inline void swap(info::DBStatDataset &v1, info::DBStatDataset &v2) {
 	v1.swap(v2);
 }
-/////////////////////////////////
 inline void swap(info::DBStatVariable &v1, info::DBStatVariable &v2) {
 	v1.swap(v2);
 }
-/////////////////////////////////////////
 inline void swap(info::DBStatIndiv &v1, info::DBStatIndiv &v2) {
 	v1.swap(v2);
 }
-/////////////////////////////////////////////////
 inline void swap(info::DBStatValue &v1, info::DBStatValue &v2) {
 	v1.swap(v2);
 }

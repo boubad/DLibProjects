@@ -61,12 +61,12 @@ namespace info {
 	}// swap
 	/////////////////////////////////////////////////////
 	DBStatIndiv::DBStatIndiv(const IntType nId, const IntType nVersion, const std::wstring &status,
-		const std::wstring &sSigle, const std::wstring &sName, const std::wstring &sDesc, const IntType nDatasetId) :
-		DBStatDatasetChild(nId, nVersion, status, sSigle, sName, sDesc, nDatasetId) {
+		const std::wstring &sSigle, const std::wstring &sName, const std::wstring &sDesc, const IntType nDatasetId, const double f) :
+		DBStatDatasetChild(nId, nVersion, status, sSigle, sName, sDesc, nDatasetId,f) {
 	}
 	DBStatIndiv::DBStatIndiv(const IntType nId, const IntType nVersion, const std::string &status,
-		const std::string &sSigle, const std::string &sName, const std::string &sDesc, const IntType nDatasetId) :
-		DBStatDatasetChild(nId, nVersion, status, sSigle, sName, sDesc, nDatasetId) {
+		const std::string &sSigle, const std::string &sName, const std::string &sDesc, const IntType nDatasetId, const double f) :
+		DBStatDatasetChild(nId, nVersion, status, sSigle, sName, sDesc, nDatasetId,f) {
 	}
 	DBStatIndiv::DBStatIndiv(const IntType n) : DBStatDatasetChild(n) {}
 	DBStatIndiv::DBStatIndiv() {}
@@ -99,16 +99,16 @@ namespace info {
 	}// swap
 	/////////////////////////////////////////////////
 	DBStatVariable::DBStatVariable(const IntType nId, const IntType nVersion, const std::wstring &status,
-		const std::wstring &sSigle, const std::wstring &sName, const std::wstring &sDesc, const IntType nDatasetId,
+		const std::wstring &sSigle, const std::wstring &sName, const std::wstring &sDesc, const IntType nDatasetId, const double f,
 		const bool bCateg, const std::wstring &sType, const std::wstring &sGenre) :
-		DBStatDatasetChild(nId, nVersion, status, sSigle, sName, sDesc, nDatasetId), m_categ(bCateg) {
+		DBStatDatasetChild(nId, nVersion, status, sSigle, sName, sDesc, nDatasetId,f), m_categ(bCateg) {
 		this->set_vartype(sType);
 		this->set_genre(sGenre);
 	}
 	DBStatVariable::DBStatVariable(const IntType nId, const IntType nVersion, const std::string &status,
-		const std::string &sSigle, const std::string &sName, const std::string &sDesc, const IntType nDatasetId,
+		const std::string &sSigle, const std::string &sName, const std::string &sDesc, const IntType nDatasetId, const double f,
 		const bool bCateg, const std::string &sType, const std::string &sGenre) :
-		DBStatDatasetChild(nId, nVersion, status, sSigle, sName, sDesc, nDatasetId), m_categ(bCateg) {
+		DBStatDatasetChild(nId, nVersion, status, sSigle, sName, sDesc, nDatasetId,f), m_categ(bCateg) {
 		this->set_vartype(sType);
 		this->set_genre(sGenre);
 	}
@@ -193,22 +193,25 @@ namespace info {
 			(s == "int") || (s == "integer") || (s == "long"));
 	}// is_numeric
 	///////////////////////////////////////////
-	DBStatDatasetChild::DBStatDatasetChild() :m_datasetid(0) {
+	DBStatDatasetChild::DBStatDatasetChild() :m_datasetid(0), m_weight(1.0) {
 	}
-	DBStatDatasetChild::DBStatDatasetChild(const IntType nId) : StatNamedItem(nId), m_datasetid(0) {
+	DBStatDatasetChild::DBStatDatasetChild(const IntType nId) : StatNamedItem(nId), m_datasetid(0), m_weight(1.0) {
 	}
 	DBStatDatasetChild::DBStatDatasetChild(const IntType nId, const IntType nVersion, const std::wstring &status,
-		const std::wstring &sSigle, const std::wstring &sName, const std::wstring &sDesc, const IntType nDatasetId) :
-		StatNamedItem(nId, nVersion, status, sSigle, sName, sDesc), m_datasetid(nDatasetId) {}
+		const std::wstring &sSigle, const std::wstring &sName, const std::wstring &sDesc
+		, const IntType nDatasetId, const double f) :
+		StatNamedItem(nId, nVersion, status, sSigle, sName, sDesc), m_datasetid(nDatasetId), m_weight(f) {}
 	DBStatDatasetChild::DBStatDatasetChild(const IntType nId, const IntType nVersion, const std::string &status,
-		const std::string &sSigle, const std::string &sName, const std::string &sDesc, const IntType nDatasetId) :
-		StatNamedItem(nId, nVersion, status, sSigle, sName, sDesc), m_datasetid(nDatasetId) {}
+		const std::string &sSigle, const std::string &sName, const std::string &sDesc,
+		const IntType nDatasetId, const double f) :
+		StatNamedItem(nId, nVersion, status, sSigle, sName, sDesc), m_datasetid(nDatasetId), m_weight(f) {}
 	DBStatDatasetChild::DBStatDatasetChild(const DBStatDatasetChild &other) : StatNamedItem(other),
-		m_datasetid(other.m_datasetid) {}
+		m_datasetid(other.m_datasetid), m_weight(other.m_weight) {}
 	DBStatDatasetChild & DBStatDatasetChild::operator=(const DBStatDatasetChild &other) {
 		if (this != &other) {
 			StatNamedItem::operator=(other);
 			this->m_datasetid = other.m_datasetid;
+			this->m_weight = other.m_weight;
 		}
 		return (*this);
 	}
@@ -221,6 +224,14 @@ namespace info {
 	}
 	bool DBStatDatasetChild::is_writeable(void) const {
 		return ((this->m_datasetid != 0) && StatNamedItem::is_writeable());
+	}
+	double DBStatDatasetChild::weight(void) const {
+		return this->m_weight;
+	}
+	void DBStatDatasetChild::weight(double d) {
+		if (d >= 0.0) {
+			this->m_weight = d;
+		}
 	}
 	//////////////////////////////////////////
 	DBStatDataset::DBStatDataset() {

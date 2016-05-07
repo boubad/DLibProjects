@@ -24,6 +24,7 @@ namespace info {
 		" optlock INTEGER NOT NULL DEFAULT 1,"
 		" datasetid INTEGER NOT NULL,"
 		" sigle TEXT NOT NULL,"
+		" weight REAL NOT NULL DEFAULT 1,"
 		" vartype TEXT NOT NULL,"
 		" categvar INTEGER NOT NULL DEFAULT 0,"
 		" nom TEXT DEFAULT NULL,"
@@ -39,6 +40,7 @@ namespace info {
 		" optlock INTEGER NOT NULL DEFAULT 1,"
 		" datasetid INTEGER NOT NULL,"
 		" sigle TEXT NOT NULL,"
+		" weight REAL NOT NULL DEFAULT 1,"
 		" nom TEXT DEFAULT NULL,"
 		" description TEXT DEFAULT NULL,"
 		" status TEXT DEFAULT NULL,"
@@ -90,7 +92,7 @@ namespace info {
 		"SELECT COUNT(*) FROM dbdataset";
 	//
 	static const char *SQL_FIND_DATASET_VARIABLES =
-		"SELECT variableid, optlock, datasetid , sigle, vartype, categvar, nom, description, genre, status"
+		"SELECT variableid, optlock, datasetid , sigle, vartype, categvar, nom, description, genre, status,weight"
 		" FROM dbvariable WHERE datasetid = ?"
 		" ORDER BY categvar DESC, sigle ASC"
 		" LIMIT ? OFFSET ?";
@@ -99,17 +101,17 @@ namespace info {
 		" ORDER BY variableid"
 		" LIMIT ? OFFSET ?";
 	static const char *SQL_VARIABLE_BY_ID =
-		"SELECT variableid,optlock,datasetid,sigle,vartype,categvar,nom,description,genre,status"
+		"SELECT variableid,optlock,datasetid,sigle,vartype,categvar,nom,description,genre,status,weight"
 		" FROM dbvariable WHERE variableid = ?";
 	static const char *SQL_VARIABLE_BY_DATASET_AND_SIGLE =
-		"SELECT variableid,optlock,datasetid,sigle,vartype,categvar,nom,description,genre,status"
+		"SELECT variableid,optlock,datasetid,sigle,vartype,categvar,nom,description,genre,status,weight"
 		" FROM dbvariable WHERE datasetid = ? AND UPPER(LTRIM(RTRIM(sigle))) = ?";
 	static const char *SQL_INSERT_VARIABLE =
-		"INSERT INTO dbvariable (datasetid,sigle,vartype,categvar,nom,description,genre,status)"
-		" VALUES (?,?,?,?,?,?,?,?)";
+		"INSERT INTO dbvariable (datasetid,sigle,vartype,categvar,nom,description,genre,status,weight)"
+		" VALUES (?,?,?,?,?,?,?,?,?)";
 	static const char *SQL_UPDATE_VARIABLE =
 		"UPDATE dbvariable SET optlock = optlock + 1,"
-		" sigle = ?, vartype = ?, categvar = ?, nom = ?, description = ?, genre = ?, status = ? WHERE variableid = ?";
+		" sigle = ?, vartype = ?, categvar = ?, nom = ?, description = ?, genre = ?, status = ?,weight = ? WHERE variableid = ?";
 	static const char *SQL_REMOVE_VARIABLE =
 		"DELETE FROM dbvariable WHERE variableid = ?";
 	static const char *SQL_FIND_DATASET_VARIABLES_COUNT =
@@ -123,21 +125,21 @@ namespace info {
 		" WHERE datasetid = ? ORDER BY individ ASC"
 		" LIMIT ? OFFSET ?";
 	static const char *SQL_FIND_DATASET_INDIVS =
-		"SELECT individ,optlock,datasetid,sigle,nom,description,status"
+		"SELECT individ,optlock,datasetid,sigle,nom,description,status,weight"
 		" FROM dbindiv WHERE datasetid = ? ORDER BY sigle"
 		" LIMIT ? OFFSET ?";
 	static const char *SQL_INDIV_BY_ID =
-		"SELECT individ,optlock,datasetid,sigle,nom,description,status"
+		"SELECT individ,optlock,datasetid,sigle,nom,description,status,weight"
 		" FROM dbindiv WHERE individ = ?";
 	static const char *SQL_INDIV_BY_DATASET_AND_SIGLE =
-		"SELECT individ,optlock,datasetid,sigle,nom,description,status"
+		"SELECT individ,optlock,datasetid,sigle,nom,description,status,weight"
 		" FROM dbindiv WHERE datasetid = ? AND UPPER(LTRIM(RTRIM(sigle))) = ?";
 	static const char *SQL_INSERT_INDIV =
-		"INSERT INTO dbindiv (datasetid,sigle,nom,description,status)"
-		" VALUES(?,?,?,?,?)";
+		"INSERT INTO dbindiv (datasetid,sigle,nom,description,status,weight)"
+		" VALUES(?,?,?,?,?,?)";
 	static const char *SQL_UPDATE_INDIV =
 		"UPDATE dbindiv SET optlock = OPTLOCK + 1,"
-		" sigle = ?, nom = ?, description = ?, status = ? WHERE individ = ?";
+		" sigle = ?, nom = ?, description = ?, status = ?,weight = ? WHERE individ = ?";
 	static const char *SQL_REMOVE_INDIV =
 		"DELETE FROM dbindiv WHERE individ = ?";
 	//
@@ -648,13 +650,18 @@ namespace info {
 					oInd.get_name(name);
 					oInd.get_status(status);
 					oInd.get_desc(desc);
+					double w = oInd.weight();
+					if (w < 0.0) {
+						w = 0;
+					}
 					IntType nDatasetId = oInd.get_dataset_id();
 					if (nId != 0) {
 						qUpdate.bind(1, sigle);
 						qUpdate.bind(2, name);
 						qUpdate.bind(3, desc);
 						qUpdate.bind(4, status);
-						qUpdate.bind(5, nId);
+						qUpdate.bind(5, w);
+						qUpdate.bind(6, nId);
 						qUpdate.exec();
 					}
 					else {
@@ -663,6 +670,7 @@ namespace info {
 						qInsert.bind(3, name);
 						qInsert.bind(4, desc);
 						qInsert.bind(5, status);
+						qInsert.bind(6, w);
 						qInsert.exec();
 					}
 				}
@@ -853,6 +861,10 @@ namespace info {
 					oVar.get_genre(genre);
 					oVar.get_vartype(vartype);
 					IntType nDatasetId = oVar.get_dataset_id();
+					double w = oVar.weight();
+					if (w < 0) {
+						w = 0;
+					}
 					if (nId != 0) {
 						qUpdate.bind(1, sigle);
 						qUpdate.bind(2, vartype);
@@ -861,7 +873,8 @@ namespace info {
 						qUpdate.bind(5, desc);
 						qUpdate.bind(6, genre);
 						qUpdate.bind(7, status);
-						qUpdate.bind(8, nId);
+						qUpdate.bind(8, w);
+						qUpdate.bind(9, nId);
 						qUpdate.exec();
 					}
 					else {
@@ -873,6 +886,7 @@ namespace info {
 						qInsert.bind(6, desc);
 						qInsert.bind(7, genre);
 						qInsert.bind(8, status);
+						qInsert.bind(9, w);
 						qInsert.exec();
 					}
 				}// writeable
@@ -1252,6 +1266,7 @@ namespace info {
 	void SQLiteStatHelper::read_variable(SQLite_Statement &q, DBStatVariable &cur) {
 		std::string sSigle, sName, status, sDesc, sGenre, sType;
 		IntType nId, nVersion, nCateg, nDatasetId;
+		double w = 1.0;
 		q.get_column(0, nId);
 		q.get_column(1, nVersion);
 		q.get_column(2, nDatasetId);
@@ -1262,14 +1277,16 @@ namespace info {
 		q.get_column(7, sDesc);
 		q.get_column(8, sGenre);
 		q.get_column(9, status);
+		q.get_column(10, w);
 		bool bCateg = (nCateg != 0) ? true : false;
-		cur = DBStatVariable(nId, nVersion, status, sSigle, sName, sDesc, nDatasetId,
+		cur = DBStatVariable(nId, nVersion, status, sSigle, sName, sDesc, nDatasetId,w,
 			bCateg, sType, sGenre);
 	}
 
 	void SQLiteStatHelper::read_indiv(SQLite_Statement &q, DBStatIndiv &cur) {
 		std::string sSigle, sName, status, sDesc;
 		IntType nId, nVersion, nDatasetId;
+		double w = 1.0;
 		q.get_column(0, nId);
 		q.get_column(1, nVersion);
 		q.get_column(2, nDatasetId);
@@ -1277,8 +1294,9 @@ namespace info {
 		q.get_column(4, sName);
 		q.get_column(5, sDesc);
 		q.get_column(6, status);
+		q.get_column(7, w);
 		//
-		cur = DBStatIndiv(nId, nVersion, status, sSigle, sName, sDesc, nDatasetId);
+		cur = DBStatIndiv(nId, nVersion, status, sSigle, sName, sDesc, nDatasetId,w);
 	}
 
 	void SQLiteStatHelper::read_value(SQLite_Statement &q, DBStatValue &cur) {
