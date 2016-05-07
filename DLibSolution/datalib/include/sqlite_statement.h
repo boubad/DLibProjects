@@ -12,6 +12,7 @@
 #include "dbvalue.h"
 //////////////////////////////////
 #include <boost/noncopyable.hpp>
+#include <boost/container/vector.hpp>
 /////////////////////////////////
 typedef struct sqlite3_stmt sqlite3_stmt;
 ///////////////////////////////
@@ -21,8 +22,8 @@ namespace info {
 	//////////////////////////////////
 	class SQLite_Statement : private boost::noncopyable {
 		friend class SQLite_Database;
-		typedef std::vector<std::string> strings_vector;
-		typedef std::vector<info::DbValue> values_vector;
+		typedef boost::container::vector<std::string> strings_vector;
+		typedef boost::container::vector<DbValue> values_vector;
 	private:
 		bool m_first;
 		SQLite_Database *m_pBase;
@@ -63,7 +64,6 @@ namespace info {
 		bool set_parameter(int iParam, const wchar_t *pwszVal);
 		bool set_parameter(int iParam, const std::string &sVal);
 		bool set_parameter(int iParam, const std::wstring &sVal);
-		bool set_parameter(int iParam, const Blob &oBlob);
 		//
 		bool set_parameter_null(const std::string &sname);
 		bool set_parameter_null(const std::wstring &sname);
@@ -73,8 +73,6 @@ namespace info {
 		bool set_parameter(const std::wstring &sname, double dval);
 		bool set_parameter(const std::string &sname, const std::string &sval);
 		bool set_parameter(const std::wstring &sname, const std::wstring &sval);
-		bool set_parameter(const std::string &sname, const info::Blob &oBlob);
-		bool set_parameter(const std::wstring &sname, const info::Blob &oBlob);
 		//
 		bool exec(void);
 		bool next(void);
@@ -127,11 +125,7 @@ namespace info {
 			this->col_value((int)idx, v);
 			v.string_value(item);
 		}
-		void get_column(unsigned long idx, Blob &item) {
-			DbValue v;
-			this->col_value((int)idx, v);
-			v.blob_value(item);
-		}
+		
 	public:
 		void bind(unsigned long parameter_id, int item) {
 			this->set_parameter((int)parameter_id, item);
@@ -151,9 +145,6 @@ namespace info {
 		void bind(unsigned long parameter_id, const std::wstring &item) {
 			this->set_parameter((int)parameter_id, item);
 		}
-		void bind(unsigned long parameter_id, const Blob &item) {
-			this->set_parameter((int)parameter_id, item);
-		}
 		void bind_null(unsigned long parameter_id) {
 			this->set_parameter_null((int)parameter_id);
 		}
@@ -169,11 +160,6 @@ namespace info {
 		void bind_double(unsigned long parameter_id, double item) {
 			this->set_parameter((int)parameter_id, item);
 		}
-		void bind_object(unsigned long parameter_id, const Blob & item) {
-			this->set_parameter((int)parameter_id, item);
-		}
-	private:
-		void force_close(void);
 	};
 
 } /* namespace sqlite */

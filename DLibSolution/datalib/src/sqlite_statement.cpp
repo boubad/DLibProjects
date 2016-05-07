@@ -4,16 +4,21 @@
 *  Created on: 17 sept. 2013
 *      Author: Boubacar
 */
-#include "sqlite3.h"
+#include "./sqlite/sqlite3.h"
 //////////////////////////////
 #include "../include/dbvalue.h"
 #include "../include/sqlite_database.h"
 #include "../include/sqlite_statement.h"
 #include "../include/stringconvert.h"
+//////////////////////////////////
+#include <boost/assert.hpp>
 /////////////////////////////
 namespace info {
 	////////////////////////////////////////////
 	void SQLite_Statement::init(SQLite_Database &oBase, const char *pszSQL) {
+		BOOST_ASSERT(oBase.is_open());
+		BOOST_ASSERT(pszSQL != nullptr);
+		//
 		this->m_pBase = &oBase;
 		this->m_pstmt = nullptr;
 		this->m_lastcode = SQLITE_OK;
@@ -25,10 +30,6 @@ namespace info {
 		int rc = ::sqlite3_prepare_v2(pdb, pszSQL, nbytes, &pRes, &pszTail);
 		if ((rc == SQLITE_OK) && (pRes != nullptr)) {
 			this->m_pstmt = pRes;
-			{
-				std::lock_guard<std::mutex> oLock(this->m_pBase->_mutex);
-				this->m_pBase->m_stmts.push_back(this);
-			}
 		}
 		else {
 			this->m_pBase->internal_get_error();
@@ -200,14 +201,7 @@ namespace info {
 				}
 								  break;
 				case SQLITE_BLOB: {
-					Blob oBlob;
-					const void *p0 = ::sqlite3_column_blob(p, icol);
-					int nSize = ::sqlite3_column_bytes(p, icol);
-					if ((p0 != nullptr) && (nSize > 0)) {
-						const byte *pData = reinterpret_cast<const byte *>(p0);
-						oBlob.data(pData, nSize);
-					} //nSize
-					vals[icol] = DbValue(oBlob);
+					
 				}
 								  break;
 				default:
@@ -269,14 +263,7 @@ namespace info {
 			}
 							  break;
 			case SQLITE_BLOB: {
-				Blob oBlob;
-				const void *p0 = ::sqlite3_column_blob(p, icol);
-				int nSize = ::sqlite3_column_bytes(p, icol);
-				if ((p0 != nullptr) && (nSize > 0)) {
-					const byte *pData = reinterpret_cast<const byte *>(p0);
-					oBlob.data(pData, nSize);
-				} //nSize
-				vals[icol] = DbValue(oBlob);
+				
 			}
 							  break;
 			default:
@@ -285,13 +272,6 @@ namespace info {
 		} // icol
 		return (true);
 	} // next
-	void SQLite_Statement::force_close(void) {
-		::sqlite3_stmt *p = this->m_pstmt;
-		if (p != nullptr) {
-			::sqlite3_finalize(p);
-			this->m_pstmt = nullptr;
-		} // p
-	} // force_close
 	bool SQLite_Statement::close(void) {
 		bool bRet = true;
 		::sqlite3_stmt *p = this->m_pstmt;
@@ -305,18 +285,6 @@ namespace info {
 				this->m_pstmt = nullptr;
 			}
 		}
-		SQLite_Database *pBase = this->m_pBase;
-		if (pBase != nullptr) {
-			std::lock_guard<std::mutex> oLock(this->m_pBase->_mutex);
-			SQLite_Database::statements_list &olist = pBase->m_stmts;
-			for (auto it = olist.begin(); it != olist.end(); ++it) {
-				PSQLite_Statement p0 = *it;
-				if (p0 == this) {
-					olist.erase(it);
-					return (true);
-				}
-			} // it
-		} // pBase
 		return (bRet);
 	} // close
 	bool SQLite_Statement::reset(void) {
@@ -372,24 +340,8 @@ namespace info {
 	} // set_parameter
 	bool SQLite_Statement::set_parameter(int iParam, const char *pszVal) {
 		::sqlite3_stmt *p = this->m_pstmt;
-		DLIB_ASSERT(pszVal != nullptr, "String must not be null");
 		int nbytes = -1;
 		if (::sqlite3_bind_text(p, iParam, pszVal, nbytes,
-			SQLITE_TRANSIENT) != SQLITE_OK) {
-			this->m_pBase->internal_get_error();
-			return (false);
-		}
-		return (true);
-	} // set_parameter
-	bool SQLite_Statement::set_parameter(int iParam, const Blob &oBlob) {
-		::sqlite3_stmt *p = this->m_pstmt;
-		size_t nSize = oBlob.size();
-		const void *pData = (const void *)oBlob.data();
-		if ((nSize < 1) || (pData == nullptr)) {
-			return (false);
-		}
-		int nbytes = (int)(nSize * sizeof(byte));
-		if (::sqlite3_bind_blob(p, iParam, pData, nbytes,
 			SQLITE_TRANSIENT) != SQLITE_OK) {
 			this->m_pBase->internal_get_error();
 			return (false);
@@ -441,21 +393,9 @@ namespace info {
 		}
 		return this->set_parameter(iParam, dval);
 	}
-	bool SQLite_Statement::set_parameter(const std::string &sname, const Blob &oBlob) {
-		::sqlite3_stmt *p = this->m_pstmt;
-		int iParam = ::sqlite3_bind_parameter_index(p, sname.c_str());
-		if (iParam < 1) {
-			return (false);
-		}
-		return this->set_parameter(iParam, oBlob);
-	}
 	bool SQLite_Statement::set_parameter(const std::wstring &sname, double dval) {
 		std::string ss = StringConvert::ws2s(sname);
 		return this->set_parameter(ss, dval);
-	}
-	bool SQLite_Statement::set_parameter(const std::wstring &sname, const Blob &oBlob) {
-		std::string ss = StringConvert::ws2s(sname);
-		return this->set_parameter(ss, oBlob);
 	}
 	bool SQLite_Statement::set_parameter(const std::string &sname,
 		const std::string &sval) {

@@ -6,123 +6,12 @@
 ///////////////////////////
 #include "../include/stringconvert.h"
 ////////////////////////////////
+#include <boost/assert.hpp>
 #include <sstream>
 /////////////////////////////////////////
 namespace info
 {
 ///////////////////////////////////////////////
-Blob::Blob() :
-    m_size(0)
-{
-} // Blob
-Blob::Blob(size_t nSize) :
-    m_size(0)
-{
-    if (nSize > 0)
-    {
-        this->m_data.reset(new byte[nSize]);
-        assert(this->m_data.get() != nullptr);
-        this->m_size = nSize;
-    } // nSize
-} // Blob
-Blob::Blob(const byte *pData, size_t nSize) :
-    m_size(0)
-{
-    if (nSize > 0)
-    {
-        this->m_data.reset(new byte[nSize]);
-        byte *pDest = this->m_data.get();
-        assert(pDest != nullptr);
-        this->m_size = nSize;
-        if (pData != nullptr)
-        {
-            const byte *pSrc = pData;
-            while (nSize > 0)
-            {
-                *pDest++ = *pSrc++;
-                --nSize;
-            }
-        } // pData
-    } // nSize
-} // Blob
-Blob::Blob(const Blob &other) :
-    m_size(0)
-{
-    size_t nSize = other.m_size;
-    const byte *pData = other.m_data.get();
-    if (nSize > 0)
-    {
-        this->m_data.reset(new byte[nSize]);
-        byte *pDest = this->m_data.get();
-        assert(pDest != nullptr);
-        this->m_size = nSize;
-        if (pData != nullptr)
-        {
-            const byte *pSrc = pData;
-            while (nSize > 0)
-            {
-                *pDest++ = *pSrc++;
-                --nSize;
-            }
-        } // pData
-    } // nSi
-} // Blob
-Blob & Blob::operator=(const Blob &other)
-{
-    if (this != &other)
-    {
-        this->m_data.reset();
-        this->m_size = 0;
-        size_t nSize = other.m_size;
-        const byte *pData = other.m_data.get();
-        if (nSize > 0)
-        {
-            this->m_data.reset(new byte[nSize]);
-            byte *pDest = this->m_data.get();
-            assert(pDest != nullptr);
-            this->m_size = nSize;
-            if (pData != nullptr)
-            {
-                const byte *pSrc = pData;
-                while (nSize > 0)
-                {
-                    *pDest++ = *pSrc++;
-                    --nSize;
-                }
-            } // pData
-        } // nSi
-    } // copy
-    return (*this);
-} // operator=
-Blob::~Blob()
-{
-} // ~Blob
-void Blob::data(const byte *pData, size_t nSize)
-{
-    byte *pOld = this->m_data.get();
-    if (pOld != pData)
-    {
-        this->m_data.reset();
-        this->m_size = 0;
-        if (nSize > 0)
-        {
-            this->m_data.reset(new byte[nSize]);
-            byte *pDest = this->m_data.get();
-            assert(pDest != nullptr);
-            this->m_size = nSize;
-            if (pData != nullptr)
-            {
-                const byte *pSrc = pData;
-                while (nSize > 0)
-                {
-                    *pDest++ = *pSrc++;
-                    --nSize;
-                }
-            } // pData
-        } // nSize
-    } // copy
-} // data
-////////////////////////////////////////////////
 DbValue::DbValue() {}
 DbValue::DbValue(bool bval) :
     m_val(bval)
@@ -178,11 +67,6 @@ DbValue::DbValue(const std::string &sval) :
 DbValue::DbValue(const std::wstring &wsval) :
     m_val(wsval)
 {
-}
-DbValue::DbValue(const Blob &oBlob)
-{
-    Blob b(oBlob);
-    this->m_val = boost::any(b);
 }
 DbValue::DbValue(const DbValue &other) :m_val(other.m_val)
 {
@@ -274,12 +158,6 @@ DbValue & DbValue::operator=(const std::wstring &s)
 {
     std::wstring ss(s);
     this->m_val = boost::any(ss);
-    return *this;
-}
-DbValue & DbValue::operator=(const Blob &oBlob)
-{
-    Blob b(oBlob);
-    this->m_val = boost::any(b);
     return *this;
 }
 const std::type_info & DbValue::type(void) const
@@ -402,11 +280,6 @@ bool DbValue::bool_value(void) const
                 oRet = (c == L't') || (c == L'1') || (c == L'v') || (c == L'o') ||
                        (c == L'T') || (c == L'V') || (c == L'O') || (c == L'Y');
             } // not empty
-        }
-        else if (t == typeid(Blob))
-        {
-            Blob x = boost::any_cast<Blob>(v);
-            oRet = x.is_valid();
         }
     } // not empty
     return (oRet);
@@ -897,11 +770,7 @@ short DbValue::short_value(void) const
                 in >> oRet;
             } // not empty
         }
-        else if (t == typeid(Blob))
-        {
-            Blob x = boost::any_cast<Blob>(v);
-            oRet = (short)x.size();
-        }
+       
     } // not empty
     return (oRet);
 } // short_value
@@ -992,11 +861,7 @@ unsigned short DbValue::unsigned_short_value(void) const
                 in >> oRet;
             } // not empty
         }
-        else if (t == typeid(Blob))
-        {
-            Blob x = boost::any_cast<Blob>(v);
-            oRet = (unsigned short)x.size();
-        }
+       
     } // not empty
     return (oRet);
 } // unsigned_short_value
@@ -1087,11 +952,7 @@ int DbValue::int_value(void) const
                 in >> oRet;
             } // not empty
         }
-        else if (t == typeid(Blob))
-        {
-            Blob x = boost::any_cast<Blob>(v);
-            oRet = (int)x.size();
-        }
+        
     } // not empty
     return (oRet);
 } // int_value
@@ -1181,11 +1042,7 @@ unsigned int DbValue::unsigned_int_value(void) const
                 in >> oRet;
             } // not empty
         }
-        else if (t == typeid(Blob))
-        {
-            Blob x = boost::any_cast<Blob>(v);
-            oRet = (unsigned int)x.size();
-        }
+       
     } // not empty
     return (oRet);
 } // unsigned_int_value
@@ -1275,11 +1132,7 @@ long DbValue::long_value(void) const
                 in >> oRet;
             } // not empty
         }
-        else if (t == typeid(Blob))
-        {
-            Blob x = boost::any_cast<Blob>(v);
-            oRet = (long)x.size();
-        }
+        
     } // not empty
     return (oRet);
 } // long_value
@@ -1369,11 +1222,7 @@ unsigned long DbValue::unsigned_long_value(void) const
                 in >> oRet;
             } // not empty
         }
-        else if (t == typeid(Blob))
-        {
-            Blob x = boost::any_cast<Blob>(v);
-            oRet = (unsigned long)x.size();
-        }
+        
     } // not empty
     return (oRet);
 } // unsigned_long_value
@@ -1463,11 +1312,7 @@ float DbValue::float_value(void) const
                 in >> oRet;
             } // not empty
         }
-        else if (t == typeid(Blob))
-        {
-            Blob x = boost::any_cast<Blob>(v);
-            oRet = (float)x.size();
-        }
+        
     } // not empty
     return (oRet);
 } // float_value
@@ -1557,11 +1402,7 @@ double DbValue::double_value(void) const
                 in >> oRet;
             } // not empty
         }
-        else if (t == typeid(Blob))
-        {
-            Blob x = boost::any_cast<Blob>(v);
-            oRet = (double)x.size();
-        }
+       
     } // not empty
     return (oRet);
 } // double_value
@@ -1679,33 +1520,6 @@ bool DbValue::string_value(std::string &s) const
             std::wstring x = boost::any_cast<std::wstring>(v);
             s = StringConvert::ws2s(x);
             bRet = true;
-        }
-        else if (t == typeid(Blob))
-        {
-            Blob x = boost::any_cast<Blob>(v);
-            const byte *p0 = x.data();
-            size_t n = x.size();
-            if ((n > 0) && (p0 != nullptr))
-            {
-                std::unique_ptr<char> oTemp(new char[n + 1]);
-                char *pDest = oTemp.get();
-                if (pDest != nullptr)
-                {
-                    char *pd = pDest;
-                    size_t nx = n;
-                    while (nx > 0)
-                    {
-                        char c = (char)(*p0);
-                        *pd = c;
-                        p0++;
-                        pd++;
-                        --nx;
-                    }
-                    pDest[n] = (char)0;
-                    s = pDest;
-                    bRet = true;
-                } // pDest
-            } // valid
         }
     } // not empty
     return (bRet);
@@ -1825,50 +1639,11 @@ bool DbValue::string_value(std::wstring &s) const
             s = boost::any_cast<std::wstring>(v);
             bRet = true;
         }
-        else if (t == typeid(Blob))
-        {
-            Blob x = boost::any_cast<Blob>(v);
-            const byte *p0 = x.data();
-            size_t n = x.size();
-            if ((n > 0) && (p0 != nullptr))
-            {
-                std::unique_ptr<wchar_t> oTemp(new wchar_t[n + 1]);
-                wchar_t *pDest = oTemp.get();
-                if (pDest != nullptr)
-                {
-                    wchar_t *pd = pDest;
-                    size_t nx = n;
-                    while (nx > 0)
-                    {
-                        wchar_t c = (wchar_t)(*p0);
-                        *pd = c;
-                        p0++;
-                        pd++;
-                        --nx;
-                    }
-                    pDest[n] = (wchar_t)0;
-                    s = pDest;
-                    bRet = true;
-                } // pDest
-            } // valid
-        }
+       
     } // not empty
     return (bRet);
 } // string_value
-bool DbValue::blob_value(Blob &oBlob) const
-{
-    bool bRet = false;
-    const boost::any &v = this->m_val;
-    if (!v.empty())
-    {
-        if (v.type() == typeid(Blob))
-        {
-            oBlob = boost::any_cast<Blob>(v);
-            bRet = true;
-        }
-    } // not empty
-    return (bRet);
-} // blob_value
+
 DbValueType DbValue::get_dbvalue_type(void) const{
     DbValueType bRet = DbValueType::emptyType;
     const boost::any &v = this->m_val;
@@ -1930,10 +1705,6 @@ DbValueType DbValue::get_dbvalue_type(void) const{
         else if (t == typeid(std::wstring))
         {
             bRet = DbValueType::wstringType;
-        }
-        else if (t == typeid(Blob))
-        {
-            bRet = DbValueType::blobType;
         }
     } // not empty
     return (bRet);

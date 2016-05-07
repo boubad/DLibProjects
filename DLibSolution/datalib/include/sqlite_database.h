@@ -3,9 +3,7 @@
 #define __SQLITE_DATABASE_H__
 /////////////////////////////////
 #include <string>
-#include <list>
 #include <stdexcept>
-#include <mutex>
 //////////////////////////////////////
 #include <boost/noncopyable.hpp>
 ////////////////////////////////////
@@ -15,32 +13,30 @@ namespace info {
 	///////////////////////////////////////
 	class sqlite_error : public std::runtime_error {
 	public:
-		sqlite_error(const std::string &what_arg) :std::runtime_error(what_arg) {}
-		sqlite_error(const char *what_arg):std::runtime_error(what_arg){}
-		sqlite_error(const sqlite_error &other):std::runtime_error(other){}
+		sqlite_error(int nCode,const std::string &what_arg) :std::runtime_error(what_arg),_code(nCode) {}
+		sqlite_error(int nCode,const char *what_arg):std::runtime_error(what_arg),_code(nCode){}
+		sqlite_error(const sqlite_error &other):std::runtime_error(other),_code(other._code){}
 		sqlite_error & operator=(const sqlite_error &other) {
 			if (this != &other) {
 				std::runtime_error::operator=(other);
+				this->_code = other._code;
 			}
 			return (*this);
 		}
 		virtual ~sqlite_error(){}
+		int code(void) const {
+			return (this->_code);
+		}
+	private:
+		int _code;
 	};// class sqlite_error
 	///////////////////////////////////////////
 	class SQLite_Statement;
-	typedef SQLite_Statement *PSQLite_Statement;
-	////////////////////////////////////////
+	/////////////////////////////////////////
 	class SQLite_Database : private boost::noncopyable {
 		friend class SQLite_Statement;
-	public:
-		typedef std::list<PSQLite_Statement> statements_list;
 	private:
-		int m_errorcode;
 		::sqlite3 *m_pDb;
-		std::string m_errorstring;
-		statements_list m_stmts;
-	private:
-		std::mutex _mutex;
 	public:
 		SQLite_Database();
 		SQLite_Database(const char *pszFilename);
@@ -55,8 +51,8 @@ namespace info {
 		bool open(const std::wstring &filename);
 		bool is_open(void) const;
 		bool has_error(void) const;
-		bool get_last_error(std::string &sErr) const;
-		bool get_last_error(std::wstring &sErr) const;
+		bool get_last_error(int &rc,std::string &sErr) const;
+		bool get_last_error(int &rc,std::wstring &sErr) const;
 		bool close(void);
 		bool exec_sql(const char *pszSQL);
 		bool exec_sql(const wchar_t *pszSQL);
@@ -79,8 +75,6 @@ namespace info {
 		void commit_transaction(void);
 		void rollback_transaction(void);
 	protected:
-		virtual void prepare_close(void);
-		void internal_clear_error(void);
 		void internal_get_error(void);
 	}; // class SQLite_Database
 	/////////////////////////////////////////

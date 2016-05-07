@@ -19,6 +19,9 @@
     <Filter Include="include">
       <UniqueIdentifier>{62c7a702-7b97-4ec0-9dbc-e6c9de2c4001}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\sqlite">
+      <UniqueIdentifier>{c3340ac2-1180-433e-aa22-d2bf4b2f3da8}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
@@ -42,17 +45,17 @@
     <ClInclude Include="include\stringconvert.h">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="src\sqlite3.h">
-      <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="src\sqlite3ext.h">
-      <Filter>src</Filter>
-    </ClInclude>
     <ClInclude Include="include\sqlite_database.h">
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\sqlite_statement.h">
       <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="src\sqlite\sqlite3.h">
+      <Filter>src\sqlite</Filter>
+    </ClInclude>
+    <ClInclude Include="src\sqlite\sqlite3ext.h">
+      <Filter>src\sqlite</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -60,9 +63,6 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="src\dbvalue.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="src\sqlite3.c">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="src\sqlitestathelper.cpp">
@@ -73,6 +73,9 @@
     </ClCompile>
     <ClCompile Include="src\sqlite_statement.cpp">
       <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sqlite\sqlite3.c">
+      <Filter>src\sqlite</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
