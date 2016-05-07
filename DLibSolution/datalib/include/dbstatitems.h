@@ -40,9 +40,6 @@ namespace info {
 		virtual bool is_writeable(void) const;
 		virtual bool is_updateable(void) const;
 		virtual bool is_removeable(void) const;
-		//
-		virtual std::ostream & write_to(std::ostream &os) const;
-		virtual std::istream & read_from(std::istream &in);
 	};// class StatBaseItem
 	///////////////////////////////////////////////
 	class StatNamedItem : public StatBaseItem {
@@ -78,9 +75,6 @@ namespace info {
 		void set_desc(const std::string &s);
 	public:
 		virtual bool is_writeable(void) const;
-		//
-		virtual std::ostream & write_to(std::ostream &os) const;
-		virtual std::istream & read_from(std::istream &in);
 	};
 	////////////////////////////////////////////////
 	class DBStatDataset : public StatNamedItem {
@@ -116,9 +110,6 @@ namespace info {
 		IntType get_dataset_id(void) const;
 		void set_dataset_id(const IntType n);
 		virtual bool is_writeable(void) const;
-		//
-		virtual std::ostream & write_to(std::ostream &os) const;
-		virtual std::istream & read_from(std::istream &in);
 	}; // class DBStatDatasetChild
 	 ///////////////////////////////////////////////
 	class DBStatVariable : public DBStatDatasetChild {
@@ -155,8 +146,6 @@ namespace info {
 		void swap(DBStatVariable &other);
 		//
 		virtual bool is_writeable(void) const;
-		virtual std::ostream & write_to(std::ostream &os) const;
-		virtual std::istream & read_from(std::istream &in);
 	}; // class DBStatVariable
 	///////////////////////////////////////////////////
 	class DBStatIndiv : public DBStatDatasetChild {
@@ -201,8 +190,6 @@ namespace info {
 		void set_value(const DbValue &v);
 		virtual bool is_writeable(void) const;
 		void swap(DBStatValue &other);
-		virtual std::ostream & write_to(std::ostream &os) const;
-		virtual std::istream & read_from(std::istream &in);
 	}; // class DBStatValue
 	////////////////////////////////////////////////////
 }// namespace info
@@ -210,41 +197,17 @@ namespace info {
 inline void swap(info::DBStatDataset &v1, info::DBStatDataset &v2) {
 	v1.swap(v2);
 }
-inline std::ostream & serialize(const info::DBStatDataset &v, std::ostream &os) {
-	return v.write_to(os);
-}
-inline std::istream & deserialize(info::DBStatDataset &v, std::istream &in) {
-	return v.read_from(in);
-}
 /////////////////////////////////
 inline void swap(info::DBStatVariable &v1, info::DBStatVariable &v2) {
 	v1.swap(v2);
-}
-inline std::ostream & serialize(const info::DBStatVariable &v, std::ostream &os) {
-	return v.write_to(os);
-}
-inline std::istream & deserialize(info::DBStatVariable &v, std::istream &in) {
-	return v.read_from(in);
 }
 /////////////////////////////////////////
 inline void swap(info::DBStatIndiv &v1, info::DBStatIndiv &v2) {
 	v1.swap(v2);
 }
-inline std::ostream & serialize(const info::DBStatIndiv &v, std::ostream &os) {
-	return v.write_to(os);
-}
-inline std::istream & deserialize(info::DBStatIndiv &v, std::istream &in) {
-	return v.read_from(in);
-}
 /////////////////////////////////////////////////
 inline void swap(info::DBStatValue &v1, info::DBStatValue &v2) {
 	v1.swap(v2);
-}
-inline std::ostream & serialize(const info::DBStatValue &v, std::ostream &os) {
-	return v.write_to(os);
-}
-inline std::istream & deserialize(info::DBStatValue &v, std::istream &in) {
-	return v.read_from(in);
 }
 /////////////////////////////////////////
 #endif // !__DBSTATITEMS_H__
