@@ -71,6 +71,7 @@ typedef std::vector<IndivCluster> indivclusters_vector;
 extern size_t info_global_clusterize_kmeans(IIndivProvider *pProvider,
 		const size_t nbClusters,indivclusters_vector &Res,
 		const size_t nbMaxIterations = 100);
+extern void info_global_add_clusterize_result(const indivclusters_vector &oClusters, InfoCritItems &oInfos);
 /////////////////////////////
 }// namespace info
 /////////////////////////////////

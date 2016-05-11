@@ -501,25 +501,32 @@ namespace UnitTestStatData
 			StoreIndivProvider oProvider(pMan, oSet);
 			Assert::IsTrue(oProvider.is_valid());
 			//
+			const size_t NB_RUNS = 50;
+			InfoCritItems oInfos;
+			//
 			size_t nbClusters = 5;
-			for (int k = 0; k < 5; ++k) {
+			for (int k = 0; k < NB_RUNS; ++k) {
 				indivclusters_vector oClusters;
 				size_t nbIters = info_global_clusterize_kmeans(&oProvider, nbClusters, oClusters);
 				Assert::IsTrue(nbIters > 0);
-				std::stringstream out;
-				out << "nb iters: " << nbIters << std::endl;
-				std::string sx = out.str();
-				Logger::WriteMessage(sx.c_str());
-				std::for_each(oClusters.begin(), oClusters.end(), [&](const IndivCluster &c) {
-					std::stringstream os;
-					std::string s;
-					write_point(c.center(), s);
-					os << "cluster " << c.index() << "\tsize: " << c.members().size() << "\t " << s;
-					std::string ss = os.str();
-					Logger::WriteMessage(ss.c_str());
-				});
-				Logger::WriteMessage("===================");
+				info_global_add_clusterize_result(oClusters, oInfos);
 			}// k
+			const ints_set &iSet = oInfos.indexes();
+			for (auto it =iSet.begin(); it != iSet.end(); ++it) {
+				IntType aIndex1 = *it;
+				for (auto jt = iSet.begin(); jt != it; ++jt) {
+					IntType aIndex2 = *jt;
+					double v = 0;
+					bool b = oInfos.get(aIndex1, aIndex2, v);
+					if (b) {
+						double x = v / NB_RUNS;
+						std::stringstream os;
+						os << aIndex1 << " -->  " << aIndex2 << "\t" << x;
+						std::string ss = os.str();
+						Logger::WriteMessage(ss.c_str());
+					}// b
+				}// jt
+			}// it
 		} // testClusterizeKMeans
 	};// clasds UnitTestSQLiteStatHelper
 	//////////////////////

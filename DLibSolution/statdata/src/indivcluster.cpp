@@ -95,6 +95,32 @@ namespace info {
 		} // iter
 		return (iter);
 	}		//info_global_clusterize_kmeans
+	extern void info_global_add_clusterize_result(const indivclusters_vector &oClusters, InfoCritItems &oInfos) {
+		ints_size_t_map curMap;
+		std::for_each(oClusters.begin(), oClusters.end(), [&curMap](const IndivCluster &c) {
+			c.get_map(curMap);
+		});
+		ints_set oSet;
+		for (auto it = curMap.begin(); it != curMap.end(); ++it) {
+			const IntType aIndex = (*it).first;
+			oSet.insert(aIndex);
+		}// it
+		for (auto it = oSet.begin(); it != oSet.end(); ++it) {
+			const IntType aIndex1 = *it;
+			const size_t cluster1 = curMap[aIndex1];
+			for (auto jt = oSet.begin(); jt != it; ++jt) {
+				const IntType aIndex2 = *jt;
+				const size_t cluster2 = curMap[aIndex2];
+				if (cluster1 == cluster2) {
+					double v = 1;
+					if (oInfos.get(aIndex2, aIndex1, v)) {
+						v = v + 1.0;
+					}
+					oInfos.add(aIndex2, aIndex1, v);
+				}// equal
+			}// jt
+		}// it
+	}//info_global_add_clusterize_result
 	///////////////////////////////////
 	IndivCluster::IndivCluster() :
 		m_mustdelete(false), m_index(0), m_provider(nullptr), m_pdist(nullptr) {

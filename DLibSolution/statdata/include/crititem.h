@@ -59,6 +59,8 @@ public:
 	bool get(const IntType i1, const IntType i2, double &v) const;
 	bool get(CritItem &item) const;
 }; // class IndivDistanceMap
+///////////////////////////////////////////
+typedef IndivDistanceMap	InfoCritItems;
 ///////////////////////////////////////
 extern void info_global_compute_distances(IIndivProvider *pProvider,IndivDistanceMap &oDistances);
 //////////////////////////////////////
