@@ -6,8 +6,11 @@
 #include <statinfo.h>
 #include <numericindivprovider.h>
 #include <crititem.h>
+#include <indivcluster.h>
 ///////////////////////////////////
 #include "infotestdata.h"
+///////////////////////////
+#include <algorithm>
 //////////////////////////////////////////////
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 using namespace info;
@@ -16,6 +19,19 @@ using namespace info;
 ///////////////////////////////////
 namespace UnitTestStatData
 {
+	/////////////////////////////////////
+	static void write_point(const DbValueMap &oMap,std::string &s) {
+		std::stringstream os;
+		std::for_each(oMap.begin(), oMap.end(), [&](const std::pair<IntType, DbValue> &p) {
+			IntType key = p.first;
+			const DbValue &v = p.second;
+			std::string ss;
+			v.string_value(ss);
+			os << "(" << key << "," << ss << "), ";
+		});
+		s = os.str();
+	}
+	//////////////////////////////////////
 	TEST_CLASS(UnitTestSQLiteStatHelper)
 	{
 		std::unique_ptr<SQLiteStatHelper> m_man;
@@ -451,7 +467,55 @@ namespace UnitTestStatData
 				} // j
 			} // i
 		} //testComputeDistances
-
+		TEST_METHOD(testIndivCluster) {
+			IStoreHelper *pMan = m_man.get();
+			DBStatDataset &oSet = this->m_oset;
+			//
+			SerialStoreIndivProvider oProvider(pMan, oSet);
+			Assert::IsTrue(oProvider.is_valid());
+			//
+			IntType aIndex = 100;
+			IndivCluster oCluster(&oProvider, aIndex);
+			oProvider.reset();
+			do {
+				Indiv oInd;
+				if (!oProvider.next(oInd)) {
+					break;
+				}
+				std::string ss;
+				write_point(oInd.data(), ss);
+				oCluster.add(oInd);
+				Logger::WriteMessage(ss.c_str());
+			} while (true);
+			Logger::WriteMessage("===================");
+			const ints_deque &members = oCluster.members();
+			size_t nc = members.size();
+			Assert::AreEqual(m_nbrows, members.size());
+			oCluster.update_center();
+			std::string ss;
+			write_point(oCluster.center(), ss);
+			Logger::WriteMessage(ss.c_str());
+		} // testIndivCluster
+		TEST_METHOD(testClusterizeKMeans) {
+			IStoreHelper *pMan = m_man.get();
+			DBStatDataset &oSet = this->m_oset;
+			//
+			StoreIndivProvider oProvider(pMan, oSet);
+			Assert::IsTrue(oProvider.is_valid());
+			//
+			size_t nbClusters = 5;
+			indivclusters_vector oClusters;
+			size_t nbIters = info_global_clusterize_kmeans(&oProvider, nbClusters, oClusters);
+			Assert::IsTrue(nbIters > 0);
+			std::for_each(oClusters.begin(), oClusters.end(), [&](const IndivCluster &c) {
+				std::stringstream os;
+				std::string s;
+				write_point(c.center(), s);
+				os << "cluster " << c.index() << "\tsize: " << c.members().size() << "\t " << s;
+				std::string ss = os.str();
+				Logger::WriteMessage(ss.c_str());
+			});
+		} // testClusterizeKMeans
 	};// clasds UnitTestSQLiteStatHelper
 	//////////////////////
 }

@@ -10,6 +10,11 @@
 #include <sstream>
 #include <stdexcept>
 #include <memory>
+#include <list>
+#include <set>
+#include <vector>
+#include <map>
+#include <deque>
 ////////////////////////////////////////////
 #include <boost/noncopyable.hpp>
 #include <boost/any.hpp>
@@ -33,13 +38,13 @@ namespace info {
 	//////////////////////////////////////////////////////
 	enum class VariableMode { modeInvalid, modeNumeric, modeNominal, modeAll };
 	////////////////////////////////////////////////////
-	typedef boost::container::list<IntType> ints_list;
-	typedef boost::container::vector<IntType> ints_vector;
-	typedef boost::container::deque<IntType> ints_deque;
-	typedef boost::container::flat_set<IntType> ints_set;
-	typedef boost::container::vector<double> doubles_vector;
-	typedef boost::container::flat_map<IntType, std::string> inttype_string_map;
-	typedef boost::container::vector<std::string> strings_vector;
+	typedef std::list<IntType> ints_list;
+	typedef std::vector<IntType> ints_vector;
+	typedef std::deque<IntType> ints_deque;
+	typedef std::set<IntType> ints_set;
+	typedef std::vector<double> doubles_vector;
+	typedef std::map<IntType, std::string> inttype_string_map;
+	typedef std::vector<std::string> strings_vector;
 	///////////////////////////////////////////////////////////////
 #if defined(USE_DLIB)
 	typedef dlib::mutex info_mutex;
