@@ -7,18 +7,18 @@
 #include "../include/indivcluster.h"
 #include "../include/crititem.h"
  ////////////////////////////////
-#include <map>
-#include <algorithm>
-////////////////////////////////
 namespace info {
 	////////////////////////////////////
 	extern size_t info_global_clusterize_kmeans(IIndivProvider *pProvider,
 		const size_t nbClusters, indivclusters_vector &oRes,
 		const size_t nbMaxIterations /*= 100*/) {
-		BOOST_ASSERT(pProvider != nullptr);
-		BOOST_ASSERT(pProvider->is_valid());
-		BOOST_ASSERT(nbClusters > 1);
-		BOOST_ASSERT(nbMaxIterations > 0);
+		assert(pProvider != nullptr);
+		assert(pProvider->is_valid());
+		assert(nbClusters > 1);
+		assert(nbMaxIterations > 0);
+		//
+		typedef std::map<IntType, size_t> sizet_map;
+		typedef std::pair<IntType, size_t> int_sizet_pair;
 		//
 		size_t nbIndivs = 0;
 		if (!pProvider->indivs_count(nbIndivs)) {
@@ -40,12 +40,12 @@ namespace info {
 		} // i
 		size_t iter = 0;
 		int ni = (int)nbIndivs;
-		std::map<IntType, size_t> oldMap;
+		ints_size_t_map oldMap;
 		while (iter < nbMaxIterations) {
 			//
-			for (size_t i = 0; i < nbClusters; ++i) {
-				(oRes[i]).clear_members();
-			} // i
+			std::for_each(oRes.begin(), oRes.end(), [](IndivCluster &c) {
+				c.clear_members();
+			});
 			for (int i = 0; i < ni; ++i) {
 				CritItem oCritRes;
 				Indiv oInd;
@@ -65,18 +65,11 @@ namespace info {
 					}
 				} // ind
 			} // i
-			  //
-			std::map<IntType, size_t> curMap;
-			curMap.clear();
-			for (size_t i = 0; i < nbClusters; ++i) {
-				IndivCluster &c = oRes[i];
+			ints_size_t_map curMap;
+			std::for_each(oRes.begin(), oRes.end(), [&](IndivCluster &c) {
 				c.update_center();
-				const ints_deque & mm = c.members();
-				size_t aIndex = c.index();
-				BOOST_FOREACH(const IntType &k, mm) {
-					curMap[k] = aIndex;
-				}		  // k
-			} // i
+				c.get_map(curMap);
+			});
 			if (oldMap.empty()) {
 				oldMap = curMap;
 				continue;
@@ -153,6 +146,13 @@ namespace info {
 			this->m_mustdelete = false;
 		}
 	}
+	void IndivCluster::get_map(ints_size_t_map &oMap) const {
+		const ints_deque &vv = this->m_individs;
+		const size_t n = this->m_index;
+		std::for_each(vv.begin(), vv.end(), [n, &oMap](const IntType &key) {
+			oMap[key] = n;
+		});
+	}//get_map
 	bool IndivCluster::is_valid(void) const {
 		if (m_pdist != nullptr) {
 			return (true);
@@ -182,7 +182,7 @@ namespace info {
 		if (this->m_pdist == nullptr) {
 			IndivCluster &o = const_cast<IndivCluster &>(*this);
 			o.m_pdist = new IndivDistanceMap();
-			BOOST_ASSERT(o.m_pdist != nullptr);
+			assert(o.m_pdist != nullptr);
 			o.m_mustdelete = true;
 		}
 		this->m_pdist->add(aIndex1, aIndex2, dRes);
@@ -210,25 +210,26 @@ namespace info {
 		return (this->m_center);
 	}
 	double IndivCluster::distance(const Indiv &oInd) const {
-		DbValueMap curData;
-		{
-			curData = this->m_center;
-		}
+		const DbValueMap & curData = this->m_center;
 		const DbValueMap &m2 = oInd.data();
 		double dRet = 0;
 		size_t nc = 0;
 		typedef std::pair<IntType, DbValue> MyPair;
-		BOOST_FOREACH(const MyPair &oPair, curData) {
-			const IntType key = oPair.first;
-			auto jt = m2.find(key);
-			if (jt != m2.end()) {
-				const DbValue &v1 = oPair.second;
-				const DbValue &v2 = (*jt).second;
-				double t = v1.double_value() - v2.double_value();
-				dRet += t * t;
-				++nc;
-			} // found
-		} // oPair
+		std::for_each(curData.begin(), curData.end(), [&](const MyPair &oPair) {
+			const DbValue &v1 = oPair.second;
+			if (!v1.empty()) {
+				const IntType key = oPair.first;
+				auto jt = m2.find(key);
+				if (jt != m2.end()) {
+					const DbValue &v2 = (*jt).second;
+					if (!v2.empty()) {
+						double t = v1.double_value() - v2.double_value();
+						dRet += t * t;
+						++nc;
+					}// ok
+				}// jt
+			}// v1
+		});
 		if (nc > 1) {
 			dRet /= nc;
 		}
@@ -245,17 +246,17 @@ namespace info {
 		vv.push_back(aIndex);
 	} // add
 	double IndivCluster::distance(const IntType aIndex, ClusterDistanceMode &mode) {
-		BOOST_ASSERT(this->is_valid());
+		assert(this->is_valid());
 		IIndivProvider *pProvider = this->m_provider;
 		Indiv oInd;
 		if (!pProvider->find_indiv(aIndex, oInd, VariableMode::modeNumeric)) {
-			BOOST_ASSERT(false);
+			assert(false);
 			return (false);
 		}
 		return this->distance(oInd, mode);
 	} // distance
 	double IndivCluster::distance(const Indiv &oInd, ClusterDistanceMode &mode) {
-		BOOST_ASSERT(this->is_valid());
+		assert(this->is_valid());
 		IIndivProvider *pProvider = this->m_provider;
 		ints_deque &vv = this->m_individs;
 		const size_t n = vv.size();
@@ -266,7 +267,7 @@ namespace info {
 			Indiv oInd2;
 			if (!pProvider->find_indiv(vv[0], oInd2, VariableMode::modeNumeric)) {
 				mode = ClusterDistanceMode::modeInvalid;
-				BOOST_ASSERT(false);
+				assert(false);
 				return (false);
 			}
 			return (oInd.distance(oInd2));
@@ -275,7 +276,7 @@ namespace info {
 			Indiv oInd2;
 			if (!pProvider->find_indiv(vv[0], oInd2, VariableMode::modeNumeric)) {
 				mode = ClusterDistanceMode::modeInvalid;
-				BOOST_ASSERT(false);
+				assert(false);
 				return (false);
 			}
 			return (oInd.distance(oInd2));
@@ -285,7 +286,7 @@ namespace info {
 			if (!pProvider->find_indiv(vv[n - 1], oInd2,
 				VariableMode::modeNumeric)) {
 				mode = ClusterDistanceMode::modeInvalid;
-				BOOST_ASSERT(false);
+				assert(false);
 				return (false);
 			}
 			return (oInd.distance(oInd2));
@@ -295,7 +296,7 @@ namespace info {
 	} // distance
 	bool IndivCluster::min_distance(const IndivCluster &other, double &dRes,
 		ClusterAppendMode &mode) const {
-		BOOST_ASSERT(this->is_valid());
+		assert(this->is_valid());
 		const ints_deque &vv1 = this->m_individs;
 		const ints_deque &vv2 = other.m_individs;
 		const size_t n1 = vv1.size();
@@ -430,11 +431,11 @@ namespace info {
 		std::map<IntType, size_t> counts;
 		std::map<IntType, double> sommes;
 		ints_deque &vv = this->m_individs;
-		BOOST_FOREACH(IntType aIndex, vv) {
+		std::for_each(vv.begin(), vv.end(), [&](const IntType &aIndex) {
 			Indiv oInd;
-			if (pProvider->find_indiv(aIndex, oInd, VariableMode::modeNumeric)) {
+			if (pProvider->find_indiv(aIndex, oInd)) {
 				const DbValueMap &oMap = oInd.data();
-				BOOST_FOREACH(const MyPair &p, oMap) {
+				std::for_each(oMap.begin(), oMap.end(), [&](const MyPair &p) {
 					const DbValue &v = p.second;
 					if (!v.empty()) {
 						double x = v.double_value();
@@ -452,12 +453,12 @@ namespace info {
 							s += x;
 							sommes[key] = s;
 						}
-					} // not empty
-				} // p
-			} // indiv
-		} // aIndex
+					}// not empty
+				});
+			} // ind
+		});
 		DbValueMap &oRes = this->m_center;
-		this->m_center.clear();
+		oRes.clear();
 		std::for_each(counts.begin(), counts.end(), [&](MyPair2 p) {
 			IntType key = p.first;
 			size_t n = p.second;

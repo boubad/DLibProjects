@@ -4,6 +4,9 @@
 //////////////////////////////
 #define DATATRANSFER_CHUNK_SIZE (100)
 ////////////////////////////////////////////
+#include <cassert>
+#include <cstdlib>
+#include <ctime>
 #include <string>
 #include <cmath>
 #include <iostream>
@@ -15,22 +18,13 @@
 #include <vector>
 #include <map>
 #include <deque>
+#include <algorithm>
+#include <mutex>
 ////////////////////////////////////////////
-#include <boost/noncopyable.hpp>
-#include <boost/any.hpp>
-#include <boost/algorithm/string.hpp>
-#include <boost/container/list.hpp>
-#include <boost/container/deque.hpp>
-#include <boost/container/vector.hpp>
-#include <boost/container/flat_set.hpp>
-#include <boost/container/flat_map.hpp>
-#include <boost/foreach.hpp>
-#include <boost/assert.hpp>
-///////////////////////////////////
+#include "boost_inc.h"
+/////////////////////////////////////
 #if defined(USE_DLIB)
 #include <dlib/threads.h>
-#else
-#include <mutex>
 #endif // USE_DLIB
 ////////////////////////////////////
 namespace info {
@@ -45,6 +39,7 @@ namespace info {
 	typedef std::vector<double> doubles_vector;
 	typedef std::map<IntType, std::string> inttype_string_map;
 	typedef std::vector<std::string> strings_vector;
+	typedef std::map<IntType, size_t> ints_size_t_map;
 	///////////////////////////////////////////////////////////////
 #if defined(USE_DLIB)
 	typedef dlib::mutex info_mutex;

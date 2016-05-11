@@ -169,6 +169,7 @@
     <ClCompile Include="src\workindivprovider.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="include\boost_inc.h" />
     <ClInclude Include="include\crititem.h" />
     <ClInclude Include="include\dbstatitems.h" />
     <ClInclude Include="include\dbvalue.h" />

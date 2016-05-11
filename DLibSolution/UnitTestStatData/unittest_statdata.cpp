@@ -10,12 +10,10 @@
 ///////////////////////////////////
 #include "infotestdata.h"
 ///////////////////////////
-#include <algorithm>
-//////////////////////////////////////////////
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 using namespace info;
 //////////////////////////////
-#include <vector>
+#include <boost/foreach.hpp>
 ///////////////////////////////////
 namespace UnitTestStatData
 {
@@ -101,7 +99,7 @@ namespace UnitTestStatData
 			Assert::IsTrue(bRet);
 			Assert::IsTrue(m_nbcols == oVars.size());
 			//
-			boost::container::flat_map<std::string, DBStatVariable *> pVars;
+			std::map<std::string, DBStatVariable *> pVars;
 			BOOST_FOREACH(const std::string &s, this->m_colnames) {
 				std::string sigle = s;
 				std::string rsigle;
@@ -120,7 +118,7 @@ namespace UnitTestStatData
 				Assert::IsTrue(p != nullptr);
 				pVars[sigle] = p;
 			}
-			boost::container::flat_map<std::string, DBStatIndiv *> pInds;
+			std::map<std::string, DBStatIndiv *> pInds;
 			BOOST_FOREACH(const std::string &s, this->m_rownames) {
 				std::string sigle = s;
 				std::string rsigle;
@@ -504,17 +502,24 @@ namespace UnitTestStatData
 			Assert::IsTrue(oProvider.is_valid());
 			//
 			size_t nbClusters = 5;
-			indivclusters_vector oClusters;
-			size_t nbIters = info_global_clusterize_kmeans(&oProvider, nbClusters, oClusters);
-			Assert::IsTrue(nbIters > 0);
-			std::for_each(oClusters.begin(), oClusters.end(), [&](const IndivCluster &c) {
-				std::stringstream os;
-				std::string s;
-				write_point(c.center(), s);
-				os << "cluster " << c.index() << "\tsize: " << c.members().size() << "\t " << s;
-				std::string ss = os.str();
-				Logger::WriteMessage(ss.c_str());
-			});
+			for (int k = 0; k < 5; ++k) {
+				indivclusters_vector oClusters;
+				size_t nbIters = info_global_clusterize_kmeans(&oProvider, nbClusters, oClusters);
+				Assert::IsTrue(nbIters > 0);
+				std::stringstream out;
+				out << "nb iters: " << nbIters << std::endl;
+				std::string sx = out.str();
+				Logger::WriteMessage(sx.c_str());
+				std::for_each(oClusters.begin(), oClusters.end(), [&](const IndivCluster &c) {
+					std::stringstream os;
+					std::string s;
+					write_point(c.center(), s);
+					os << "cluster " << c.index() << "\tsize: " << c.members().size() << "\t " << s;
+					std::string ss = os.str();
+					Logger::WriteMessage(ss.c_str());
+				});
+				Logger::WriteMessage("===================");
+			}// k
 		} // testClusterizeKMeans
 	};// clasds UnitTestSQLiteStatHelper
 	//////////////////////

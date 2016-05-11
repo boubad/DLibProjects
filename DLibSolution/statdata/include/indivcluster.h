@@ -47,6 +47,7 @@ public:
 	const ints_deque & members(void) const;
 	const DbValueMap &center(void) const;
 public:
+	void get_map(ints_size_t_map &oMap) const;
 	bool is_valid(void) const;
 	bool is_empty(void) const;
 	double distance(const Indiv &oInd) const;
