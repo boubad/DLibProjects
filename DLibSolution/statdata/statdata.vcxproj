@@ -149,6 +149,7 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\clusterize_kmeans.cpp" />
     <ClCompile Include="src\crititem.cpp" />
     <ClCompile Include="src\dbstatitems.cpp" />
     <ClCompile Include="src\dbvalue.cpp" />
@@ -170,6 +171,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\boost_inc.h" />
+    <ClInclude Include="include\clusterize_kmeans.h" />
     <ClInclude Include="include\crititem.h" />
     <ClInclude Include="include\dbstatitems.h" />
     <ClInclude Include="include\dbvalue.h" />

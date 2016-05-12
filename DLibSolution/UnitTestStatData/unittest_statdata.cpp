@@ -7,6 +7,7 @@
 #include <numericindivprovider.h>
 #include <crititem.h>
 #include <indivcluster.h>
+#include <clusterize_kmeans.h>
 ///////////////////////////////////
 #include "infotestdata.h"
 ///////////////////////////
@@ -528,6 +529,33 @@ namespace UnitTestStatData
 				}// jt
 			}// it
 		} // testClusterizeKMeans
+		TEST_METHOD(testClusterizeKMeansCollector) {
+			IStoreHelper *pMan = m_man.get();
+			DBStatDataset &oSet = this->m_oset;
+			//
+			StoreIndivProvider oProvider(pMan, oSet);
+			Assert::IsTrue(oProvider.is_valid());
+			//
+			const size_t NB_RUNS = 2;
+			size_t nbClusters = 5;
+			size_t nbMaxIterations = 50;
+			ClusterizeKMeansCollector oCollector;
+			oCollector.process(&oProvider, nbClusters, nbMaxIterations, NB_RUNS);
+			const indivclusters_vector & oClusters = oCollector.get_clusters();
+			size_t nc = oClusters.size();
+			double criteria = oCollector.get_criteria();
+			{
+				std::stringstream os;
+				os << "Nb Runs: " << oCollector.get_nbruns() << " \tCriteria: " << criteria << std::endl;
+				std::string ss = os.str();
+				Logger::WriteMessage(ss.c_str());
+			}
+			for (size_t i = 0; i < nc; ++i) {
+				std::string ss;
+				write_point(oClusters[i].center(), ss);
+				Logger::WriteMessage(ss.c_str());
+			}// i
+		} // testClusterizeKMeansCollector
 	};// clasds UnitTestSQLiteStatHelper
 	//////////////////////
 }

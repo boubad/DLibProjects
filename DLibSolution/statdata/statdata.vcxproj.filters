@@ -66,6 +66,9 @@
     <ClCompile Include="src\workindivprovider.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="src\clusterize_kmeans.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\sqlite\sqlite3.h">
@@ -120,6 +123,9 @@
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\boost_inc.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\clusterize_kmeans.h">
       <Filter>include</Filter>
     </ClInclude>
   </ItemGroup>
