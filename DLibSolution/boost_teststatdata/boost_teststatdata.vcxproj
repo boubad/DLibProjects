@@ -170,6 +170,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="databasefixture.h" />
+    <ClInclude Include="distancefixture.h" />
+    <ClInclude Include="indivproviderfixture.h" />
     <ClInclude Include="infoglobaldata.h" />
     <ClInclude Include="infotestdata.h" />
     <ClInclude Include="stdafx.h" />
@@ -178,11 +180,16 @@
   <ItemGroup>
     <ClCompile Include="boost_teststatdata.cpp" />
     <ClCompile Include="databasefixture.cpp" />
+    <ClCompile Include="distancefixture.cpp" />
+    <ClCompile Include="indivproviderfixture.cpp" />
     <ClCompile Include="infoglobaldata.cpp" />
     <ClCompile Include="infotestdata.cpp" />
     <ClCompile Include="stdafx.cpp" />
+    <ClCompile Include="test_clusterizekmeans.cpp" />
+    <ClCompile Include="test_indivcluster.cpp" />
     <ClCompile Include="test_indivprovider.cpp" />
     <ClCompile Include="test_istorehelper.cpp" />
+    <ClCompile Include="test_statinfos.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

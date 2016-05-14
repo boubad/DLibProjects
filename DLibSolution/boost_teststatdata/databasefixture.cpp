@@ -1,4 +1,8 @@
 #include "databasefixture.h"
+#include "infotestdata.h"
+/////////////////////////////
+using namespace std;
+using namespace info;
 //////////////////////////////
 DatabaseFixture::DatabaseFixture() :m_nbcols(0), m_nbrows(0) {
 	string filename;

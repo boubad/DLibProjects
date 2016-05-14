@@ -33,6 +33,12 @@
     <ClInclude Include="infoglobaldata.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="indivproviderfixture.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="distancefixture.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -54,6 +60,21 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="infoglobaldata.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="indivproviderfixture.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="test_statinfos.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="distancefixture.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="test_indivcluster.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="test_clusterizekmeans.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
