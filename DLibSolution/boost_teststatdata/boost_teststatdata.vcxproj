@@ -188,6 +188,7 @@
     <ClCompile Include="test_clusterizekmeans.cpp" />
     <ClCompile Include="test_indivcluster.cpp" />
     <ClCompile Include="test_indivprovider.cpp" />
+    <ClCompile Include="test_indivtreecpp.cpp" />
     <ClCompile Include="test_istorehelper.cpp" />
     <ClCompile Include="test_statinfos.cpp" />
   </ItemGroup>
