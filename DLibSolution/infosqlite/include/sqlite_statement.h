@@ -125,7 +125,14 @@ namespace info_sqlite {
 			this->col_value((int)idx, v);
 			v.string_value(item);
 		}
-
+		void get_column(unsigned long idx, boost::any &item) {
+			DbValue v;
+			this->col_value((int)idx, v);
+			item = v.value();
+		}
+		void get_column(unsigned long idx, DbValue &item) {
+			this->col_value((int)idx, item);
+		}
 	public:
 		void bind(unsigned long parameter_id, int item) {
 			this->set_parameter((int)parameter_id, item);

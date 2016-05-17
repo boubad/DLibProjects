@@ -323,6 +323,150 @@ namespace info {
 		bool empty(void) const {
 			return (this->m_val.empty());
 		}
+		bool get_value(std::string &v) const {
+			const boost::any &vx = this->m_val;
+			if (vx.empty()) {
+				return false;
+			}
+			try {
+				v = boost::any_cast<std::string>(vx);
+				return (true);
+			}
+			catch (boost::bad_any_cast &) {
+				return  (false);
+			}
+		}// get_value
+		bool get_value(std::wstring &v) const {
+			const boost::any &vx = this->m_val;
+			if (vx.empty()) {
+				return false;
+			}
+			try {
+				v = boost::any_cast<std::wstring>(vx);
+				return (true);
+			}
+			catch (boost::bad_any_cast &) {
+				return  (false);
+			}
+		}// get_value
+		bool get_value(bool &v) const {
+			const boost::any &vx = this->m_val;
+			if (vx.empty()) {
+				return false;
+			}
+			try {
+				v = boost::any_cast<bool>(vx);
+				return (true);
+			}
+			catch (boost::bad_any_cast &) {
+				return  (false);
+			}
+		}// get_value
+		bool get_value(double &v) const {
+			const boost::any &vx = this->m_val;
+			if (vx.empty()) {
+				return false;
+			}
+			try {
+				v = boost::any_cast<double>(vx);
+				return (true);
+			}
+			catch (boost::bad_any_cast &) {
+				return  (false);
+			}
+		}// get_value
+		bool get_value(float &v) const {
+			const boost::any &vx = this->m_val;
+			if (vx.empty()) {
+				return false;
+			}
+			try {
+				v = boost::any_cast<float>(vx);
+				return (true);
+			}
+			catch (boost::bad_any_cast &) {
+				return  (false);
+			}
+		}// get_value
+		bool get_value(int &v) const {
+			const boost::any &vx = this->m_val;
+			if (vx.empty()) {
+				return false;
+			}
+			try {
+				v = boost::any_cast<int>(vx);
+				return (true);
+			}
+			catch (boost::bad_any_cast &) {
+				return  (false);
+			}
+		}// get_value
+		bool get_value(unsigned int &v) const {
+			const boost::any &vx = this->m_val;
+			if (vx.empty()) {
+				return false;
+			}
+			try {
+				v = boost::any_cast<unsigned int>(vx);
+				return (true);
+			}
+			catch (boost::bad_any_cast &) {
+				return  (false);
+			}
+		}// get_value
+		bool get_value(unsigned long &v) const {
+			const boost::any &vx = this->m_val;
+			if (vx.empty()) {
+				return false;
+			}
+			try {
+				v = boost::any_cast<unsigned long>(vx);
+				return (true);
+			}
+			catch (boost::bad_any_cast &) {
+				return  (false);
+			}
+		}// get_value
+		bool get_value(long &v) const {
+			const boost::any &vx = this->m_val;
+			if (vx.empty()) {
+				return false;
+			}
+			try {
+				v = boost::any_cast<long>(vx);
+				return (true);
+			}
+			catch (boost::bad_any_cast &) {
+				return  (false);
+			}
+		}// get_value
+		bool get_value(short &v) const {
+			const boost::any &vx = this->m_val;
+			if (vx.empty()) {
+				return false;
+			}
+			try {
+				v = boost::any_cast<short>(vx);
+				return (true);
+			}
+			catch (boost::bad_any_cast &) {
+				return  (false);
+			}
+		}// get_value
+		bool get_value(unsigned short &v) const {
+			const boost::any &vx = this->m_val;
+			if (vx.empty()) {
+				return false;
+			}
+			try {
+				v = boost::any_cast<unsigned short>(vx);
+				return (true);
+			}
+			catch (boost::bad_any_cast &) {
+				return  (false);
+			}
+		}// get_value
+	public:
 		virtual bool is_writeable(void) const {
 			return ((this->m_varid != 0) && (this->m_indid != 0));
 		}
