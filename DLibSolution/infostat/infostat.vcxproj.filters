@@ -36,5 +36,8 @@
     <ClInclude Include="include\memorystatstore.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\memorydataset.h">
+      <Filter>include</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
