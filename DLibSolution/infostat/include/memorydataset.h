@@ -16,13 +16,9 @@
 #include <boost/noncopyable.hpp>
 /////////////////////////////////////
 namespace info {
-	template <typename IDTYPE, typename INTTYPE, typename STRINGTYPE, typename WEIGHTYPE>
-	class MemoryStatStore<IDTYPE, INTTYPE, STRINGTYPE, WEIGHTYPE>;
 	////////////////////////////////
 	template <typename IDTYPE = unsigned long, typename INTTYPE = int, typename STRINGTYPE = std::string, typename WEIGHTYPE = float>
 	class MemoryDataset : private boost::noncopyable {
-		using MemoryStatStoreType = MemoryStatStore<IDTYPE, INTTYPE, STRINGTYPE, WEIGHTYPE>;
-		friend class MemoryStatStoreType;
 	public:
 		using ints_set = std::set<IDTYPE>;
 		using strings_set = std::set<STRINGTYPE>;
@@ -290,6 +286,7 @@ namespace info {
 					}
 				}// found
 			}// it
+			return (true);
 		}// find_indiv_values
 		bool find_variable_distinct_values(VariableType &oVar, strings_vector &oList, size_t skip, size_t count) {
 			if (count < 1) {
@@ -326,6 +323,7 @@ namespace info {
 					}
 				}// found
 			}// it
+			return (true);
 		}//find_variable_distinct_values
 		bool find_variable_values(VariableType &oVar, values_vector &oList, size_t skip, size_t count) {
 			if (count < 1) {
@@ -354,6 +352,7 @@ namespace info {
 					}
 				}// found
 			}// it
+			return (true);
 		}// find_variables_values
 		bool find_dataset_values(values_vector &oList, size_t skip, size_t count) {
 			if (count < 1) {
@@ -364,7 +363,7 @@ namespace info {
 			const size_t nMax = vv.size();
 			size_t nStart = skip;
 			if (nStart > nMax) {
-				nStart = nMax,
+				nStart = nMax;
 			}
 			size_t nEnd = nStart + count;
 			if (nEnd > nMax) {
@@ -394,7 +393,7 @@ namespace info {
 			std::lock(lock1, lock2, lock3);
 			values_vector &values = this->m_values;
 			IDTYPE nMax = 0;
-			std::for_each(oList.begin(), oList.end(), [&](ValueType &v) {
+			std::for_each(oList.begin(), oList.end(), [&](const ValueType &v) {
 				IDTYPE nx = v.id();
 				if (nx > nMax) {
 					nMax = nx;
@@ -408,7 +407,7 @@ namespace info {
 				this->find_value(xVal, false);
 				IDTYPE nId = xVal.id();
 				if (bRemove && (nId != 0)) {
-					auto it = std::for_each(values.begin(), values.end(), [&](ValueType &v)->bool {
+					auto it = std::find_if(values.begin(), values.end(), [&](ValueType &v)->bool {
 						return (v.id() == nId);
 					});
 					if (it != values.end()) {
@@ -418,7 +417,7 @@ namespace info {
 				else if (oVal.is_writeable()) {
 					boost::any v0 = oVal.value();
 					if (v0.empty() && (nId != 0)) {
-						auto it = std::for_each(values.begin(), values.end(), [&](ValueType &v)->bool {
+						auto it = std::find_if(values.begin(), values.end(), [&](ValueType &v)->bool {
 							return (v.id() == nId);
 						});
 						if (it != values.end()) {
@@ -474,7 +473,7 @@ namespace info {
 					}
 				}
 				else if ((nVarId != 0) && (nIndId != 0)) {
-					auto it = std::find_if(vv.begin(), vv.end(), [sigle](const ValueType &p)->bool {
+					auto it = std::find_if(vv.begin(), vv.end(), [nVarId,nIndId](const ValueType &p)->bool {
 						return ((p.variable_id() == nVarId) && (p.indiv_id() == nIndId));
 					});
 					if (it != vv.end()) {
@@ -497,7 +496,7 @@ namespace info {
 					}
 				}
 				else if ((nVarId != 0) && (nIndId != 0)) {
-					auto it = std::find_if(vv.begin(), vv.end(), [sigle](const ValueType &p)->bool {
+					auto it = std::find_if(vv.begin(), vv.end(), [nVarId,nIndId](const ValueType &p)->bool {
 						return ((p.variable_id() == nVarId) && (p.indiv_id() == nIndId));
 					});
 					if (it != vv.end()) {
@@ -511,7 +510,7 @@ namespace info {
 		//
 		bool remove_indivs(const indivs_vector &oList) {
 			std::unique_lock<std::mutex> lock1(this->m_mutexIndiv, std::defer_lock);
-			std::unique_lock<std::mutex> lock2(this->m_mutexVlue, std::defer_lock);
+			std::unique_lock<std::mutex> lock2(this->m_mutexValue, std::defer_lock);
 			std::lock(lock1, lock2);
 			indivs_vector &variables = this->m_indivs;
 			values_vector &values = this->m_values;
@@ -522,7 +521,7 @@ namespace info {
 					ints_set oVals;
 					std::for_each(values.begin(), values.end(), [&](ValueType &pv) {
 						if (pv.indiv_id() == nVarId) {
-							oVals.push_back(pv.id());
+							oVals.insert(pv.id());
 						}
 					});
 					std::for_each(oVals.begin(), oVals.end(), [&](IDTYPE nvalid) {
@@ -534,7 +533,7 @@ namespace info {
 						}
 					});
 					auto it = std::find_if(variables.begin(), variables.end(), [&](IndivType &px)->bool {
-						return (px.d() == nVarId);
+						return (px.id() == nVarId);
 					});
 					if (it != variables.end()) {
 						variables.erase(it);
@@ -548,7 +547,7 @@ namespace info {
 			std::unique_lock<std::mutex> lock(this->m_mutexIndiv);
 			indivs_vector &vv = this->m_indivs;
 			IDTYPE nMax = 0;
-			std::for_each(oList.begin(), oList.end(), [&](IndivType &v) {
+			std::for_each(oList.begin(), oList.end(), [&](const IndivType &v) {
 				IDTYPE nx = v.id();
 				if (nx > nMax) {
 					nMax = nx;
@@ -579,8 +578,8 @@ namespace info {
 							if (v0.id() == nId) {
 								INTTYPE old = v0.version();
 								v0 = oVar;
-								vO.id(nId);
-								vO.version(old + 1);
+								v0.id(nId);
+								v0.version(old + 1);
 								break;
 							}
 						}// i
@@ -608,7 +607,7 @@ namespace info {
 				}
 				else if ((nDatasetId == nCurrentDatasetId) && (!sigle.empty())) {
 					auto it = std::find_if(vv.begin(), vv.end(), [sigle](const IndivType &p)->bool {
-						STRINGTYPE s = p.sidle();
+						STRINGTYPE s = p.sigle();
 						return (s == sigle);
 					});
 					if (it != vv.end()) {
@@ -632,7 +631,7 @@ namespace info {
 				}
 				else if ((nDatasetId == nCurrentDatasetId) && (!sigle.empty())) {
 					auto it = std::find_if(vv.begin(), vv.end(), [sigle](const IndivType &p)->bool {
-						STRINGTYPE s = p.sidle();
+						STRINGTYPE s = p.sigle();
 						return (s == sigle);
 					});
 					if (it != vv.end()) {
@@ -652,7 +651,7 @@ namespace info {
 			const size_t nMax = vv.size();
 			size_t nStart = skip;
 			if (nStart > nMax) {
-				nStart = nMax,
+				nStart = nMax;
 			}
 			size_t nEnd = nStart + count;
 			if (nEnd > nMax) {
@@ -679,7 +678,7 @@ namespace info {
 			const size_t nMax = vv.size();
 			size_t nStart = skip;
 			if (nStart > nMax) {
-				nStart = nMax,
+				nStart = nMax;
 			}
 			size_t nEnd = nStart + count;
 			if (nEnd > nMax) {
@@ -716,7 +715,7 @@ namespace info {
 		}//find_dataset_variables_types
 		bool remove_variables(const variables_vector &oList) {
 			std::unique_lock<std::mutex> lock1(this->m_mutexVariable, std::defer_lock);
-			std::unique_lock<std::mutex> lock2(this->m_mutexVlue, std::defer_lock);
+			std::unique_lock<std::mutex> lock2(this->m_mutexValue, std::defer_lock);
 			std::lock(lock1, lock2);
 			variables_vector &variables = this->m_variables;
 			values_vector &values = this->m_values;
@@ -727,7 +726,7 @@ namespace info {
 					ints_set oVals;
 					std::for_each(values.begin(), values.end(), [&](ValueType &pv) {
 						if (pv.variable_id() == nVarId) {
-							oVals.push_back(pv.id());
+							oVals.insert(pv.id());
 						}
 					});
 					std::for_each(oVals.begin(), oVals.end(), [&](IDTYPE nvalid) {
@@ -739,7 +738,7 @@ namespace info {
 						}
 					});
 					auto it = std::find_if(variables.begin(), variables.end(), [&](VariableType &px)->bool {
-						return (px.d() == nVarId);
+						return (px.id() == nVarId);
 					});
 					if (it != variables.end()) {
 						variables.erase(it);
@@ -753,7 +752,7 @@ namespace info {
 			std::unique_lock<std::mutex> lock(this->m_mutexVariable);
 			variables_vector &vv = this->m_variables;
 			IDTYPE nMax = 0;
-			std::for_each(oList.begin(), oList.end(), [&](VariableType &v) {
+			std::for_each(oList.begin(), oList.end(), [&](const VariableType &v) {
 				IDTYPE nx = v.id();
 				if (nx > nMax) {
 					nMax = nx;
@@ -789,8 +788,8 @@ namespace info {
 							if (v0.id() == nId) {
 								INTTYPE old = v0.version();
 								v0 = oVar;
-								vO.id(nId);
-								vO.version(old + 1);
+								v0.id(nId);
+								v0.version(old + 1);
 								break;
 							}
 						}// i
@@ -818,7 +817,7 @@ namespace info {
 				}
 				else if ((nDatasetId == nCurrentDatasetId) && (!sigle.empty())) {
 					auto it = std::find_if(vv.begin(), vv.end(), [sigle](const VariableType &p)->bool {
-						STRINGTYPE s = p.sidle();
+						STRINGTYPE s = p.sigle();
 						return (s == sigle);
 					});
 					if (it != vv.end()) {
@@ -842,7 +841,7 @@ namespace info {
 				}
 				else if ((nDatasetId == nCurrentDatasetId) && (!sigle.empty())) {
 					auto it = std::find_if(vv.begin(), vv.end(), [sigle](const VariableType &p)->bool {
-						STRINGTYPE s = p.sidle();
+						STRINGTYPE s = p.sigle();
 						return (s == sigle);
 					});
 					if (it != vv.end()) {
@@ -862,7 +861,7 @@ namespace info {
 			const size_t nMax = vv.size();
 			size_t nStart = skip;
 			if (nStart > nMax) {
-				nStart = nMax,
+				nStart = nMax;
 			}
 			size_t nEnd = nStart + count;
 			if (nEnd > nMax) {
@@ -889,7 +888,7 @@ namespace info {
 			const size_t nMax = vv.size();
 			size_t nStart = skip;
 			if (nStart > nMax) {
-				nStart = nMax,
+				nStart = nMax;
 			}
 			size_t nEnd = nStart + count;
 			if (nEnd > nMax) {
@@ -924,7 +923,7 @@ namespace info {
 				DatasetType &vv = this->m_oset;
 				if (vv.id() == nId) {
 					vv.version(vv.version() + 1);
-					vv.sigle(cur.sigle);
+					vv.sigle(cur.sigle());
 					vv.name(cur.name());
 					vv.status(cur.status());
 					vv.description(cur.description());
@@ -972,6 +971,117 @@ namespace info {
 			IDTYPE nRet = this->m_oset.id();
 			return (nRet);
 		}//get_datasetid
+		//
+		template <typename T>
+		void import(size_t nRows, size_t nCols,
+			const std::vector<T> &data,
+			const strings_vector &rowNames,
+			const strings_vector &colNames,
+			const STRINGTYPE &stype) {
+			bool bRet = false;
+			DatasetType &oSet = this->m_oset;
+			assert(oSet.id() != 0);
+			variables_vector oVars;
+			for (size_t i = 0; i < nCols; ++i) {
+				STRINGTYPE sigle = colNames[i];
+				VariableType v(oSet, sigle);
+				if (!this->find_variable(v)) {
+					v.sigle(sigle);
+					v.dataset_id(oSet.id());
+					v.vartype(stype);
+					oVars.push_back(v);
+				}
+			} // i
+			if (!oVars.empty()) {
+				bRet = this->maintains_variables(oVars);
+				assert(bRet);
+			}
+			indivs_vector oInds;
+			for (size_t i = 0; i < nRows; ++i) {
+				STRINGTYPE sigle = rowNames[i];
+				IndivType v(oSet, sigle);
+				if (!this->find_indiv(v)) {
+					v.sigle(sigle);
+					v.dataset_id(oSet.id());
+					oInds.push_back(v);
+				}
+			} // i
+			if (!oInds.empty()) {
+				bRet = this->maintains_indivs(oInds);
+				assert(bRet);
+			}
+			oInds.clear();
+			bRet = this->get_indivs(oInds, 0, nRows);
+			assert(bRet);
+			assert(nRows == oInds.size());
+			oVars.clear();
+			bRet = this->get_variables(oVars, 0, nCols);
+			assert(bRet);
+			assert(nCols == oVars.size());
+			//
+			std::map<STRINGTYPE, VariableType *> pVars;
+			std::for_each(colNames.begin(), colNames.end(),
+				[&](const STRINGTYPE  &s) {
+				STRINGTYPE sigle = s;
+				STRINGTYPE rsigle;
+				VariableType ovar(oSet, sigle);
+				rsigle = ovar.sigle();
+				VariableType *p = nullptr;
+				for (size_t i = 0; i < oVars.size(); ++i) {
+					VariableType &vv = oVars[i];
+					STRINGTYPE  sx = vv.sigle();
+					if (sx == rsigle) {
+						p = &vv;
+						break;
+					}
+				} // i
+				assert(p != nullptr);
+				pVars[sigle] = p;
+			});
+			std::map<STRINGTYPE, IndivType *> pInds;
+			std::for_each(rowNames.begin(), rowNames.end(),
+				[&](const STRINGTYPE  &s) {
+				STRINGTYPE  sigle = s;
+				STRINGTYPE  rsigle;
+				IndivType ovar(oSet, sigle);
+				rsigle = ovar.sigle();
+				IndivType *p = nullptr;
+				for (size_t i = 0; i < oInds.size(); ++i) {
+					IndivType &vv = oInds[i];
+					STRINGTYPE  sx = vv.sigle();
+					if (sx == rsigle) {
+						p = &vv;
+						break;
+					}
+				} // i
+				assert(p != nullptr);
+				pInds[sigle] = p;
+			});
+			values_vector oVals;
+			for (size_t i = 0; i < nRows; ++i) {
+				STRINGTYPE  sigleind = rowNames[i];
+				IndivType *pInd = pInds[sigleind];
+				assert(pInd != nullptr);
+				for (size_t j = 0; j < nCols; ++j) {
+					STRINGTYPE  siglevar = colNames[j];
+					VariableType *pVar = pVars[siglevar];
+					assert(pVar != nullptr);
+					ValueType val(*pVar, *pInd);
+					if (!this->find_value(val)) {
+						double f = (double)data[i * nCols + j];
+						boost::any vv(f);
+						val.value(vv);
+						val.variable_id(pVar->id());
+						val.indiv_id(pInd->id());
+						oVals.push_back(val);
+					}
+				} // j
+			} // i
+			if (!oVals.empty()) {
+				bRet = this->maintains_values(oVals);
+				assert(bRet);
+			}
+		} // import
 	}; // class MemoryDataset<IDTYPE, INTTYPE, STRINGTYPE, WEIGHTYPE>
 	////////////////////////////////////
 }// namespâce info

@@ -41,6 +41,24 @@ namespace info {
 		MemoryStatStore() :m_lastid(1) {}
 		virtual ~MemoryStatStore() {}
 	public:
+		//
+		template <typename T>
+		bool import(const STRINGTYPE &name, size_t nRows, size_t nCols,
+			const std::vector<T> &data,
+			const strings_vector &rowNames,
+			const strings_vector &colNames,
+			const STRINGTYPE &stype) {
+			DatasetType oSet(name);
+			if (!this->maintains_dataset(oSet,true)) {
+				return (false);
+			}
+			MemoryDatasetType *p = this->get_dataset(oSet);
+			if (p != nullptr) {
+				p->import(nRows, nCols, data, rowNames, colNames, stype);
+				return (true);
+			}
+			return (false);
+		}// import
 		// overrides
 		virtual bool is_valid(void) {
 			return (true);
@@ -57,10 +75,10 @@ namespace info {
 			nCount = this->m_osets.size();
 			return (true);
 		}
-		virtual bool find_all_datasets(datasets_vector &oList, size_t skip = 0, size_t count = DATATRANSFER_CHUNK_SIZE) {
+		virtual bool find_all_datasets(datasets_vector &oList, size_t skip = 0, size_t count = 100) {
 			oList.clear();
 			if (count < 1) {
-				count = DATATRANSFER_CHUNK_SIZE;
+				count = 100;
 			}
 			size_t nStart = skip;
 			{
@@ -87,10 +105,10 @@ namespace info {
 			}// sync
 			return (true);
 		}//find_all_datasets
-		virtual bool find_all_datasets_ids(ints_vector &oList, size_t skip = 0, size_t count = DATATRANSFER_CHUNK_SIZE) {
+		virtual bool find_all_datasets_ids(ints_vector &oList, size_t skip = 0, size_t count = 100) {
 			oList.clear();
 			if (count < 1) {
-				count = DATATRANSFER_CHUNK_SIZE;
+				count = 100;
 			}
 			size_t nStart = skip;
 			{
@@ -215,7 +233,7 @@ namespace info {
 			return (false);
 		}
 		virtual bool find_dataset_variables_ids(const DatasetType &oSet, ints_vector &oList,
-			size_t skip = 0, size_t count = DATATRANSFER_CHUNK_SIZE) {
+			size_t skip = 0, size_t count = 100) {
 			DatasetType  xSet(oSet);
 			MemoryDatasetType *p = this->get_dataset(xSet);
 			if (p != nullptr) {
@@ -224,7 +242,7 @@ namespace info {
 			return (false);
 		}
 		virtual bool find_dataset_variables(const DatasetType &oSet, variables_vector &oList,
-			size_t skip = 0, size_t count = DATATRANSFER_CHUNK_SIZE) {
+			size_t skip = 0, size_t count = 100) {
 			DatasetType  xSet(oSet);
 			MemoryDatasetType *p = this->get_dataset(xSet);
 			if (p != nullptr) {
@@ -290,7 +308,7 @@ namespace info {
 			return (false);
 		}
 		virtual bool find_dataset_indivs_ids(const DatasetType &oSet, ints_vector &oList,
-			size_t skip = 0, size_t count = DATATRANSFER_CHUNK_SIZE) {
+			size_t skip = 0, size_t count = 100) {
 			DatasetType  xSet(oSet);
 			MemoryDatasetType *p = this->get_dataset(xSet);
 			if (p != nullptr) {
@@ -299,7 +317,7 @@ namespace info {
 			return (false);
 		}
 		virtual bool find_dataset_indivs(const DatasetType &oSet, indivs_vector &oList,
-			size_t skip = 0, size_t count = DATATRANSFER_CHUNK_SIZE) {
+			size_t skip = 0, size_t count = 100) {
 			DatasetType  xSet(oSet);
 			MemoryDatasetType *p = this->get_dataset(xSet);
 			if (p != nullptr) {
@@ -380,7 +398,7 @@ namespace info {
 			DatasetType xSet(oVar.dataset_id());
 			MemoryDatasetType *p = this->get_dataset(xSet);
 			if (p != nullptr) {
-				return p->maintains_values(oList, bRemove);
+				return p->maintains_values(oVals, bRemove);
 			}
 		}
 		virtual bool find_dataset_values_count(const DatasetType &oSet, size_t &nCount) {
@@ -392,7 +410,7 @@ namespace info {
 			return (false);
 		}
 		virtual bool find_dataset_values(const DatasetType &oSet, values_vector &oList,
-			size_t skip = 0, size_t count = DATATRANSFER_CHUNK_SIZE) {
+			size_t skip = 0, size_t count = 100) {
 			DatasetType  xSet(oSet);
 			MemoryDatasetType *p = this->get_dataset(xSet);
 			if (p != nullptr) {
@@ -401,7 +419,7 @@ namespace info {
 			return (false);
 		}
 		virtual bool find_variable_values(VariableType &oVar, values_vector &oList,
-			size_t skip = 0, size_t count = DATATRANSFER_CHUNK_SIZE) {
+			size_t skip = 0, size_t count = 100) {
 			if (!this->find_variable(oVar)) {
 				return (false);
 			}
@@ -413,19 +431,19 @@ namespace info {
 			return (false);
 		}
 		virtual bool find_variable_distinct_values(VariableType &oVar, strings_vector &oList,
-			size_t skip = 0, size_t count = DATATRANSFER_CHUNK_SIZE) {
+			size_t skip = 0, size_t count = 100) {
 			if (!this->find_variable(oVar)) {
 				return (false);
 			}
 			DatasetType xSet(oVar.dataset_id());
 			MemoryDatasetType *p = this->get_dataset(xSet);
 			if (p != nullptr) {
-				return p->find_variable_distinct_values(oVar, oList, size, count);
+				return p->find_variable_distinct_values(oVar, oList, skip, count);
 			}
 			return (false);
 		}
 		virtual bool find_indiv_values(IndivType &oInd, values_vector &oList,
-			size_t skip = 0, size_t count = DATATRANSFER_CHUNK_SIZE) {
+			size_t skip = 0, size_t count = 100) {
 			if (!this->find_indiv(oInd)) {
 				return (false);
 			}
