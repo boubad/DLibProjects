@@ -138,6 +138,9 @@ namespace info {
 		using StatDatasetType = StatDataset<IDTYPE, INTTYPE, STRINGTYPE>;
 	public:
 		StatDataset() {}
+		StatDataset(const IDTYPE n) {
+			this->id(n);
+		}
 		StatDataset(const STRINGTYPE &s):NamedBaseInfoStatItemType(s){}
 		StatDataset(const StatDatasetType &other) :NamedBaseInfoStatItemType(other) {}
 		StatDatasetType & operator=(const StatDatasetType &other) {
