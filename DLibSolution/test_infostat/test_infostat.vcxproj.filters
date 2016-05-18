@@ -47,5 +47,8 @@
     <ClCompile Include="test_sqlitestore.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="test_memorystatstore.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

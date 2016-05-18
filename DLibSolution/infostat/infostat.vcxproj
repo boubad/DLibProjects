@@ -147,6 +147,7 @@
   <ItemGroup>
     <ClInclude Include="include\baseitem.h" />
     <ClInclude Include="include\istatstore.h" />
+    <ClInclude Include="include\memorystatstore.h" />
     <ClInclude Include="include\stringconvert.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
