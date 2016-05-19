@@ -43,6 +43,7 @@ namespace info {
 	template <typename U = unsigned long>
 	class Indiv {
 	public:
+		using IndexType = U;
 		using IndivType = Indiv<U>;
 		using DataMap = std::map<U, InfoValue>;
 	private:
@@ -102,6 +103,7 @@ namespace info {
 	template <typename U = unsigned long>
 	class IIndivSource {
 	public:
+		using IndexType = U;
 		using IndivType = Indiv<U>;
 		using DataMap = std::map<U, InfoValue>;
 		using IndivTypePtr = std::shared_ptr<IndivType>;
