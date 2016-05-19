@@ -169,6 +169,7 @@
     <ClInclude Include="infotestdata.h" />
     <ClInclude Include="memorystorefixture.h" />
     <ClInclude Include="stdafx.h" />
+    <ClInclude Include="storeindivprovider_fixture.h" />
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
@@ -181,6 +182,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="storeindivprovider_fixture.cpp" />
     <ClCompile Include="test_infostat.cpp" />
     <ClCompile Include="test_memorystatstore.cpp" />
     <ClCompile Include="test_sqlitestore.cpp" />

@@ -85,6 +85,7 @@ namespace info {
 			}
 			virtual void reset(void) {
 				std::unique_lock<std::mutex> oLock(this->_mutex);
+				StoreType *pStore = this->m_pstore;
 				this->m_current = 0;
 				size_t nc = 0;
 				DatasetType &oSet = this->m_oset;

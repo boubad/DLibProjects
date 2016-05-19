@@ -14,7 +14,7 @@ namespace info {
 	bool info_global_compute_distance(const std::map<U1, InfoValue> &oMap1,
 		const std::map<U2, InfoValue> &oMap2, W &res) {
 		size_t nc = 0;
-		res = 0;
+		double dRes = 0;
 		std::for_each(oMap1.begin(), oMap1.end(), [&](const std::pair<U1, InfoValue> &p) {
 			const InfoValue &vv1 = p.second;
 			if ((!vv1.empty()) && vv1.is_numerical()) {
@@ -23,19 +23,20 @@ namespace info {
 				if (it != oMap2.end()) {
 					const InfoValue &vv2 = (*it).second;
 					if ((!vv2.empty()) && vv2.is_numerical()) {
-						W v1, v2;
+						double v1, v2;
 						vv1.get_value(v1);
 						vv2.get_value(v2);
-						const W tt = (W)(v1 - v2);
-						res = (W)(res + tt * tt);
+						const double tt = v1 - v2;
+						dRes += tt * tt;
 						++nc;
 					}// vv2
 				}// it
 			}// vv1
 		});
 		if (nc > 1) {
-			res = (W)(res / nc);
+			dRes /= nc;
 		}
+		res = (W)dRes;
 		return (nc > 0);
 	}//info_global_compute_distance
 	/////////////////////////////
@@ -52,7 +53,7 @@ namespace info {
 		template <typename XU>
 		Indiv(const XU aIndex, const std::map<XU, InfoValue> &oMap) : m_index((U)aIndex) {
 			DataMap &m = this->m_center;
-			std::for_each(oMap.begin(), oMap.end(), [&map](const std::pair<XU, InfoValue> &p) {
+			std::for_each(oMap.begin(), oMap.end(), [&m](const std::pair<XU, InfoValue> &p) {
 				InfoValue v = p.second;
 				if (!v.empty()) {
 					U key = (U)p.first;
@@ -110,7 +111,7 @@ namespace info {
 		virtual void reset(void) = 0;
 		virtual IndivTypePtr next(void) = 0;
 	public:
-		virtual IIndivSource() {}
+		virtual ~IIndivSource() {}
 	};// class IIndivSource<U,T>
 	////////////////////////////////
 }// namespace info
