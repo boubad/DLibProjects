@@ -177,6 +177,9 @@ namespace info {
 		"SELECT valueid,optlock,variableid,individ,stringval,status"
 		" FROM dbvalue WHERE individ = ?"
 		" LIMIT ? OFFSET ?";
+	static const char *SQL_INDIV_VALUES_COUNT =
+		"SELECT COUNT(*)"
+		" FROM dbvalue WHERE individ = ?";
 	static const char *SQL_VARIABLE_VALUES_DISTINCT =
 		"SELECT DISTINCT stringval FROM dbvalue WHERE variableid = ?"
 		" LIMIT ? OFFSET ?";
@@ -202,7 +205,8 @@ namespace info {
 		}
 		else if (stype == "short") {
 			vRes = v0.short_value();
-		}		else if (stype == "unsigned short") {
+		}
+		else if (stype == "unsigned short") {
 			vRes = v0.unsigned_short_value();
 		}
 		else if (stype == "int") {
@@ -531,7 +535,32 @@ namespace info {
 		}
 		return (false);
 	}//find_variable_distinct_values
-
+	bool SQLiteStatHelper::find_indiv_values_count(IndivType &oInd, size_t &nc) {
+		assert(this->is_valid());
+		try {
+			nc = 0;
+			if (!this->find_indiv(oInd)) {
+				return (false);
+			}
+			IDTYPE nId = oInd.id();
+			SQLite_Statement q(*(this->m_base), SQL_INDIV_VALUES_COUNT);
+			assert(q.get_parameters_count() == 1);
+			q.bind(1, nId);
+			if (q.move_next()) {
+				int nx = 0;
+				q.get_column(0, nx);
+				nc = (size_t)nx;
+			}
+			return (true);
+		}// try
+		catch (sqlite_error &err) {
+			log_error(err);
+		}
+		catch (std::exception &ex) {
+			log_error(ex);
+		}
+		return (false);
+	}//find_indiv_values_count
 	bool  SQLiteStatHelper::find_indiv_values(IndivType &oInd, values_vector &oList,
 		size_t skip /*= 0*/, size_t count /*= 100*/) {
 		assert(this->is_valid());

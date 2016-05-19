@@ -76,6 +76,7 @@ namespace info {
 			size_t skip = 0, size_t count = DATATRANSFER_CHUNK_SIZE) = 0;
 		virtual bool find_indiv_values(IndivType &oInd, values_vector &oList,
 			size_t skip = 0, size_t count = DATATRANSFER_CHUNK_SIZE) = 0;
+		virtual bool find_indiv_values_count(IndivType &oInd, size_t &nc) = 0;
 	public:
 		virtual ~IStatStore() {}
 	}; // class IStatStore<IDTYPE,INTTYPE,STRINGTYPE,WEIGHTTYPE>

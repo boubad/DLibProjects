@@ -49,7 +49,7 @@ namespace info {
 			const strings_vector &colNames,
 			const STRINGTYPE &stype) {
 			DatasetType oSet(name);
-			if (!this->maintains_dataset(oSet,true)) {
+			if (!this->maintains_dataset(oSet, true)) {
 				return (false);
 			}
 			MemoryDatasetType *p = this->get_dataset(oSet);
@@ -451,6 +451,17 @@ namespace info {
 			MemoryDatasetType *p = this->get_dataset(xSet);
 			if (p != nullptr) {
 				return p->find_indiv_values(oInd, oList, skip, count);
+			}
+			return (false);
+		}
+		virtual bool find_indiv_values_count(IndivType &oInd, size_t &nc) {
+			if (!this->find_indiv(oInd)) {
+				return (false);
+			}
+			DatasetType xSet(oInd.dataset_id());
+			MemoryDatasetType *p = this->get_dataset(xSet);
+			if (p != nullptr) {
+				return p->find_indiv_values_count(oInd, nc);
 			}
 			return (false);
 		}

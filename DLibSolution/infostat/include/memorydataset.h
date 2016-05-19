@@ -259,6 +259,24 @@ namespace info {
 		~MemoryDataset() {}
 	public:
 		//
+		bool find_indiv_values_count(IndivType &oInd, size_t &nc) {
+			std::unique_lock<std::mutex> lock1(this->m_mutexValue, std::defer_lock);
+			std::unique_lock<std::mutex> lock2(this->m_mutexIndiv, std::defer_lock);
+			std::lock(lock1, lock2);
+			if (!this->find_indiv(oInd, false)) {
+				return (false);
+			}
+			const IDTYPE nVarId = oInd.id();
+			const values_vector &values = this->m_values;
+			nc = 0;
+			for (auto it = values.begin(); it != values.end(); ++it) {
+				const ValueType &v = *it;
+				if (v.indiv_id() == nVarId) {
+					++nc;
+				}// found
+			}// it
+			return (true);
+		}// find_indiv_values_count
 		bool find_indiv_values(IndivType &oInd, values_vector &oList, size_t skip, size_t count) {
 			if (count < 1) {
 				count = 100;
