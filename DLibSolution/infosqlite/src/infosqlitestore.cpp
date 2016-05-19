@@ -1,8 +1,8 @@
 #include "../include/infosqlitestore.h"
 #include "../include/sqlite_database.h"
 #include "../include/sqlite_statement.h"
-#include "../include/dbvalue.h"
-#include "string_convert.h"
+#include <infovalue.h>
+#include <stringconvert.h>
 ////////////////////////////////////////
 //#include <iostream>
 #include <boost/log/trivial.hpp>
@@ -30,6 +30,7 @@ namespace info {
 		" weight REAL NOT NULL DEFAULT 1,"
 		" vartype TEXT NOT NULL,"
 		" categvar INTEGER NOT NULL DEFAULT 0,"
+		" nbmodals INTEGER NOT NULL DEFAULT 0,"
 		" nom TEXT DEFAULT NULL,"
 		" description TEXT DEFAULT NULL,"
 		" genre TEXT DEFAULT NULL,"
@@ -95,7 +96,7 @@ namespace info {
 		"SELECT COUNT(*) FROM dbdataset";
 	//
 	static const char *SQL_FIND_DATASET_VARIABLES =
-		"SELECT variableid, optlock, datasetid , sigle, vartype, categvar, nom, description, genre, status,weight"
+		"SELECT variableid, optlock, datasetid , sigle, vartype, categvar, nom, description, genre, status,weight,nbmodals"
 		" FROM dbvariable WHERE datasetid = ?"
 		" ORDER BY categvar DESC, sigle ASC"
 		" LIMIT ? OFFSET ?";
@@ -104,17 +105,17 @@ namespace info {
 		" ORDER BY variableid"
 		" LIMIT ? OFFSET ?";
 	static const char *SQL_VARIABLE_BY_ID =
-		"SELECT variableid,optlock,datasetid,sigle,vartype,categvar,nom,description,genre,status,weight"
+		"SELECT variableid,optlock,datasetid,sigle,vartype,categvar,nom,description,genre,status,weight,nbmodals"
 		" FROM dbvariable WHERE variableid = ?";
 	static const char *SQL_VARIABLE_BY_DATASET_AND_SIGLE =
-		"SELECT variableid,optlock,datasetid,sigle,vartype,categvar,nom,description,genre,status,weight"
+		"SELECT variableid,optlock,datasetid,sigle,vartype,categvar,nom,description,genre,status,weight,nbmodals"
 		" FROM dbvariable WHERE datasetid = ? AND UPPER(LTRIM(RTRIM(sigle))) = ?";
 	static const char *SQL_INSERT_VARIABLE =
-		"INSERT INTO dbvariable (datasetid,sigle,vartype,categvar,nom,description,genre,status,weight)"
-		" VALUES (?,?,?,?,?,?,?,?,?)";
+		"INSERT INTO dbvariable (datasetid,sigle,vartype,categvar,nom,description,genre,status,weight,nbmodals)"
+		" VALUES (?,?,?,?,?,?,?,?,?,?)";
 	static const char *SQL_UPDATE_VARIABLE =
 		"UPDATE dbvariable SET optlock = optlock + 1,"
-		" sigle = ?, vartype = ?, categvar = ?, nom = ?, description = ?, genre = ?, status = ?,weight = ? WHERE variableid = ?";
+		" sigle = ?, vartype = ?, categvar = ?, nom = ?, description = ?, genre = ?, status = ?,weight = ?,nbmodals = ? WHERE variableid = ?";
 	static const char *SQL_REMOVE_VARIABLE =
 		"DELETE FROM dbvariable WHERE variableid = ?";
 	static const char *SQL_FIND_DATASET_VARIABLES_COUNT =
@@ -180,6 +181,9 @@ namespace info {
 	static const char *SQL_INDIV_VALUES_COUNT =
 		"SELECT COUNT(*)"
 		" FROM dbvalue WHERE individ = ?";
+	static const char *SQL_VARIABLE_VALUES_COUNT =
+		"SELECT COUNT(*)"
+		" FROM dbvalue WHERE variableid = ?";
 	static const char *SQL_VARIABLE_VALUES_DISTINCT =
 		"SELECT DISTINCT stringval FROM dbvalue WHERE variableid = ?"
 		" LIMIT ? OFFSET ?";
@@ -191,15 +195,13 @@ namespace info {
 		"SELECT variableid,vartype FROM dbvariable WHERE datasetid = ?";
 	///////////////////////////////////////
 	static void log_error(const std::exception &err) {
-		//std::cerr << "ERROR: " << err.what() << std::endl;
 		BOOST_LOG_TRIVIAL(error) << err.what();
 	}
 	static void log_error(sqlite_error &err) {
-		//std::cerr << "ERROR: SQLite error: " << err.code() << " , " << err.what() << std::endl;
 		BOOST_LOG_TRIVIAL(error) << "SQLite error: " << err.code() << " , " << err.what();
 	}
 	static void convert_value(const std::string &stype, const boost::any &vsrc, boost::any &vRes) {
-		DbValue v0(vsrc);
+		InfoValue v0(vsrc);
 		if ((stype == "bool") || (stype == "boolean") || (stype == "logical")) {
 			vRes = v0.bool_value();
 		}
@@ -445,7 +447,7 @@ namespace info {
 				if (oMap.find(key) != oMap.end()) {
 					boost::any h;
 					convert_value(oMap[key], cur.value(), h);
-					cur.value(h);
+					cur.value(InfoValue(h));
 					oList.push_back(cur);
 				}
 			}
@@ -484,7 +486,7 @@ namespace info {
 				this->read_value(q, cur);
 				boost::any h;
 				convert_value(stype, cur.value(), h);
-				cur.value(h);
+				cur.value(InfoValue(h));
 				oList.push_back(cur);
 			}
 			return (true);
@@ -561,6 +563,32 @@ namespace info {
 		}
 		return (false);
 	}//find_indiv_values_count
+	bool SQLiteStatHelper::find_variable_values_count(VariableType &oVar, size_t &nc) {
+		assert(this->is_valid());
+		try {
+			nc = 0;
+			if (!this->find_variable(oVar)) {
+				return (false);
+			}
+			IDTYPE nId = oVar.id();
+			SQLite_Statement q(*(this->m_base), SQL_VARIABLE_VALUES_COUNT);
+			assert(q.get_parameters_count() == 1);
+			q.bind(1, nId);
+			if (q.move_next()) {
+				int nx = 0;
+				q.get_column(0, nx);
+				nc = (size_t)nx;
+			}
+			return (true);
+		}// try
+		catch (sqlite_error &err) {
+			log_error(err);
+		}
+		catch (std::exception &ex) {
+			log_error(ex);
+		}
+		return (false);
+	}//find_variable_values_count
 	bool  SQLiteStatHelper::find_indiv_values(IndivType &oInd, values_vector &oList,
 		size_t skip /*= 0*/, size_t count /*= 100*/) {
 		assert(this->is_valid());
@@ -596,7 +624,7 @@ namespace info {
 				if (oMap.find(key) != oMap.end()) {
 					boost::any h;
 					convert_value(oMap[key], cur.value(), h);
-					cur.value(h);
+					cur.value(InfoValue(h));
 					oList.push_back(cur);
 				}
 			}
@@ -636,7 +664,7 @@ namespace info {
 				IDTYPE nId = xVal.id();
 				STRINGTYPE status = oVal.status();
 				boost::any v0 = oVal.value();
-				DbValue v(v0);
+				InfoValue v(v0);
 				std::string sval;
 				v.string_value(sval);
 				if (nId != 0) {
@@ -981,9 +1009,9 @@ namespace info {
 				bInTrans = true;
 			}
 			SQLite_Statement qInsert(*(this->m_base), SQL_INSERT_VARIABLE);
-			assert(qInsert.get_parameters_count() == 9);
+			assert(qInsert.get_parameters_count() == 10);
 			SQLite_Statement qUpdate(*(this->m_base), SQL_UPDATE_VARIABLE);
-			assert(qUpdate.get_parameters_count() == 9);
+			assert(qUpdate.get_parameters_count() == 10);
 			//
 			std::for_each(oVars.begin(), oVars.end(), [&](const VariableType &oVar) {
 				VariableType xVar(oVar);
@@ -1003,6 +1031,7 @@ namespace info {
 					vartype = oVar.vartype();
 					genre = oVar.genre();
 					int nCateg = (oVar.is_categ()) ? 1 : 0;
+					int nbModal = oVar.modalites_count();
 					IDTYPE nDatasetId = oVar.dataset_id();
 					double w = oVar.weight();
 					if (w < 0) {
@@ -1017,7 +1046,8 @@ namespace info {
 						qUpdate.bind(6, genre);
 						qUpdate.bind(7, status);
 						qUpdate.bind(8, w);
-						qUpdate.bind(9, nId);
+						qUpdate.bind(9, nbModal);
+						qUpdate.bind(10, nId);
 						qUpdate.exec();
 					}
 					else {
@@ -1030,6 +1060,7 @@ namespace info {
 						qInsert.bind(7, genre);
 						qInsert.bind(8, status);
 						qInsert.bind(9, w);
+						qInsert.bind(10, nbModal);
 						qInsert.exec();
 					}
 				}// writeable
@@ -1424,10 +1455,11 @@ namespace info {
 	}
 
 	void SQLiteStatHelper::read_variable(SQLite_Statement &q, VariableType &cur) {
-		assert(q.get_num_columns() == 11);
+		assert(q.get_num_columns() == 12);
 		STRINGTYPE sSigle, sName, status, sDesc, sGenre, sType;
 		IDTYPE nId, nDatasetId;
 		INTTYPE nVersion, nCateg;
+		int nbModal = 0;
 		WEIGHTYPE w = 1.0;
 		q.get_column(0, nId);
 		q.get_column(1, nVersion);
@@ -1440,6 +1472,7 @@ namespace info {
 		q.get_column(8, sGenre);
 		q.get_column(9, status);
 		q.get_column(10, w);
+		q.get_column(11, nbModal);
 		bool bCateg = (nCateg != 0) ? true : false;
 		cur.id(nId);
 		cur.version(nVersion);
@@ -1452,6 +1485,7 @@ namespace info {
 		cur.genre(sGenre);
 		cur.dataset_id(nDatasetId);
 		cur.weight(w);
+		cur.modalites_count(nbModal);
 	}
 
 	void SQLiteStatHelper::read_indiv(SQLite_Statement &q, IndivType &cur) {
@@ -1484,7 +1518,7 @@ namespace info {
 		STRINGTYPE status, sval;
 		IDTYPE nId, nVarId, nIndId;
 		INTTYPE nVersion;
-		DbValue v;
+		InfoValue v;
 		q.get_column(0, nId);
 		q.get_column(1, nVersion);
 		q.get_column(2, nVarId);

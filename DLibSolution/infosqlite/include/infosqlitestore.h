@@ -93,6 +93,7 @@ namespace info {
 		virtual bool find_indiv_values(IndivType &oInd, values_vector &oList,
 			size_t skip = 0, size_t count = DATATRANSFER_CHUNK_SIZE);
 		virtual bool find_indiv_values_count(IndivType &oInd, size_t &nc);
+		virtual bool find_variable_values_count(VariableType &oVar, size_t &nc);
 	}; // class SQLiteStatHelper
 	//////////////////////////////////////////
 }// namespace info

@@ -277,6 +277,24 @@ namespace info {
 			}// it
 			return (true);
 		}// find_indiv_values_count
+		bool find_variable_values_count(VariableType &oVar, size_t &nc) {
+			std::unique_lock<std::mutex> lock1(this->m_mutexValue, std::defer_lock);
+			std::unique_lock<std::mutex> lock2(this->m_mutexVariable, std::defer_lock);
+			std::lock(lock1, lock2);
+			if (!this->find_variable(oVar, false)) {
+				return (false);
+			}
+			const IDTYPE nVarId = oVar.id();
+			const values_vector &values = this->m_values;
+			nc = 0;
+			for (auto it = values.begin(); it != values.end(); ++it) {
+				const ValueType &v = *it;
+				if (v.variable_id() == nVarId) {
+					++nc;
+				}// found
+			}// it
+			return (true);
+		}// find_variable_values_count
 		bool find_indiv_values(IndivType &oInd, values_vector &oList, size_t skip, size_t count) {
 			if (count < 1) {
 				count = 100;
@@ -433,7 +451,7 @@ namespace info {
 					}
 				}
 				else if (oVal.is_writeable()) {
-					boost::any v0 = oVal.value();
+					InfoValue v0 = oVal.value();
 					if (v0.empty() && (nId != 0)) {
 						auto it = std::find_if(values.begin(), values.end(), [&](ValueType &v)->bool {
 							return (v.id() == nId);
@@ -1087,7 +1105,7 @@ namespace info {
 					ValueType val(*pVar, *pInd);
 					if (!this->find_value(val)) {
 						double f = (double)data[i * nCols + j];
-						boost::any vv(f);
+						InfoValue vv(f);
 						val.value(vv);
 						val.variable_id(pVar->id());
 						val.indiv_id(pInd->id());

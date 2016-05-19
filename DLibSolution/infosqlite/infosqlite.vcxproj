@@ -149,7 +149,6 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\dbvalue.cpp" />
     <ClCompile Include="src\infosqlitestore.cpp" />
     <ClCompile Include="src\sqlite\sqlite3.c">
       <SDLCheck Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</SDLCheck>
@@ -161,13 +160,11 @@
     <ClCompile Include="src\sqlite_statement.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="include\dbvalue.h" />
     <ClInclude Include="include\infosqlitestore.h" />
     <ClInclude Include="include\sqlite_database.h" />
     <ClInclude Include="include\sqlite_statement.h" />
     <ClInclude Include="src\sqlite\sqlite3.h" />
     <ClInclude Include="src\sqlite\sqlite3ext.h" />
-    <ClInclude Include="src\string_convert.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

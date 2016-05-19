@@ -6,12 +6,13 @@
 */
 #include "./sqlite/sqlite3.h"
 //////////////////////////////
-#include "../include/dbvalue.h"
+#include <infovalue.h>
+#include <stringconvert.h>
 #include "../include/sqlite_database.h"
 #include "../include/sqlite_statement.h"
-#include "string_convert.h"
 //////////////////////////////////
 namespace info_sqlite {
+	using namespace info;
 	////////////////////////////////////////////
 	void SQLite_Statement::init(SQLite_Database &oBase, const char *pszSQL) {
 		assert(oBase.is_open());
@@ -118,7 +119,7 @@ namespace info_sqlite {
 		sRet = StringConvert::s2ws(s);
 		return (true);
 	}
-	bool SQLite_Statement::col_value(int icol, DbValue &val) const {
+	bool SQLite_Statement::col_value(int icol, InfoValue &val) const {
 		bool bRet = false;
 		const values_vector &vv = this->m_vals;
 		if ((icol >= 0) && ((size_t)icol < vv.size())) {
@@ -127,7 +128,7 @@ namespace info_sqlite {
 		}
 		return (bRet);
 	} // col_value
-	bool SQLite_Statement::col_value(const std::string &sname, DbValue &val) const {
+	bool SQLite_Statement::col_value(const std::string &sname, InfoValue &val) const {
 		bool bRet = false;
 		const strings_vector &names = this->m_names;
 		const int n = (int)names.size();
@@ -139,7 +140,7 @@ namespace info_sqlite {
 		} // i
 		return (bRet);
 	} // col_value
-	bool SQLite_Statement::col_value(const std::wstring &sname, DbValue &val) const {
+	bool SQLite_Statement::col_value(const std::wstring &sname, InfoValue &val) const {
 		std::string s = StringConvert::ws2s(sname);
 		return this->col_value(s, val);
 	}
@@ -177,12 +178,12 @@ namespace info_sqlite {
 				switch (ntype) {
 				case SQLITE_INTEGER: {
 					int ival = ::sqlite3_column_int(p, icol);
-					vals[icol] = DbValue(ival);
+					vals[icol] = InfoValue(ival);
 				}
 									 break;
 				case SQLITE_FLOAT: {
 					double dval = ::sqlite3_column_double(p, icol);
-					vals[icol] = DbValue(dval);
+					vals[icol] = InfoValue(dval);
 				}
 								   break;
 				case SQLITE_TEXT: {
@@ -195,7 +196,7 @@ namespace info_sqlite {
 						std::copy(ps, ps + n, ss.begin());
 						sval = ss;
 					}
-					vals[icol] = DbValue(sval);
+					vals[icol] = InfoValue(sval);
 				}
 								  break;
 				case SQLITE_BLOB: {
@@ -233,18 +234,18 @@ namespace info_sqlite {
 			vals.resize(nCount);
 		}
 		for (int icol = 0; icol < nCount; ++icol) {
-			DbValue v;
+			InfoValue v;
 			vals[icol] = v;
 			int ntype = ::sqlite3_column_type(p, icol);
 			switch (ntype) {
 			case SQLITE_INTEGER: {
 				int ival = ::sqlite3_column_int(p, icol);
-				vals[icol] = DbValue(ival);
+				vals[icol] = InfoValue(ival);
 			}
 								 break;
 			case SQLITE_FLOAT: {
 				double dval = ::sqlite3_column_double(p, icol);
-				vals[icol] = DbValue(dval);
+				vals[icol] = InfoValue(dval);
 			}
 							   break;
 			case SQLITE_TEXT: {
@@ -257,7 +258,7 @@ namespace info_sqlite {
 					std::copy(ps, ps + n, ss.begin());
 					sval = ss;
 				}
-				vals[icol] = DbValue(sval);
+				vals[icol] = InfoValue(sval);
 			}
 							  break;
 			case SQLITE_BLOB: {
