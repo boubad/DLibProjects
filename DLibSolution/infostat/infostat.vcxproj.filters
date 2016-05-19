@@ -45,5 +45,13 @@
     <ClInclude Include="include\storeindivsource.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\infovalue.h">
+      <Filter>include</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\infovalue.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
