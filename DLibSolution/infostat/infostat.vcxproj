@@ -147,6 +147,7 @@
   <ItemGroup>
     <ClInclude Include="include\baseitem.h" />
     <ClInclude Include="include\indiv.h" />
+    <ClInclude Include="include\infovalue.h" />
     <ClInclude Include="include\istatstore.h" />
     <ClInclude Include="include\memorydataset.h" />
     <ClInclude Include="include\memorystatstore.h" />
