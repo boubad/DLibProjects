@@ -6,11 +6,12 @@
 */
 #include "./sqlite/sqlite3.h"
 ////////////////////////
-#include "string_convert.h"
+#include <stringconvert.h>
 #include "../include/sqlite_database.h"
 #include "../include/sqlite_statement.h"
 /////////////////////////////
 namespace info_sqlite {
+	using namespace info;
 	///////////////////////////////////////////////
 	static const char *SQL_COMMIT_TRANSACTION = "COMMIT TRANSACTION";
 	static const char *SQL_BEGIN_TRANSACTION = "BEGIN TRANSACTION";

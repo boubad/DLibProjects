@@ -5,46 +5,60 @@
 #include <map>
 #include <memory>
 #include <algorithm>
+/////////////////////////////////
+#include "infovalue.h"
 ////////////////////////////////////
 namespace info {
 	//////////////////////////////////
-	template <typename U, typename T, typename W>
-	bool info_global_compute_distance(const std::map<U, T> &oMap1,
-		const std::map<U, T> &oMap2, W &res) {
+	template <typename U1, typename U2, typename W>
+	bool info_global_compute_distance(const std::map<U1, InfoValue> &oMap1,
+		const std::map<U2, InfoValue> &oMap2, W &res) {
 		size_t nc = 0;
-		res = 0;
-		std::for_each(oMap1.begin(), oMap1.end(), [&](const std::pair<T, U> &p) {
-			const U key = p.first;
-			auto it = oMap2.find(key);
-			if (it != oMap2.end()) {
-				const T v1 = p.second;
-				const T v2 = (*it).second;
-				const W tt = (W)v1 - (W)v2;
-				res = (W)(res + tt * tt);
-				++nc;
-			}// it
+		double dRes = 0;
+		std::for_each(oMap1.begin(), oMap1.end(), [&](const std::pair<U1, InfoValue> &p) {
+			const InfoValue &vv1 = p.second;
+			if ((!vv1.empty()) && vv1.is_numerical()) {
+				const U2 key = (U2)p.first;
+				auto it = oMap2.find(key);
+				if (it != oMap2.end()) {
+					const InfoValue &vv2 = (*it).second;
+					if ((!vv2.empty()) && vv2.is_numerical()) {
+						double v1, v2;
+						vv1.get_value(v1);
+						vv2.get_value(v2);
+						const double tt = v1 - v2;
+						dRes += tt * tt;
+						++nc;
+					}// vv2
+				}// it
+			}// vv1
 		});
 		if (nc > 1) {
-			res = (W)(res / nc);
+			dRes /= nc;
 		}
+		res = (W)dRes;
 		return (nc > 0);
 	}//info_global_compute_distance
 	/////////////////////////////
-	template <typename U = unsigned long, typename T = float>
+	template <typename U = unsigned long>
 	class Indiv {
 	public:
-		using IndivType = Indiv<U, T>;
-		using DataMap = std::map<U, T>;
+		using IndivType = Indiv<U>;
+		using DataMap = std::map<U, InfoValue>;
 	private:
 		U m_index;
 		DataMap m_center;
 	public:
 		Indiv(const U aIndex = 0) :m_index(0) {}
-		template <typename XU, typename XT>
-		Indiv(const XU aIndex, const std::map<XU, XT> &oMap) : m_index((U)aIndex) {
+		template <typename XU>
+		Indiv(const XU aIndex, const std::map<XU, InfoValue> &oMap) : m_index((U)aIndex) {
 			DataMap &m = this->m_center;
-			std::for_each(oMap.begin(), oMap.end(), [&map](const std::pair<XU, XT> &p) {
-				m[(U)p.first] = (T)p.second;
+			std::for_each(oMap.begin(), oMap.end(), [&m](const std::pair<XU, InfoValue> &p) {
+				InfoValue v = p.second;
+				if (!v.empty()) {
+					U key = (U)p.first;
+					m[key] = v;
+				}
 			});
 		}
 		Indiv(IndivType &other) :m_index(other.m_index), m_center(other.m_center) {
@@ -67,12 +81,16 @@ namespace info {
 		const DataMap & center(void) const {
 			return (this->m_center);
 		}
-		template <typename XU, typename XT>
-		void center(const std::map<XU, XT> &oMap) {
+		template <typename XU>
+		void center(const std::map<XU, InfoValue> &oMap) {
 			DataMap &m = this->m_center;
 			m.clear();
-			std::for_each(oMap.begin(), oMap.end(), [&map](const std::pair<XU, XT> &p) {
-				m[(U)p.first] = (T)p.second;
+			std::for_each(oMap.begin(), oMap.end(), [&map](const std::pair<XU, InfoValue> &p) {
+				InfoValue v = p.second;
+				if (!v.empty()) {
+					U key = (U)p.first;
+					m[key] = v;
+				}
 			});
 		}
 		template <typename W>
@@ -81,11 +99,11 @@ namespace info {
 		}// distance
 	};// class Indiv<U,T>
 	//////////////////////////////////////
-	template <typename U = unsigned long, typename T = float>
+	template <typename U = unsigned long>
 	class IIndivSource {
 	public:
-		using IndivType = Indiv<U, T>;
-		using DataMap = std::map<U, T>;
+		using IndivType = Indiv<U>;
+		using DataMap = std::map<U, InfoValue>;
 		using IndivTypePtr = std::shared_ptr<IndivType>;
 	public:
 		virtual size_t count(void) = 0;
@@ -93,7 +111,7 @@ namespace info {
 		virtual void reset(void) = 0;
 		virtual IndivTypePtr next(void) = 0;
 	public:
-		virtual IIndivSource() {}
+		virtual ~IIndivSource() {}
 	};// class IIndivSource<U,T>
 	////////////////////////////////
 }// namespace info

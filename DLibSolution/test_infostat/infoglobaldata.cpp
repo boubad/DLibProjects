@@ -157,7 +157,7 @@ void InfoGlobalInit::import(const std::string &name, size_t nRows, size_t nCols,
 			SQLiteStatHelper::ValueType val(*pVar, *pInd);
 			if (!p->find_value(val)) {
 				float f = (float)data[i * nCols + j];
-				boost::any vv(f);
+				InfoValue vv(f);
 				val.value(vv);
 				oVals.push_back(val);
 			}

@@ -465,6 +465,17 @@ namespace info {
 			}
 			return (false);
 		}
+		virtual bool find_variable_values_count(VariableType &oVar, size_t &nc) {
+			if (!this->find_variable(oVar)) {
+				return (false);
+			}
+			DatasetType xSet(oVar.dataset_id());
+			MemoryDatasetType *p = this->get_dataset(xSet);
+			if (p != nullptr) {
+				return p->find_variable_values_count(oVar, nc);
+			}
+			return (false);
+		}
 	};// class MemoryStatStore<IDTYPE, INTTYPE, STRINGTYPE, WEIGHTYPE>
 	/////////////////////////////////////
 }// namespace info

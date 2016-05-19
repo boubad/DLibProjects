@@ -3,9 +3,8 @@
 #define __BASEITEM_H__
 /////////////////////////////////////
 #include "stringconvert.h"
+#include "infovalue.h"
 //////////////////////////////////
-#include <boost/any.hpp>
-////////////////////////////////
 namespace info {
 	///////////////////////////////////////
 	template <typename IDTYPE, typename INTTYPE, typename STRINGTYPE>
@@ -204,21 +203,23 @@ namespace info {
 		using StatVariableType = StatVariable<IDTYPE, INTTYPE, STRINGTYPE, WEIGHTYPE>;
 	private:
 		bool m_categ;
+		int m_nbmodalites;
 		STRINGTYPE m_type;
 		STRINGTYPE m_genre;
 	public:
-		StatVariable():m_categ(false){}
-		StatVariable(const IDTYPE n) :m_categ(false) {
+		StatVariable():m_categ(false),m_nbmodalites(0){}
+		StatVariable(const IDTYPE n) :m_categ(false),m_nbmodalites(0) {
 			this->id(n);
 		}
-		StatVariable(const StatDatasetType &oSet, const STRINGTYPE &s) :DatasetChildType(oSet,s) {
+		StatVariable(const StatDatasetType &oSet, const STRINGTYPE &s) :DatasetChildType(oSet,s),m_categ(false),m_nbmodalites(0) {
 		}
 		StatVariable(const StatVariableType &other) :DatasetChildType(other),
-			m_categ(other.m_categ),m_type(other.m_type),m_genre(other.m_genre) {}
+			m_categ(other.m_categ),m_nbmodalites(other.m_nbmodalites),m_type(other.m_type),m_genre(other.m_genre) {}
 		StatVariableType & operator=(const StatVariableType &other) {
 			if (this != &other) {
 				DatasetChildType::operator=(other);
 				this->m_categ = other.m_categ;
+				this->m_nbmodalites = other.m_nbmodalites;
 				this->m_type = other.m_type;
 				this->m_genre = other.m_genre;
 			}
@@ -231,6 +232,17 @@ namespace info {
 		}
 		void is_categ(const bool b) {
 			this->m_categ = b;
+		}
+		bool is_modal(void) const {
+			return (this->m_nbmodalites > 0);
+		}
+		int modalites_count(void) const {
+			return (this->m_nbmodalites);
+		}
+		void modalites_count(const int n) {
+			if (n >= 0) {
+				this->m_nbmodalites = n;
+			}
 		}
 		const STRINGTYPE &vartype(void) const {
 			return (this->m_type);
@@ -284,13 +296,17 @@ namespace info {
 	private:
 		IDTYPE m_varid;
 		IDTYPE m_indid;
-		any m_val;
+		InfoValue m_val;
 	public:
 		StatValue(){}
 		template <typename WEIGHTYPE>
 		StatValue(const StatVariable<IDTYPE, INTTYPE, STRINGTYPE, WEIGHTYPE> &oVar,
+			const StatIndiv<IDTYPE, INTTYPE, STRINGTYPE, WEIGHTYPE> &oInd) :m_varid(oVar.id()), m_indid(oInd.id()){
+		}
+		template <typename T, typename WEIGHTYPE>
+		StatValue(const StatVariable<IDTYPE, INTTYPE, STRINGTYPE, WEIGHTYPE> &oVar,
 			const StatIndiv<IDTYPE, INTTYPE, STRINGTYPE, WEIGHTYPE> &oInd,
-			const any &v = any()) :m_varid(oVar.id()), m_indid(oInd.id()), m_val(v) {
+			const T &v) :m_varid(oVar.id()), m_indid(oInd.id()), m_val(v) {
 		}
 		StatValue(const StatValueType &other):BaseInfoStatItemType(other),
 			m_varid(other.m_varid),m_indid(other.m_indid),m_val(other.m_val){}
@@ -317,158 +333,19 @@ namespace info {
 		void indiv_id(const IDTYPE n) {
 			this->m_indid = n;
 		}
-		const any  & value(void) const {
+		const InfoValue  & value(void) const {
 			return (this->m_val);
 		}
-		void value(const any &v) {
+		void value(const InfoValue &v) {
 			this->m_val = v;
 		}
 		bool empty(void) const {
 			return (this->m_val.empty());
 		}
-		bool get_value(std::string &v) const {
-			const boost::any &vx = this->m_val;
-			if (vx.empty()) {
-				return false;
-			}
-			try {
-				v = boost::any_cast<std::string>(vx);
-				return (true);
-			}
-			catch (boost::bad_any_cast &) {
-				return  (false);
-			}
-		}// get_value
-		bool get_value(std::wstring &v) const {
-			const boost::any &vx = this->m_val;
-			if (vx.empty()) {
-				return false;
-			}
-			try {
-				v = boost::any_cast<std::wstring>(vx);
-				return (true);
-			}
-			catch (boost::bad_any_cast &) {
-				return  (false);
-			}
-		}// get_value
-		bool get_value(bool &v) const {
-			const boost::any &vx = this->m_val;
-			if (vx.empty()) {
-				return false;
-			}
-			try {
-				v = boost::any_cast<bool>(vx);
-				return (true);
-			}
-			catch (boost::bad_any_cast &) {
-				return  (false);
-			}
-		}// get_value
-		bool get_value(double &v) const {
-			const boost::any &vx = this->m_val;
-			if (vx.empty()) {
-				return false;
-			}
-			try {
-				v = boost::any_cast<double>(vx);
-				return (true);
-			}
-			catch (boost::bad_any_cast &) {
-				return  (false);
-			}
-		}// get_value
-		bool get_value(float &v) const {
-			const boost::any &vx = this->m_val;
-			if (vx.empty()) {
-				return false;
-			}
-			try {
-				v = boost::any_cast<float>(vx);
-				return (true);
-			}
-			catch (boost::bad_any_cast &) {
-				return  (false);
-			}
-		}// get_value
-		bool get_value(int &v) const {
-			const boost::any &vx = this->m_val;
-			if (vx.empty()) {
-				return false;
-			}
-			try {
-				v = boost::any_cast<int>(vx);
-				return (true);
-			}
-			catch (boost::bad_any_cast &) {
-				return  (false);
-			}
-		}// get_value
-		bool get_value(unsigned int &v) const {
-			const boost::any &vx = this->m_val;
-			if (vx.empty()) {
-				return false;
-			}
-			try {
-				v = boost::any_cast<unsigned int>(vx);
-				return (true);
-			}
-			catch (boost::bad_any_cast &) {
-				return  (false);
-			}
-		}// get_value
-		bool get_value(unsigned long &v) const {
-			const boost::any &vx = this->m_val;
-			if (vx.empty()) {
-				return false;
-			}
-			try {
-				v = boost::any_cast<unsigned long>(vx);
-				return (true);
-			}
-			catch (boost::bad_any_cast &) {
-				return  (false);
-			}
-		}// get_value
-		bool get_value(long &v) const {
-			const boost::any &vx = this->m_val;
-			if (vx.empty()) {
-				return false;
-			}
-			try {
-				v = boost::any_cast<long>(vx);
-				return (true);
-			}
-			catch (boost::bad_any_cast &) {
-				return  (false);
-			}
-		}// get_value
-		bool get_value(short &v) const {
-			const boost::any &vx = this->m_val;
-			if (vx.empty()) {
-				return false;
-			}
-			try {
-				v = boost::any_cast<short>(vx);
-				return (true);
-			}
-			catch (boost::bad_any_cast &) {
-				return  (false);
-			}
-		}// get_value
-		bool get_value(unsigned short &v) const {
-			const boost::any &vx = this->m_val;
-			if (vx.empty()) {
-				return false;
-			}
-			try {
-				v = boost::any_cast<unsigned short>(vx);
-				return (true);
-			}
-			catch (boost::bad_any_cast &) {
-				return  (false);
-			}
-		}// get_value
+		template <typename T>
+		bool get_value(T &v) const {
+			this->m_val.get_value(v);
+		}
 	public:
 		virtual bool is_writeable(void) const {
 			return ((this->m_varid != 0) && (this->m_indid != 0));
@@ -477,7 +354,7 @@ namespace info {
 			BaseInfoStatItemType::clear();
 			this->m_varid = 0;
 			this->m_indid = 0;
-			this->m_val = any();
+			this->m_val = InfoValue();
 		}
 	}; // class StatValue<IDTYPE, INTTYPE, STRINGTYPE>;
 	////////////////////////////////////

@@ -1,61 +1,62 @@
 #pragma once
-#ifndef __DBVALUE_H__
-#define __DBVALUE_H__
+#ifndef __INFOVALUE_H__
+#define __INFOVALUE_H__
 ///////////////////////
+#include  <string>
 #include <boost/any.hpp>
 ////////////////////////////
-namespace info_sqlite
+namespace info
 {
-	//////////////////////////////////
-	using  byte = unsigned char;
 	////////////////////////////////////
-	enum class DbValueType : short
+	enum InfoValueType : short
 	{
 		emptyType, boolType, charType, unsignedCharType, wcharType, shortType, unsignedShortType, intType,
-		unsignedIntType, longType, unsignedLongType, floatType, doubleType, stringType, wstringType
+		unsignedIntType, longType, unsignedLongType, longLongType, floatType, doubleType, longDoubleType, stringType, wstringType,endType
 	};
 	//////////////////////////////////
-	class DbValue
+	class InfoValue
 	{
 	private:
 		boost::any m_val;
 	public:
-		DbValue();
-		explicit DbValue(bool bval);
-		explicit DbValue(char bval);
-		explicit DbValue(unsigned char bval);
-		explicit DbValue(wchar_t bval);
-		explicit DbValue(short ival);
-		explicit DbValue(unsigned short ival);
-		explicit DbValue(int ival);
-		explicit DbValue(unsigned int ival);
-		explicit DbValue(long ival);
-		explicit DbValue(unsigned long ival);
-		explicit DbValue(float fval);
-		explicit DbValue(double dval);
-		explicit DbValue(const std::string &sval);
-		explicit DbValue(const std::wstring &wsval);
-		explicit DbValue(const boost::any &v) :m_val(v) {};
-		DbValue(const DbValue &other);
-		DbValue & operator=(const DbValue &other);
-		bool operator<(const DbValue &other) const;
-		bool operator==(const DbValue &other) const;
-		~DbValue();
-		DbValue & operator=(bool b);
-		DbValue & operator=(char ival);
-		DbValue & operator=(unsigned char ival);
-		DbValue & operator=(wchar_t ival);
-		DbValue & operator=(short ival);
-		DbValue & operator=(unsigned short ival);
-		DbValue & operator=(int ival);
-		DbValue & operator=(unsigned int ival);
-		DbValue & operator=(long ival);
-		DbValue & operator=(unsigned long ival);
-		DbValue & operator=(float fval);
-		DbValue & operator=(double dval);
-		DbValue & operator=(const std::string &s);
-		DbValue & operator=(const std::wstring &s);
-		DbValueType get_dbvalue_type(void) const;
+		InfoValue();
+		explicit InfoValue(bool bval);
+		explicit InfoValue(char bval);
+		explicit InfoValue(unsigned char bval);
+		explicit InfoValue(wchar_t bval);
+		explicit InfoValue(short ival);
+		explicit InfoValue(unsigned short ival);
+		explicit InfoValue(int ival);
+		explicit InfoValue(unsigned int ival);
+		explicit InfoValue(long ival);
+		explicit InfoValue(unsigned long ival);
+		explicit InfoValue(long long ival);
+		explicit InfoValue(float fval);
+		explicit InfoValue(double dval);
+		explicit InfoValue(long double dval);
+		explicit InfoValue(const std::string &sval);
+		explicit InfoValue(const std::wstring &wsval);
+		explicit InfoValue(const boost::any &v);
+		InfoValue(const InfoValue &other);
+		InfoValue & operator=(const InfoValue &other);
+		~InfoValue();
+		InfoValue & operator=(bool b);
+		InfoValue & operator=(char ival);
+		InfoValue & operator=(unsigned char ival);
+		InfoValue & operator=(wchar_t ival);
+		InfoValue & operator=(short ival);
+		InfoValue & operator=(unsigned short ival);
+		InfoValue & operator=(int ival);
+		InfoValue & operator=(unsigned int ival);
+		InfoValue & operator=(long ival);
+		InfoValue & operator=(unsigned long ival);
+		InfoValue & operator=(long long ival);
+		InfoValue & operator=(float fval);
+		InfoValue & operator=(double dval);
+		InfoValue & operator=(long double dval);
+		InfoValue & operator=(const std::string &s);
+		InfoValue & operator=(const std::wstring &s);
+		InfoValueType get_infovalue_type(void) const;
 		const std::type_info & type(void) const;
 		const boost::any & value(void) const;
 		bool is_valid(void) const;
@@ -70,12 +71,40 @@ namespace info_sqlite
 		unsigned int unsigned_int_value(void) const;
 		long long_value(void) const;
 		unsigned long unsigned_long_value(void) const;
+		long long long_long_value(void) const;
 		float float_value(void) const;
 		double double_value(void) const;
+		long double long_double_value(void) const;
 		bool string_value(std::string &s) const;
 		bool string_value(std::wstring &s) const;
+		//
+		bool is_empty(void) const;
+		bool is_integral(void) const;
+		bool is_floating(void) const;
+		bool is_boolean(void) const;
+		bool is_text(void) const;
+		bool is_numerical(void) const;
+		//
+		void get_value(boost::any &v) const;
+		void get_value(bool &v) const;
+		void get_value(char &v) const;
+		void get_value(unsigned char &v) const;
+		void get_value(wchar_t &v) const;
+		void get_value(short &v) const;
+		void get_value(unsigned short &v) const;
+		void get_value(int &v) const;
+		void get_value(unsigned int &v) const;
+		void get_value(long &v) const;
+		void get_value(unsigned long &v) const;
+		void get_value(long long &v) const;
+		void get_value(float &v) const;
+		void get_value(double &v) const;
+		void get_value(long double &v) const;
+		void get_value(std::string &v) const;
+		void get_value(std::wstring &v) const;
 	};
 	//////////////////////////////////////////
-} /* namespace info_sqlite */
+} /* namespace info */
   /////////////////////////////////////////
 #endif // __DBVALUE_H__
+

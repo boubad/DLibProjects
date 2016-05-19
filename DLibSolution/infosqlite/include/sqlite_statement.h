@@ -11,7 +11,7 @@
 //////////////////////////////
 #include <vector>
 /////////////////////////////
-#include "dbvalue.h"
+#include <infovalue.h>
 //////////////////////////////////
 typedef struct sqlite3_stmt sqlite3_stmt;
 ///////////////////////////////
@@ -21,7 +21,8 @@ namespace info_sqlite {
 	//////////////////////////////////
 	class SQLite_Statement : private boost::noncopyable {
 		friend class SQLite_Database;
-		using values_vector = std::vector<DbValue>;
+		using InfoValue = info::InfoValue;
+		using values_vector = std::vector<InfoValue>;
 		using strings_vector = std::vector<std::string>;
 	private:
 		bool m_first;
@@ -80,9 +81,9 @@ namespace info_sqlite {
 		bool has_values(void) const;
 		bool col_name(int icol, std::string &sRet) const;
 		bool col_name(int icol, std::wstring &sRet) const;
-		bool col_value(int icol, DbValue &val) const;
-		bool col_value(const std::string &sname, DbValue &val) const;
-		bool col_value(const std::wstring &sname, DbValue &val) const;
+		bool col_value(int icol, InfoValue &val) const;
+		bool col_value(const std::string &sname, InfoValue &val) const;
+		bool col_value(const std::wstring &sname, InfoValue &val) const;
 	public:
 		std::string get_column_name(unsigned long idx) {
 			std::string sRet;
@@ -96,41 +97,41 @@ namespace info_sqlite {
 			return this->cols();
 		}
 		void get_column(unsigned long idx, int &item) {
-			DbValue v;
+			InfoValue v;
 			this->col_value((int)idx, v);
 			item = v.int_value();
 		}
 		void get_column(unsigned long idx, long &item) {
-			DbValue v;
+			InfoValue v;
 			this->col_value((int)idx, v);
 			item = v.long_value();
 		}
 		void get_column(unsigned long idx, unsigned long &item) {
-			DbValue v;
+			InfoValue v;
 			this->col_value((int)idx, v);
 			item = v.unsigned_long_value();
 		}
 		void get_column(unsigned long idx, double &item) {
-			DbValue v;
+			InfoValue v;
 			this->col_value((int)idx, v);
 			item = v.double_value();
 		}
 		void get_column(unsigned long idx, std::string &item) {
-			DbValue v;
+			InfoValue v;
 			this->col_value((int)idx, v);
 			v.string_value(item);
 		}
 		void get_column(unsigned long idx, std::wstring &item) {
-			DbValue v;
+			InfoValue v;
 			this->col_value((int)idx, v);
 			v.string_value(item);
 		}
 		void get_column(unsigned long idx, boost::any &item) {
-			DbValue v;
+			InfoValue v;
 			this->col_value((int)idx, v);
 			item = v.value();
 		}
-		void get_column(unsigned long idx, DbValue &item) {
+		void get_column(unsigned long idx, InfoValue &item) {
 			this->col_value((int)idx, item);
 		}
 	public:

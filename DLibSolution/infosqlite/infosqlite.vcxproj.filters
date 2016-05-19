@@ -36,9 +36,6 @@
     <ClCompile Include="src\sqlite_statement.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="src\dbvalue.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="src\infosqlitestore.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -55,12 +52,6 @@
     </ClInclude>
     <ClInclude Include="include\sqlite_statement.h">
       <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="include\dbvalue.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="src\string_convert.h">
-      <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="include\infosqlitestore.h">
       <Filter>include</Filter>
