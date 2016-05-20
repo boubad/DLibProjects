@@ -48,10 +48,16 @@
     <ClInclude Include="include\infovalue.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\indivcluster.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\treeitem.h">
+      <Filter>include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\infovalue.cpp">
-      <Filter>src</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

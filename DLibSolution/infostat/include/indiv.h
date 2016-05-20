@@ -82,6 +82,19 @@ namespace info {
 		const DataMap & center(void) const {
 			return (this->m_center);
 		}
+		bool empty(void) const {
+			return (this->m_center.empty());
+		}
+		bool has_numeric_fields(void) const {
+			const DataMap &oMap = this->m_center();
+			for (auto it = oMap.begin(); it != oMap.end(); ++it) {
+				const InfoValue &v = (*it).second;
+				if (v.is_numerical()) {
+					return (true);
+				}
+			}
+			return (false);
+		}// has_numeric_fields
 		template <typename XU>
 		void center(const std::map<XU, InfoValue> &oMap) {
 			DataMap &m = this->m_center;
