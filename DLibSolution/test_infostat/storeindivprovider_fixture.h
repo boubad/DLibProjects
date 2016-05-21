@@ -9,6 +9,9 @@ class StoreIndivSorceFixture : public MemoryStoreFixture {
 protected:
 	using StoreIndivSourceType = info::StoreIndivSource<>;
 	using IndivType = info::Indiv<>;
+	using IndexType = IndivType::IndexType;
+	using DataMap = IndivType::DataMap;
+	using IndivTypePtr = std::shared_ptr<IndivType>;
 	using MemoryStoreType = info::MemoryStatStore<>;
 	using IStoreType = info::IStatStore<>;
 	using DatasetType = IStoreType::DatasetType;

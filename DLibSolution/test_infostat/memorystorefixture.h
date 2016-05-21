@@ -3,6 +3,13 @@
 #define __MEMORYSTOREFIXTURE_H__
 ////////////////////////////////////
 #include <memorystatstore.h>
+#include <iostream>
+#include <sstream>
+////////////////////////////////
+template <typename U>
+void test_write_map(const std::map<U,info::InfoValue> &oMap,std::string &ss){
+	info::info_global_write_map(oMap,ss);
+}// test_write_map
 /////////////////////////////
 class MemoryStoreFixture {
 protected:

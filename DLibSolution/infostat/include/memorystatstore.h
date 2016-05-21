@@ -4,6 +4,7 @@
 /////////////////////////////////////////
 #include "istatstore.h"
 #include "memorydataset.h"
+#include "info_global.h"
 /////////////////////////////
 #include <memory>
 /////////////////////////////////////////
@@ -154,7 +155,7 @@ namespace info {
 			std::unique_lock<std::mutex> lck(this->m_mutex);
 			pmemorydatasets_vector &vv = this->m_osets;
 			size_t nc = vv.size();
-			IDTYPE nId = cur.id();
+			//IDTYPE nId = cur.id();
 			STRINGTYPE sigle = cur.sigle();
 			for (size_t i = 0; i < nc; ++i) {
 				PMemoryDatasetType &o = vv[i];
@@ -173,7 +174,7 @@ namespace info {
 			}
 			{
 				std::unique_lock<std::mutex> lck(this->m_mutex);
-				MemoryDatasetType *pRet = nullptr;
+				//MemoryDatasetType *pRet = nullptr;
 				pmemorydatasets_vector &vv = this->m_osets;
 				size_t nc = vv.size();
 				for (size_t i = 0; i < nc; ++i) {
@@ -262,7 +263,7 @@ namespace info {
 			}
 			{
 				std::unique_lock<std::mutex> lck(this->m_mutex);
-				MemoryDatasetType *pRet = nullptr;
+				//MemoryDatasetType *pRet = nullptr;
 				pmemorydatasets_vector &vv = this->m_osets;
 				size_t nc = vv.size();
 				for (size_t i = 0; i < nc; ++i) {
@@ -337,7 +338,7 @@ namespace info {
 			}
 			{
 				std::unique_lock<std::mutex> lck(this->m_mutex);
-				MemoryDatasetType *pRet = nullptr;
+				//MemoryDatasetType *pRet = nullptr;
 				pmemorydatasets_vector &vv = this->m_osets;
 				size_t nc = vv.size();
 				for (size_t i = 0; i < nc; ++i) {
@@ -400,6 +401,7 @@ namespace info {
 			if (p != nullptr) {
 				return p->maintains_values(oVals, bRemove);
 			}
+			return (false);
 		}
 		virtual bool find_dataset_values_count(const DatasetType &oSet, size_t &nCount) {
 			DatasetType  xSet(oSet);

@@ -345,6 +345,7 @@ namespace info {
 		template <typename T>
 		bool get_value(T &v) const {
 			this->m_val.get_value(v);
+			return (true);
 		}
 	public:
 		virtual bool is_writeable(void) const {

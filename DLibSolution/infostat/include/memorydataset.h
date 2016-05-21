@@ -438,7 +438,7 @@ namespace info {
 			if (nMax > this->m_lastid.load()) {
 				this->m_lastid.store(nMax + 1);
 			}
-			std::_For_each(oList.begin(), oList.end(), [&](const ValueType &oVal) {
+			std::for_each(oList.begin(), oList.end(), [&](const ValueType &oVal) {
 				ValueType xVal(oVal);
 				this->find_value(xVal, false);
 				IDTYPE nId = xVal.id();
