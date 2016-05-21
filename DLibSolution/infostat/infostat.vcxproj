@@ -150,6 +150,7 @@
     <ClInclude Include="include\clusterscollection.h" />
     <ClInclude Include="include\indiv.h" />
     <ClInclude Include="include\indivcluster.h" />
+    <ClInclude Include="include\infostat.h" />
     <ClInclude Include="include\infovalue.h" />
     <ClInclude Include="include\info_global.h" />
     <ClInclude Include="include\interruptable_object.h" />
