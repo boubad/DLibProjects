@@ -54,6 +54,21 @@
     <ClInclude Include="include\treeitem.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\treecollection.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\interruptable_object.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\info_global.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\clusterscollection.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\clusterize.h">
+      <Filter>include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\infovalue.cpp">

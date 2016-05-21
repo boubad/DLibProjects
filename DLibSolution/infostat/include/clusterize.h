@@ -96,7 +96,7 @@ public:
 			const size_t nbMaxIters = 100,
 			std::atomic_bool *pCancel = nullptr) {
 		return (this->compute_random(nbClusters, pSource, nbMaxIters,
-				pCancel));
+				pCancel) > 0);
 	} // process
 public:
 	virtual void clear(void) {

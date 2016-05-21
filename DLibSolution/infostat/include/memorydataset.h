@@ -253,7 +253,7 @@ namespace info {
 		MemoryDataset(const DatasetType &oSet) :m_lastid(1), m_oset(oSet) {
 			size_t nMax = this->m_oset.id();
 			if (nMax >= this->m_lastid.load()) {
-				this->m_lastid.store(nMax + 1);
+				this->m_lastid.store((IDTYPE)(nMax + 1));
 			}
 		}
 		~MemoryDataset() {}
