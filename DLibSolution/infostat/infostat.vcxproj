@@ -150,8 +150,10 @@
     <ClInclude Include="include\clusterize.h" />
     <ClInclude Include="include\clusterscollection.h" />
     <ClInclude Include="include\crititem.h" />
+    <ClInclude Include="include\distancemap.h" />
     <ClInclude Include="include\indiv.h" />
     <ClInclude Include="include\indivcluster.h" />
+    <ClInclude Include="include\indivsummator.h" />
     <ClInclude Include="include\infostat.h" />
     <ClInclude Include="include\infovalue.h" />
     <ClInclude Include="include\info_global.h" />

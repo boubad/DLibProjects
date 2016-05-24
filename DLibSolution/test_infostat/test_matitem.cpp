@@ -11,8 +11,6 @@
 #include "storeindivprovider_fixture.h"
 #include "infotestdata.h"
 //////////////////////////////////
-#include <boost/foreach.hpp>
-/////////////////////////////
 using namespace info;
 //////////////////////////////////
 BOOST_FIXTURE_TEST_SUITE(MatItemTestSuite, StoreIndivSorceFixture<>)
@@ -27,13 +25,12 @@ BOOST_AUTO_TEST_CASE(testMatItem) {
 	MatItemType::ints_vector  ids;
 	oMat.ids(ids);
 	//BOOST_TEST_MESSAGE("");
-	BOOST_FOREACH(IndexType aIndex, ids)
-	{
+	for (auto aIndex : ids) {
 		MatItemType::IndivTypePtr oInd = pMan->find(aIndex);
 		MatItemType::IndivType *pInd = oInd.get();
 		BOOST_CHECK(pInd != nullptr);
 		std::string s = pInd->sigle();
-		//BOOST_TEST_MESSAGE(s);
+		BOOST_TEST_MESSAGE(s);
 	}
 	//BOOST_TEST_MESSAGE("");
 } //testTreeItemMean

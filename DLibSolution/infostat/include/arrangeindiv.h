@@ -14,7 +14,7 @@
 namespace info {
 ////////////////////////////////////////
 template<typename U = unsigned long, typename STRINGTYPE = std::string,
-		typename DISTANCETYPE = double>
+		typename DISTANCETYPE = unsigned long>
 class ArrangeIndivs: public ClustersCollection<U, STRINGTYPE> {
 public:
 	using IndexType = U;

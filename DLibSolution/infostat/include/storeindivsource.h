@@ -4,6 +4,7 @@
 /////////////////////////////////
 #include "istatstore.h"
 #include "infostat.h"
+#include "indiv.h"
 ///////////////////////////////////
 namespace info {
 	/////////////////////////////
@@ -22,14 +23,13 @@ namespace info {
 			using values_vector = std::vector<ValueType>;
 			using StoreIndivSourceType = StoreIndivSource<U, INTTYPE, STRINGTYPE, WEIGHTYPE>;
 			using indivptrs_vector = std::vector<IndivTypePtr>;
+			using SourceType = IIndivSource<U, STRINGTYPE>;
 		private:
 			StoreType *m_pstore;
 			size_t m_current;
 			ints_vector m_ids;
 			DatasetType m_oset;
 			indivptrs_vector m_indivs;
-			//
-			std::mutex _mutex;
 		public:
 			StoreIndivSource(StoreType *pStore, const STRINGTYPE &datasetName) :
 				m_pstore(pStore), m_current(0) {
@@ -50,14 +50,12 @@ namespace info {
 			}
 		public:
 			virtual size_t count(void) {
-				std::unique_lock<std::mutex> oLock(this->_mutex);
 				return (this->m_ids.size());
 			}
 			virtual IndivTypePtr find(const IndexType aIndex) {
 				bool bFound = false;
 				size_t ipos = 0;
 				{
-					std::unique_lock<std::mutex> oLock(this->_mutex);
 					ints_vector & vv = this->m_ids;
 					const size_t n = vv.size();
 					for (size_t i = 0; i < n; ++i) {
@@ -74,7 +72,6 @@ namespace info {
 				return (IndivTypePtr());
 			}
 			virtual IndivTypePtr get(const size_t pos) {
-				std::unique_lock<std::mutex> oLock(this->_mutex);
 				indivptrs_vector & vv = this->m_indivs;
 				assert(pos < vv.size());
 				IndivTypePtr oRet = vv[pos];
@@ -110,7 +107,6 @@ namespace info {
 				return (oRet);
 			}
 			virtual void reset(void) {
-				std::unique_lock<std::mutex> oLock(this->_mutex);
 				StoreType *pStore = this->m_pstore;
 				this->m_current = 0;
 				size_t nc = 0;
@@ -123,7 +119,6 @@ namespace info {
 				}
 			} // reset
 			virtual IndivTypePtr next(void) {
-				std::unique_lock<std::mutex> oLock(this->_mutex);
 				DatasetType &oSet = this->m_oset;
 				ints_vector & ids = this->m_ids;
 				IndivTypePtr oRet;
@@ -191,7 +186,6 @@ namespace info {
 			TransformationType m_transf;
 			StatSummatorType m_summator;
 			//
-			std::mutex _mutex2;
 		public:
 			TranformedStoreIndivSource(StoreType *pStore, const STRINGTYPE &datasetName,
 				const TransformationType mode = TransformationType::normalize) :
@@ -208,26 +202,21 @@ namespace info {
 			}
 		public:
 			TransformationType transformation(void) {
-				std::unique_lock<std::mutex> oLock(this->_mutex2);
 				return (this->m_transf);
 			}
 			void transformation(TransformationType t) {
-				std::unique_lock<std::mutex> oLock(this->_mutex2);
 				this->m_transf = t;
 			}
 		public:
 			virtual IndivTypePtr get(const size_t pos) {
-				std::unique_lock<std::mutex> oLock(this->_mutex2);
 				IndivTypePtr oInd = StoreIndivSourceType::get(pos);
 				return (this->m_summator.transform(oInd, this->m_transf));
 			}
 			virtual IndivTypePtr find(const IndexType aIndex) {
-				std::unique_lock<std::mutex> oLock(this->_mutex2);
 				IndivTypePtr oInd = StoreIndivSourceType::find(aIndex);
 				return (this->m_summator.transform(oInd, this->m_transf));
 			}
 			virtual void reset(void) {
-				std::unique_lock<std::mutex> oLock(this->_mutex2);
 				StoreIndivSourceType::reset();
 				StatSummatorType &oSum = this->m_summator;
 				oSum.clear();
@@ -238,7 +227,6 @@ namespace info {
 				} // i
 			} // reset
 			virtual IndivTypePtr next(void) {
-				std::unique_lock<std::mutex> oLock(this->_mutex2);
 				IndivTypePtr oInd = StoreIndivSourceType::next();
 				return (this->m_summator.transform(oInd, this->m_transf));
 			} // next

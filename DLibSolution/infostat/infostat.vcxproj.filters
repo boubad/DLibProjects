@@ -84,6 +84,12 @@
     <ClInclude Include="include\matitem.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\distancemap.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\indivsummator.h">
+      <Filter>include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\infovalue.cpp">

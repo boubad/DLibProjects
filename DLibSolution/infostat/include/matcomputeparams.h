@@ -9,7 +9,7 @@
 #ifndef MATCOMPUTEPARAMS_H_
 #define MATCOMPUTEPARAMS_H_
  ////////////////////////////////
-#include "crititem.h"
+#include "distancemap.h"
 #include "indiv.h"
 ////////////////////////////////////
 namespace info {

@@ -13,7 +13,7 @@
 /////////////////////////////////
 namespace info {
 ////////////////////////////////////////
-template<typename U = unsigned long,typename STRINGTYPE = std::string>
+template<typename U = unsigned long,typename STRINGTYPE = std::string,typename DISTANCETYPE = unsigned long>
 class ClusterizeKMeans: public ClustersCollection<U,STRINGTYPE> {
 public:
 	using IndexType = U;
@@ -119,14 +119,14 @@ public:
 				return (false);
 			}
 			bool bFirst = true;
-			double dMin = 0;
+			DISTANCETYPE dMin = 0;
 			size_t iCluster = 0;
 			IndivTypePtr oInd = pProvider->get(i);
 			IndivType *pInd = oInd.get();
 			if (pInd != nullptr) {
 				for (size_t j = 0; j < nc; ++j) {
 					IndivClusterType &c = clusters[j];
-					double d = 0;
+					DISTANCETYPE d = 0;
 					if (c.distance(oInd, d)) {
 						if (bFirst) {
 							dMin = d;
