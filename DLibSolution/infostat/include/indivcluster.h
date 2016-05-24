@@ -139,7 +139,6 @@ namespace info {
 		}
 		void get_indivs_map(ints_sizet_map &oMap, const size_t val = 0) const {
 			const indivptrs_vector &v = this->m_indivs;
-			oMap.clear();
 			for (auto &oInd : v) {
 				if (this->check_interrupt()) {
 					return;

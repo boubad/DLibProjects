@@ -23,11 +23,11 @@ BOOST_AUTO_TEST_CASE(testMatItem) {
 	MatElemType::DistanceMapType oDist(pMan);
 	MatElemType::ints_vector oIds;
 	oDist.indexes(oIds);
-	BOOST_TEST_MESSAGE("\nTEST MATELEM");
+	//BOOST_TEST_MESSAGE("\nTEST MATELEM");
 	MatElemType oMat(&oDist, &oIds);
-	BOOST_TEST_MESSAGE("Start criteria: " << oMat.criteria());
+	//BOOST_TEST_MESSAGE("Start criteria: " << oMat.criteria());
 	oMat.process();
-	BOOST_TEST_MESSAGE("End criteria: " << oMat.criteria());
+	//BOOST_TEST_MESSAGE("End criteria: " << oMat.criteria());
 	MatElemType::ints_vector  ids;
 	oMat.ids(ids);
 	for (auto aIndex : ids) {
@@ -35,7 +35,7 @@ BOOST_AUTO_TEST_CASE(testMatItem) {
 		MatElemType::IndivType *pInd = oInd.get();
 		BOOST_CHECK(pInd != nullptr);
 		std::string s = pInd->sigle();
-		BOOST_TEST_MESSAGE(s);
+		//BOOST_TEST_MESSAGE(s);
 	}
 	//BOOST_TEST_MESSAGE("");
 } //testTreeItemMean
