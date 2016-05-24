@@ -24,6 +24,7 @@ namespace info {
 			using StoreIndivSourceType = StoreIndivSource<U, INTTYPE, STRINGTYPE, WEIGHTYPE>;
 			using indivptrs_vector = std::vector<IndivTypePtr>;
 			using SourceType = IIndivSource<U, STRINGTYPE>;
+			using StoreIndivSourceType = StoreIndivSource<U, INTTYPE, STRINGTYPE, WEIGHTYPE>;
 		private:
 			StoreType *m_pstore;
 			size_t m_current;
@@ -94,13 +95,13 @@ namespace info {
 					return (oRet);
 				}
 				DataMap oMap;
-				std::for_each(oVals.begin(), oVals.end(), [&](const ValueType &v) {
+				for (auto &v : oVals) {
 					if (!v.empty()) {
 						const U key = (U)v.variable_id();
 						InfoValue val = v.value();
 						oMap[key] = val;
 					} // v
-				});
+				}
 				oRet = std::make_shared<IndivType>(aIndex, oMap, oInd.sigle());
 				assert(oRet.get() != nullptr);
 				vv[pos] = oRet;
@@ -119,120 +120,16 @@ namespace info {
 				}
 			} // reset
 			virtual IndivTypePtr next(void) {
-				DatasetType &oSet = this->m_oset;
 				ints_vector & ids = this->m_ids;
-				IndivTypePtr oRet;
 				size_t pos = this->m_current;
-				indivptrs_vector & vv = this->m_indivs;
-				if (pos >= vv.size()) {
-					return (oRet);
-				}
-				oRet = vv[pos];
-				if (oRet.get() != nullptr) {
-					this->m_current = pos + 1;
-					return (oRet);
-				}
 				if (pos >= ids.size()) {
-					return (oRet);
+					return IndivTypePtr();
 				}
 				this->m_current = pos + 1;
-				StoreType *pStore = this->m_pstore;
-				assert(pStore != nullptr);
-				U aIndex = ids[pos];
-				DBIndivType oInd(aIndex);
-				oInd.dataset_id(oSet.id());
-				size_t nc = 0;
-				if (!pStore->find_indiv_values_count(oInd, nc)) {
-					return (oRet);
-				}
-				values_vector oVals;
-				if (!pStore->find_indiv_values(oInd, oVals, 0, nc)) {
-					return (oRet);
-				}
-				DataMap oMap;
-				std::for_each(oVals.begin(), oVals.end(), [&](const ValueType &v) {
-					if (!v.empty()) {
-						const U key = (U)v.variable_id();
-						InfoValue val = v.value();
-						oMap[key] = val;
-					} // v
-				});
-				oRet = std::make_shared<IndivType>(aIndex, oMap, oInd.sigle());
-				assert(oRet.get() != nullptr);
-				vv[pos] = oRet;
-				return (oRet);
+				return this->get(pos);
 			} // next
 	};
 	// class StoreIndivSource<U,T,INTTYPE,STRINGTYPE,WEIGHTYPE>
-	/////////////////////////////////////
-	template<typename U = unsigned long, typename INTTYPE = int,
-		typename STRINGTYPE = std::string, typename WEIGHTYPE = float>
-		class TranformedStoreIndivSource : public StoreIndivSource<U, INTTYPE,
-		STRINGTYPE, WEIGHTYPE> {
-		public:
-			using ints_vector = std::vector<U>;
-			using IndivType = Indiv<U, STRINGTYPE>;
-			using DataMap = std::map<U, InfoValue>;
-			using IndivTypePtr = std::shared_ptr<IndivType>;
-			using StoreType = IStatStore<U, INTTYPE, STRINGTYPE, WEIGHTYPE>;
-			using DBIndivType = StatIndiv<U, INTTYPE, STRINGTYPE, WEIGHTYPE>;
-			using DatasetType = StatDataset<U, INTTYPE, STRINGTYPE>;
-			using ValueType = StatValue<U, INTTYPE, STRINGTYPE>;
-			using values_vector = std::vector<ValueType>;
-			using StoreIndivSourceType = StoreIndivSource<U, INTTYPE, STRINGTYPE, WEIGHTYPE>;
-			using indivptrs_vector = std::vector<IndivTypePtr>;
-			using StatSummatorType = StatSummator<U, STRINGTYPE>;
-		private:
-			TransformationType m_transf;
-			StatSummatorType m_summator;
-			//
-		public:
-			TranformedStoreIndivSource(StoreType *pStore, const STRINGTYPE &datasetName,
-				const TransformationType mode = TransformationType::normalize) :
-				StoreIndivSourceType(pStore, datasetName), m_transf(mode) {
-				StatSummatorType &oSum = this->m_summator;
-				oSum.clear();
-				const size_t nc = this->count();
-				for (size_t i = 0; i < nc; ++i) {
-					IndivTypePtr oInd = StoreIndivSourceType::get(i);
-					oSum.add(oInd);
-				} // i
-			}
-			virtual ~TranformedStoreIndivSource() {
-			}
-		public:
-			TransformationType transformation(void) {
-				return (this->m_transf);
-			}
-			void transformation(TransformationType t) {
-				this->m_transf = t;
-			}
-		public:
-			virtual IndivTypePtr get(const size_t pos) {
-				IndivTypePtr oInd = StoreIndivSourceType::get(pos);
-				return (this->m_summator.transform(oInd, this->m_transf));
-			}
-			virtual IndivTypePtr find(const IndexType aIndex) {
-				IndivTypePtr oInd = StoreIndivSourceType::find(aIndex);
-				return (this->m_summator.transform(oInd, this->m_transf));
-			}
-			virtual void reset(void) {
-				StoreIndivSourceType::reset();
-				StatSummatorType &oSum = this->m_summator;
-				oSum.clear();
-				const size_t nc = this->count();
-				for (size_t i = 0; i < nc; ++i) {
-					IndivTypePtr oInd = StoreIndivSourceType::get(i);
-					oSum.add(oInd);
-				} // i
-			} // reset
-			virtual IndivTypePtr next(void) {
-				IndivTypePtr oInd = StoreIndivSourceType::next();
-				return (this->m_summator.transform(oInd, this->m_transf));
-			} // next
-	};
-	// class StoreIndivSource<U,INTTYPE,STRINGTYPE,WEIGHTYPE>
-	/////////////////////////////////////
 	/////////////////////////////////
 }// namespace info
 ////////////////////////////////////

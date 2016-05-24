@@ -90,6 +90,12 @@
     <ClInclude Include="include\indivsummator.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\transformed_storeindivsource.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\matelem.h">
+      <Filter>include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\infovalue.cpp">

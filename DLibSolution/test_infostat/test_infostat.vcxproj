@@ -184,6 +184,7 @@
     <ClCompile Include="test_clusterize.cpp" />
     <ClCompile Include="test_indivprovider.cpp" />
     <ClCompile Include="test_infostat.cpp" />
+    <ClCompile Include="test_matelem.cpp" />
     <ClCompile Include="test_matitem.cpp" />
     <ClCompile Include="test_memorystatstore.cpp" />
     <ClCompile Include="test_sqlitestore.cpp" />

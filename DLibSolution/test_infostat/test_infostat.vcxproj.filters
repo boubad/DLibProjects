@@ -68,5 +68,8 @@
     <ClCompile Include="test_matitem.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="test_matelem.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

@@ -269,14 +269,13 @@ protected:
 		}
 		IndivSummator<U> summator(this->get_cancelleable_flag());
 		const clusters_vector &v = this->m_clusters;
-		for (auto kt = v.begin(); kt != v.end(); ++kt) {
+		for (auto & oInd : v) {
 			if (this->check_interrupt()) {
 				return;
 			}
-			const IndivClusterType &oInd = *kt;
 			const DataMap &oMap = oInd.center();
 			summator.add(oMap);
-		} // kt
+		}
 		summator.get_result(this->m_center);
 	} // update_center
 	virtual bool initialize_process(SourceType *pSource,

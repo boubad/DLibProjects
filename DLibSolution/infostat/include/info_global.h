@@ -36,6 +36,33 @@
 #include <boost/noncopyable.hpp>
 ////////////////////////////////////
 namespace info {
+	///////////////////////////////////
+	template<typename Iterator, typename Func>
+	void info_parallel_for_each(Iterator first, Iterator last, Func f)
+	{
+		const ptrdiff_t range_length = last - first;
+		if (range_length == 0) {
+			return;
+		}
+		if (range_length == 1)
+		{
+			f(*first);
+			return;
+		}
+		const Iterator mid = first + (range_length / 2);
+
+		std::future<void> bgtask = std::async(&info_parallel_for_each<Iterator, Func>, first, mid, f);
+		try
+		{
+			info_parallel_for_each(mid, last, f);
+		}
+		catch (...)
+		{
+			bgtask.wait();
+			throw;
+		}
+		bgtask.get();
+	}// info_parallel_for_each
 	//////////////////////////////////
 	template<typename U>
 	void info_global_write_map(const std::map<U, info::InfoValue> &oMap,

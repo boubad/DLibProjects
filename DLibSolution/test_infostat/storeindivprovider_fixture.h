@@ -3,8 +3,9 @@
 #define __STOREINDIVPROVIDER_FIXTURE_H__
 ///////////////////////////////////////////
 #include <indiv.h>
+#include <transformed_storeindivsource.h>
+//////////////////////////////////
 #include "memorystorefixture.h"
-#include <storeindivsource.h>
 	//////////////////////////////////////
 	template<typename IDTYPE = unsigned long, typename INTTYPE = int,
 		typename STRINGTYPE = std::string, typename WEIGHTYPE = float>

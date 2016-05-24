@@ -30,7 +30,7 @@ BOOST_AUTO_TEST_CASE(testMatItem) {
 		MatItemType::IndivType *pInd = oInd.get();
 		BOOST_CHECK(pInd != nullptr);
 		std::string s = pInd->sigle();
-		BOOST_TEST_MESSAGE(s);
+		//BOOST_TEST_MESSAGE(s);
 	}
 	//BOOST_TEST_MESSAGE("");
 } //testTreeItemMean

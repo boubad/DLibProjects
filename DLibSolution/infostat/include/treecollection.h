@@ -40,11 +40,10 @@ public:
 			ClustersCollectionType(pCancel), m_mode(LinkMode::linkMean) {
 	}
 	virtual ~IndivsTree() {
-		treeitems_vector & v = this->m_items;
-		for (auto it = v.begin(); it != v.end(); ++it) {
-			PTreeItemType p = *it;
+		treeitems_vector &v = this->m_items;
+		for (auto && p : v) {
 			delete p;
-		}
+		}// p
 		v.clear();
 	}
 	LinkMode link_mode(void) const {
@@ -59,10 +58,9 @@ public:
 protected:
 	virtual void clear(void) {
 		treeitems_vector &v = this->m_items;
-		for (auto it = v.begin(); it != v.end(); ++it) {
-			PTreeItemType p = *it;
+		for (auto && p : v) {
 			delete p;
-		}
+		}// p
 		v.clear();
 		ClustersCollectionType::clear();
 	}
@@ -79,6 +77,9 @@ protected:
 		std::atomic_bool *pCancel = this->get_cancelleable_flag();
 		IndivSummator<U> summator(pCancel);
 		for (size_t i = 0; i < nbIndivs; ++i) {
+			if (this->check_interrupt()) {
+				return (false);
+			}
 			IndivTypePtr oInd = pProvider->get(i);
 			const IndivType *pInd = oInd.get();
 			if ((pInd != nullptr) && pInd->has_numeric_fields()) {
@@ -108,6 +109,9 @@ protected:
 			}
 			PTreeItemType p1 = items[i];
 			for (size_t j = 0; j < i; ++j) {
+				if (this->check_interrupt()) {
+					return (false);
+				}
 				PTreeItemType p2 = items[j];
 				DISTANCETYPE d = 0;
 				if (p1->distance(*p2, d, mode)) {

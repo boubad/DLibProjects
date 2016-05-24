@@ -3,6 +3,7 @@
 #define __DISTANCEMAP_H__
 ///////////////////////////////////
 #include "crititem.h"
+#include "indiv.h"
 /////////////////////////////
 namespace info {
 	//////////////////////////////////////
@@ -10,6 +11,7 @@ namespace info {
 	class DistanceMap {
 	public:
 		using ints_set = std::set<U>;
+		using ints_vector = std::vector<U>;
 		using entry_type = std::map<U, W>;
 		using map_type = std::map<U, entry_type>;
 		using DistanceType = DistanceMap<U, W>;
@@ -17,11 +19,36 @@ namespace info {
 	private:
 		map_type m_map;
 		ints_set m_set;
-		//
-		std::mutex _mutex;
 	public:
 		DistanceMap() {
 		}
+		template <typename XU, typename STRINGTYPE>
+		DistanceMap(IIndivSource<XU, STRINGTYPE> *pProvider) {
+			using DataMap = std::map<XU, InfoValue>;
+			using IndivType = Indiv<XU, STRINGTYPE>;
+			using IndivTypePtr = std::shared_ptr<IndivType>;
+			assert(pProvider != nullptr);
+			const size_t n = pProvider->count();
+			for (size_t i = 0; i < n; ++i) {
+				IndivTypePtr oInd1 = pProvider->get(i);
+				const IndivType *pInd1 = oInd1.get();
+				if ((pInd1 != nullptr) && pInd1->has_numeric_fields()) {
+					const U aIndex1 = pInd1->id();
+					const DataMap &m1 = pInd1->center();
+					for (size_t j = 0; j < i; ++j) {
+						IndivTypePtr oInd2 = pProvider->get(j);
+						const IndivType *pInd2 = oInd2.get();
+						if ((pInd2 != nullptr) && pInd2->has_numeric_fields()) {
+							const U aIndex2 = pInd2->id();
+							W d = 0;
+							if (info_global_compute_distance(m1, pInd2->center(), d)) {
+								this->add(aIndex1, aIndex2, d);
+							}
+						} // pInd2
+					} // j
+				} // pInd1
+			} // i
+		}// DistanceMap
 		DistanceMap(const DistanceMapType &other) :m_map(other.m_map), m_set(other.m_set) {}
 		DistanceMapType & operator=(const DistanceMapType &other) {
 			if (this != &other) {
@@ -71,7 +98,6 @@ namespace info {
 			return (false);
 		}
 		void clear(void) {
-			std::lock_guard<std::mutex> oLock(this->_mutex);
 			this->m_map.clear();
 			this->m_set.clear();
 		} // clear
@@ -80,6 +106,12 @@ namespace info {
 		}
 		void indexes(ints_set &oSet) {
 			oSet = this->m_set;
+		}
+		void indexes(ints_vector &oIds) const {
+			oIds.clear();
+			for (U aIndex : this->m_set) {
+				oIds.push_back(aIndex);
+			}
 		}
 		template <typename XU, typename XW>
 		void add(const XU i1, const XU i2, const XW xval) {
@@ -93,7 +125,6 @@ namespace info {
 				index2 = t;
 			}
 			W val = (W)xval;
-			std::lock_guard<std::mutex> oLock(this->_mutex);
 			map_type &oMap = this->m_map;
 			auto it = oMap.find(index1);
 			if (it == oMap.end()) {
@@ -123,7 +154,6 @@ namespace info {
 				index1 = index2;
 				index2 = t;
 			}
-			std::lock_guard<std::mutex> oLock(this->_mutex);
 			map_type &oMap = this->m_map;
 			auto it = oMap.find(index1);
 			if (it == oMap.end()) {

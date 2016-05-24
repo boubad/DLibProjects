@@ -160,11 +160,13 @@
     <ClInclude Include="include\interruptable_object.h" />
     <ClInclude Include="include\istatstore.h" />
     <ClInclude Include="include\matcomputeparams.h" />
+    <ClInclude Include="include\matelem.h" />
     <ClInclude Include="include\matitem.h" />
     <ClInclude Include="include\memorydataset.h" />
     <ClInclude Include="include\memorystatstore.h" />
     <ClInclude Include="include\storeindivsource.h" />
     <ClInclude Include="include\stringconvert.h" />
+    <ClInclude Include="include\transformed_storeindivsource.h" />
     <ClInclude Include="include\treecollection.h" />
     <ClInclude Include="include\treeitem.h" />
   </ItemGroup>
