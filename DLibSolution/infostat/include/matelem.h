@@ -133,7 +133,7 @@ namespace info {
 							}
 							sizets_vector v = xMat.indexes();
 							DISTANCETYPE cc = xMat.criteria();
-							return (std::make_pair(cc,v));
+							return (std::make_pair(cc, v));
 						}));
 					}// j1/j2
 				}// while
@@ -164,7 +164,7 @@ namespace info {
 			assert(this->m_pids != nullptr);
 			return (this->m_pids->size());
 		}
-		DISTANCETYPE distance(const size_t i1, const size_t i2) {
+		DISTANCETYPE distance(const size_t i1, const size_t i2) const {
 			assert(this->m_pids != nullptr);
 			assert(this->m_pdist != nullptr);
 			ints_vector &oIds = *(this->m_pids);
@@ -179,7 +179,7 @@ namespace info {
 		void criteria(const DISTANCETYPE c) {
 			this->m_crit = c;
 		}
-		DISTANCETYPE criteria(sizets_vector &indexes) {
+		DISTANCETYPE criteria(sizets_vector &indexes) const {
 			const size_t n = indexes.size();
 			DISTANCETYPE dRet = 0;
 			if (n < 2) {
@@ -196,13 +196,13 @@ namespace info {
 			} // i
 			return (dRet);
 		} // criteria
-		DISTANCETYPE operator()(const size_t i1, const size_t i2) {
+		DISTANCETYPE operator()(const size_t i1, const size_t i2) const {
 			return (this->distance(i1, i2));
 		}
-		DISTANCETYPE operator()(sizets_vector &indexes) {
+		DISTANCETYPE operator()(sizets_vector &indexes) const {
 			return (this->criteria(indexes));
 		}
-		bool try_permute(const size_t i1, const size_t i2, DISTANCETYPE &crit) {
+		bool try_permute(const size_t i1, const size_t i2, DISTANCETYPE &crit) const {
 			assert(i1 != i2);
 			sizets_vector temp(this->m_indexes);
 			assert(i1 < temp.size());
@@ -217,39 +217,37 @@ namespace info {
 			}
 			return (false);
 		} // try_permute
-		bool find_best_try(pairs_queue &q, DISTANCETYPE &crit) {
-			while (!q.empty()) {
-				q.pop();
-			}
-			crit = this->m_crit;
-			sizets_vector &indexes = this->m_indexes;
-			const size_t n = indexes.size();
+		bool find_best_try(pairs_queue &q, DISTANCETYPE &crit) const {
+			const sizets_vector &indexes = this->m_indexes;
 			std::mutex _mutex;
 			const sizets_vector &args = this->m_args;
+			std::atomic<DISTANCETYPE> resCrit(this->m_crit);
 			info_parallel_for_each(args.begin(), args.end(), [&](const size_t &i) {
 				for (size_t j = 0; j < i; ++j) {
 					sizets_vector temp(indexes);
 					const size_t tt = temp[i];
 					temp[i] = temp[j];
 					temp[j] = tt;
+					sizets_pair oPair(std::make_pair(j, i));
 					DISTANCETYPE c = this->criteria(temp);
-					{
+					DISTANCETYPE cur = resCrit.load();
+					if (c == cur) {
 						std::lock_guard<std::mutex> oLock(_mutex);
-						if (c < crit) {
-							while (!q.empty()) {
-								q.pop();
-							}
-							q.push(std::make_pair(i, j));
-							crit = c;
+						if (!q.empty()) {
+							q.push(oPair);
 						}
-						else if (c == crit) {
-							if (!q.empty()) {
-								q.push(std::make_pair(i, j));
-							}
+					}
+					else if (c < cur) {
+						std::lock_guard<std::mutex> oLock(_mutex);
+						while (!q.empty()) {
+							q.pop();
 						}
-					}// sync
+						q.push(oPair);
+						resCrit.store(c);
+					}
 				} // j
 			});
+			crit = resCrit.load();
 			return (!q.empty());
 		} //find_best_try
 

@@ -24,12 +24,18 @@ namespace info {
 		}
 		template <typename XU, typename STRINGTYPE>
 		DistanceMap(IIndivSource<XU, STRINGTYPE> *pProvider) {
+			using sizets_vector = std::vector<size_t>;
 			using DataMap = std::map<XU, InfoValue>;
 			using IndivType = Indiv<XU, STRINGTYPE>;
 			using IndivTypePtr = std::shared_ptr<IndivType>;
 			assert(pProvider != nullptr);
 			const size_t n = pProvider->count();
+			sizets_vector args(n);
 			for (size_t i = 0; i < n; ++i) {
+				args[i] = i;
+			}//i
+			std::mutex _mutex;
+			info_parallel_for_each(args.begin(), args.end(), [&](const size_t &i) {
 				IndivTypePtr oInd1 = pProvider->get(i);
 				const IndivType *pInd1 = oInd1.get();
 				if ((pInd1 != nullptr) && pInd1->has_numeric_fields()) {
@@ -42,12 +48,13 @@ namespace info {
 							const U aIndex2 = pInd2->id();
 							W d = 0;
 							if (info_global_compute_distance(m1, pInd2->center(), d)) {
+								std::lock_guard<std::mutex> oLock(_mutex);
 								this->add(aIndex1, aIndex2, d);
 							}
 						} // pInd2
 					} // j
 				} // pInd1
-			} // i
+			});
 		}// DistanceMap
 		DistanceMap(const DistanceMapType &other) :m_map(other.m_map), m_set(other.m_set) {}
 		DistanceMapType & operator=(const DistanceMapType &other) {
