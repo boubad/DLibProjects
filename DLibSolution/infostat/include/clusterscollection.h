@@ -10,25 +10,24 @@
 ////////////////////////////////////
 #include "indivcluster.h"
 ////////////////////////////////////
-#include <boost/noncopyable.hpp>
-/////////////////////////////////
 namespace info {
 ///////////////////////////////
-template<typename U>
-class ClustersCollection: public InterruptObject, private boost::noncopyable {
+template<typename U, typename STRINGTYPE>
+class ClustersCollection: public InterruptObject {
 public:
 	using IndexType = U;
-	using IndivType = Indiv<U>;
+	using IndivType = Indiv<U,STRINGTYPE>;
 	using IndivTypePtr = std::shared_ptr<IndivType>;
 	using indivptrs_vector = std::vector<IndivTypePtr>;
 	using DataMap = std::map<U, InfoValue>;
 	using ints_sizet_map = std::map<U, size_t>;
-	using IndivClusterType = IndivCluster<U>;
+	using IndivClusterType = IndivCluster<U,STRINGTYPE>;
 	using SourceType = IIndivSource<U>;
 	using clusters_vector = std::vector<IndivClusterType>;
 	using ints_vector = std::vector<U>;
 	using sizet_intsvector_map = std::map<size_t, ints_vector>;
 	using datamaps_vector = std::vector<DataMap>;
+	using ClustersCollectionType = ClustersCollection<U, STRINGTYPE>;
 private:
 	SourceType *m_provider;
 	size_t m_nbclusters;
@@ -41,6 +40,7 @@ private:
 	DataMap m_center;
 	ints_sizet_map m_indivsmap;
 	sizet_intsvector_map m_classesmap;
+	
 public:
 	std::ostream & write_to(std::ostream &os) const {
 		os << this->m_finter << ", " << this->m_fintra << ", " << this->m_ff
@@ -116,7 +116,7 @@ public:
 	const DataMap & center(void) const {
 		return (this->m_center);
 	}
-	virtual bool process(SourceType *pSource, const size_t nbClusters,
+	virtual bool process(SourceType *pSource, const size_t nbClusters = 5,
 			const size_t nbMaxIters = 100,
 			std::atomic_bool *pCancel = nullptr) {
 		if (!this->initialize_process(pSource, nbClusters, nbMaxIters,
@@ -139,15 +139,42 @@ public:
 		}
 		return (this->post_terminate_process());
 	} // process
-	virtual ~ClustersCollection() {
+	
+	DataMap & center(void) {
+		return (this->m_center);
 	}
-public:
+protected:
 	ClustersCollection(std::atomic_bool *pCancel = nullptr) :
 			InterruptObject(pCancel), m_provider(nullptr), m_nbclusters(0), m_nbindivs(
 					0), m_nbmaxiters(100), m_finter(0), m_fintra(0), m_ff(0) {
 	}
+	ClustersCollection(const ClustersCollectionType &other) :InterruptObject(other),
+		m_ptovider(other.m_provider),
+		m_nbclusters(other.m_nbclusters), m_nbindivs(other.m_nbindivs), m_nbmaxiters(other.m_nbmaxiters),
+		m_finter(other.m_finter), m_fintra(other.m_fintra), m_ff(other.m_ff),
+		m_clusters(other.m_clusters), m_center(other.m_center),
+		m_indivsmap(other.m_indivsmap), m_classesmap(other.m_classesmap) {}		
 	SourceType *source(void) const {
 		return (this->m_provider);
+	}
+	ClustersCollectionType & operator=(const ClustersCollectionType &other) {
+		if (this != &other) {
+			InterruptObject::operator=(other);
+			this->m_provider = other.m_provider;
+			this->m_nbclusters = other.m_nbclusters;
+			this->m_nbindivs = other.m_nbindivs;
+			this->m_nbmaxiters = other.m_nbmaxiters;
+			this->m_finter = other.m_finter;
+			this->m_fintra = other.m_fintra;
+			this->m_ff = other.m_ff;
+			this->m_clusters = other.m_clusters;
+			this->m_center = other.m_center;
+			this->m_indivsmap = other.m_indivsmap;
+			this->m_classesmap = other.m_classesmap;
+		}
+		return (*this);
+	}
+	virtual ~ClustersCollection() {
 	}
 	size_t get_nbIndivs(void) const {
 		return (this->m_nbindivs);
@@ -155,14 +182,14 @@ public:
 	size_t get_nbClusters(void) const {
 		return (this->m_nbclusters);
 	}
-	size_t get_nbMawIters(void) const {
+	size_t get_nbMaxIters(void) const {
 		return (this->m_nbmaxiters);
 	}
 	clusters_vector & clusters(void) {
 		return (this->m_clusters);
 	}
-	DataMap & center(void) {
-		return (this->m_center);
+	void set_clusters(const clusters_vector &v) {
+		this->m_clusters = v;
 	}
 	void get_indivs_map(ints_sizet_map &oMap) const {
 		oMap.clear();
@@ -230,7 +257,6 @@ public:
 		}
 		return (false);
 	}	  // get_criterias
-protected:
 	virtual void clear(void) {
 		this->m_clusters.clear();
 		this->m_center.clear();
@@ -293,14 +319,14 @@ protected:
 ///////////////////////////////
 }// namespace info
 /////////////////////////////////////
-template<typename U>
+template<typename U, typename STRINGTYPE>
 inline std::ostream & operator<<(std::ostream &os,
-		const info::ClustersCollection<U> &d) {
+		const info::ClustersCollection<U, STRINGTYPE> &d) {
 	return d.write_to(os);
 }
-template<typename U>
+template<typename U, typename STRINGTYPE>
 inline std::wostream & operator<<(std::wostream &os,
-		const info::ClustersCollection<U> &d) {
+		const info::ClustersCollection<U, STRINGTYPE> &d) {
 	return d.write_to(os);
 }
 /////////////////////////

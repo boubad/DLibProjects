@@ -72,6 +72,18 @@
     <ClInclude Include="include\infostat.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\arrangeindiv.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\crititem.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\matcomputeparams.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\matitem.h">
+      <Filter>include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\infovalue.cpp">

@@ -253,7 +253,7 @@ namespace info {
 		MemoryDataset(const DatasetType &oSet) :m_lastid(1), m_oset(oSet) {
 			size_t nMax = this->m_oset.id();
 			if (nMax >= this->m_lastid.load()) {
-				this->m_lastid.store((IDTYPE)(nMax + 1));
+				this->m_lastid.store(nMax + 1);
 			}
 		}
 		~MemoryDataset() {}
@@ -491,7 +491,7 @@ namespace info {
 				}// write
 			});
 			return (true);
-		}// maitains_values
+		}// maintains_values
 		bool find_value(ValueType &cur, bool bLock = true) {
 			IDTYPE nId = cur.id();
 			IDTYPE nVarId = cur.variable_id();
@@ -809,11 +809,6 @@ namespace info {
 						IDTYPE xId = xVar.id();
 						if (xId == 0) {
 							xVar.id(this->next_id());
-						}
-						else {
-							if (xId >= this->m_lastid.load()) {
-								this->m_lastid.store(xId + 1);
-							}
 						}
 						vv.push_back(xVar);
 					}
