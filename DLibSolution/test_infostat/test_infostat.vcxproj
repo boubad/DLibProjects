@@ -182,6 +182,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="test_clusterize.cpp" />
+    <ClCompile Include="test_clusterize_hierar.cpp" />
     <ClCompile Include="test_indivprovider.cpp" />
     <ClCompile Include="test_infostat.cpp" />
     <ClCompile Include="test_matelem.cpp" />

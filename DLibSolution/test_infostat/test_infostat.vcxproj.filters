@@ -71,5 +71,8 @@
     <ClCompile Include="test_matelem.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="test_clusterize_hierar.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

@@ -55,6 +55,13 @@ public:
 	const treeitems_vector & items(void) const {
 		return (this->m_items);
 	}
+	void get_centers(datamaps_vector &oVec) const {
+		oVec.clear();
+		for (auto &p : this->m_items) {
+			DataMap oMap = p->center();
+			oVec.push_back(oMap);
+		}//p
+	}
 protected:
 	virtual void clear(void) {
 		treeitems_vector &v = this->m_items;
