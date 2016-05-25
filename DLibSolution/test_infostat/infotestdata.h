@@ -20,9 +20,12 @@ namespace info {
 			std::vector<int> &data, std::vector<std::string> &indNames, std::vector<std::string> &varNames);
 		static void get_mortal_data(std::string &name, size_t &nRows, size_t &nCols,
 			std::vector<int> &data, std::vector<std::string> &indNames, std::vector<std::string> &varNames);
+		static void get_test_data(std::string &name, size_t &nRows, size_t &nCols,
+			std::vector<int> &data, std::vector<std::string> &indNames, std::vector<std::string> &varNames);
 		static void get_data(const std::string &name, size_t &nRows, size_t &nCols,
 			std::vector<int> &data, std::vector<std::string> &indNames, std::vector<std::string> &varNames);
 		static void get_data_names(std::vector<std::string> &onames);
+		static void get_test_name(std::string &name);
 	};// classInfoTestData
 	  ////////////////////////////////////////
 }// namespace info

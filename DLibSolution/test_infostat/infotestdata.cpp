@@ -5,6 +5,7 @@
 #include <map>
 #include <iostream>
 #include <sstream>
+#include <cstdlib>
 ////////////////////////////////////
 namespace info {
 	///////////////////////////////////
@@ -71,6 +72,35 @@ namespace info {
 		name = st_test_name;
 		nRows = TEST_NROWS;
 		nCols = TEST_NCOLS;
+	}
+	///////////////////////////////////////
+	void InfoTestData::get_test_name(std::string &name) {
+		name = st_test_name;
+	}
+	void InfoTestData::get_test_data(std::string &name, size_t &nRows, size_t &nCols,
+		std::vector<int> &data, std::vector<std::string> &indNames, std::vector<std::string> &varNames) {
+		name = st_test_name;
+		nRows = TEST_NROWS;
+		nCols = TEST_NCOLS;
+		indNames.resize(nRows);
+		for (size_t i = 0; i < nRows; ++i) {
+			std::stringstream os;
+			os << "ind" << (i + 1);
+			std::string s = os.str();
+			indNames[i] = s;
+		}// i
+		varNames.resize(nCols);
+		for (size_t i = 0; i < nCols; ++i) {
+			std::stringstream os;
+			os << "var" << (i + 1);
+			std::string s = os.str();
+			varNames[i] = s;
+		}// i
+		size_t nn = (size_t)(nCols * nRows);
+		data.resize(nn);
+		for (size_t i = 0; i < nn; ++i) {
+			data[i] = ::rand() % 100;
+		}
 	}
 	 ///////////////////////////////////////
 	void InfoTestData::get_data(const std::string &name, size_t &nRows, size_t &nCols,

@@ -20,10 +20,17 @@
 			using IStoreType = info::IStatStore<IDTYPE, INTTYPE, STRINGTYPE, WEIGHTYPE>;
 			using DatasetType = typename IStoreType::DatasetType;
 			using IndivSourceType = typename  StoreIndivSourceType::SourceType;
+			using StoreIndivSourceType2 = info::StoreIndivSource<IDTYPE, INTTYPE, STRINGTYPE, WEIGHTYPE>;
 			//
 			std::unique_ptr<StoreIndivSourceType> m_source;
+			std::unique_ptr<StoreIndivSourceType2> m_testsource;
 			IndivSourceType *get_source(void) {
 				IndivSourceType *p = this->m_source.get();
+				assert(p != nullptr);
+				return (p);
+			}
+			IndivSourceType *get_test_source(void) {
+				IndivSourceType *p = this->m_testsource.get();
 				assert(p != nullptr);
 				return (p);
 			}
@@ -36,6 +43,12 @@
 				p->transformation(TransformationType::recode1000);
 				assert(p != nullptr);
 				this->m_source.reset(p);
+				/*
+				sigle = this->m_testset.sigle();
+				StoreIndivSourceType2 *pp = new StoreIndivSourceType2(pStore, sigle);
+				assert(pp != nullptr);
+				this->m_testsource.reset(pp);
+				*/
 			}
 			virtual ~StoreIndivSorceFixture() {
 				this->m_source.reset();

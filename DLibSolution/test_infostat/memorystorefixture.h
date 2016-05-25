@@ -31,12 +31,14 @@ protected:
 		return (p);
 	}
 	DatasetType m_oset;
+	DatasetType m_testset;
 public:
 	MemoryStoreFixture() :
 			m_nbrows(0), m_nbcols(0) {
 		this->init_data();
 		this->fill_mortal_data();
-		this->fill_conso_data();
+	//	this->fill_conso_data();
+	//	this->fill_test_data();
 		STRINGTYPE sigle;
 		info::InfoTestData::get_mortal_name(sigle);
 		this->m_oset.sigle(sigle);
@@ -45,6 +47,11 @@ public:
 		bool bRet = p->find_dataset(this->m_oset);
 		assert(bRet);
 		assert(this->m_oset.id() != 0);
+		//info::InfoTestData::get_test_name(sigle);
+		//this->m_testset.sigle(sigle);
+		//bRet = p->find_dataset(this->m_testset);
+		//assert(bRet);
+		//assert(this->m_testset.id() != 0);
 	} // init
 	virtual ~MemoryStoreFixture() {
 		this->data_teardown();
@@ -53,6 +60,23 @@ private:
 	void data_teardown(void) {
 		this->m_man.reset();
 	} // data_teardown
+	void fill_test_data(void) {
+		STRINGTYPE name;
+		size_t nRows = 0, nCols = 0;
+		std::vector<int> gdata;
+		std::vector<STRINGTYPE> rowNames, colNames;
+		info::InfoTestData::get_test_data(name, nRows, nCols, gdata, rowNames,
+			colNames);
+		assert(!name.empty());
+		assert(nRows > 2);
+		assert(nCols > 2);
+		this->m_nbrows = nRows;
+		this->m_nbcols = nCols;
+		assert(colNames.size() >= nCols);
+		assert(rowNames.size() >= nRows);
+		assert(gdata.size() >= (size_t)(nCols * nRows));
+		this->import(name, nRows, nCols, gdata, rowNames, colNames);
+	} // fill_test_data
 	void fill_mortal_data(void) {
 		STRINGTYPE name;
 		size_t nRows = 0, nCols = 0;

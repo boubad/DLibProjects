@@ -10,6 +10,7 @@ InfoGlobalInit::InfoGlobalInit() {
 	this->init_data();
 	this->fill_mortal_data();
 	//this->fill_conso_data();
+	//this->fill_test_data();
 } // init
 InfoGlobalInit::~InfoGlobalInit() {
 	this->data_teardown();
@@ -47,6 +48,21 @@ void InfoGlobalInit::fill_conso_data(void) {
 	assert(gdata.size() >= (size_t)(nCols * nRows));
 	this->import(name, nRows, nCols, gdata, rowNames, colNames);
 }// fill_mortal_data
+void  InfoGlobalInit::fill_test_data(void) {
+	std::string name;
+	size_t nRows = 0, nCols = 0;
+	std::vector<int> gdata;
+	std::vector<std::string> rowNames, colNames;
+	InfoTestData::get_test_data(name, nRows, nCols, gdata, rowNames,
+		colNames);
+	assert(!name.empty());
+	assert(nRows > 2);
+	assert(nCols > 2);
+	assert(colNames.size() >= nCols);
+	assert(rowNames.size() >= nRows);
+	assert(gdata.size() >= (size_t)(nCols * nRows));
+	this->import(name, nRows, nCols, gdata, rowNames, colNames);
+}//fill_test_data
 void InfoGlobalInit::init_data(void) {
 	std::string filename;
 	InfoTestData::get_database_filename(filename);

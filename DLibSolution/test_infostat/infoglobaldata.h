@@ -12,6 +12,7 @@ private:
 	void  data_teardown(void);
 	void fill_mortal_data(void);
 	void fill_conso_data(void);
+	void fill_test_data(void);
 	void init_data(void);
 	void import(const std::string &name, size_t nRows, size_t nCols,
 		const std::vector<int> &data,
