@@ -668,16 +668,15 @@ namespace info {
 			SQLite_Statement qRemove(*(this->m_base), SQL_REMOVE_VALUE);
 			assert(qRemove.get_parameters_count() == 1);
 			//
-			std::for_each(oVals.begin(), oVals.end(), [&](const ValueType &oVal) {
+			for (auto &oVal : oVals) {
+				std::string sval;
+				const InfoValue &v = oVal.value();
+				v.string_value(sval);
 				bool mustRemove = bRemove;
 				ValueType xVal(oVal);
 				this->find_value(xVal);
 				IDTYPE nId = xVal.id();
 				STRINGTYPE status = oVal.status();
-				boost::any v0 = oVal.value();
-				InfoValue v(v0);
-				std::string sval;
-				v.string_value(sval);
 				if (nId != 0) {
 					if (sval.empty()) {
 						mustRemove = true;
@@ -696,7 +695,7 @@ namespace info {
 						qUpdate.bind(3, nId);
 						qUpdate.exec();
 					}
-					else {
+					else if (!sval.empty()) {
 						IDTYPE nVarId = oVal.variable_id();
 						IDTYPE nIndId = oVal.indiv_id();
 						qInsert.bind(1, nVarId);
@@ -706,7 +705,7 @@ namespace info {
 						qInsert.exec();
 					}
 				} // writeable
-			});
+			}// oVal
 			//
 			if (bCommit && bInTrans) {
 				this->commit_transaction();
@@ -808,7 +807,7 @@ namespace info {
 			SQLite_Statement qUpdate(*(this->m_base), SQL_UPDATE_INDIV);
 			assert(qUpdate.get_parameters_count() == 6);
 			//
-			std::for_each(oInds.begin(), oInds.end(), [&](const IndivType &oInd) {
+			for (auto &oInd : oInds) {
 				IndivType xInd(oInd);
 				this->find_indiv(xInd);
 				IDTYPE nId = xInd.id();
@@ -847,7 +846,7 @@ namespace info {
 						qInsert.exec();
 					}
 				}
-			});
+			}// oInd
 			if (bCommit && bInTrans) {
 				this->commit_transaction();
 			}
@@ -1024,7 +1023,7 @@ namespace info {
 			SQLite_Statement qUpdate(*(this->m_base), SQL_UPDATE_VARIABLE);
 			assert(qUpdate.get_parameters_count() == 10);
 			//
-			std::for_each(oVars.begin(), oVars.end(), [&](const VariableType &oVar) {
+			for (auto &oVar : oVars) {
 				VariableType xVar(oVar);
 				this->find_variable(xVar);
 				IDTYPE nId = xVar.id();
@@ -1075,7 +1074,7 @@ namespace info {
 						qInsert.exec();
 					}
 				}// writeable
-			});
+			}// oVar
 			if (bCommit && bInTrans) {
 				this->commit_transaction();
 			}
@@ -1561,9 +1560,9 @@ namespace info {
 		}
 		catch (...) {
 #if defined(__CYGWIN__)
-			std::cerr <<  "Unknown exception in open..." << std::endl;
+			std::cerr << "Unknown exception in open..." << std::endl;
 #else
-		BOOST_LOG_TRIVIAL(error) << "Unknown exception in open..." << std::endl;
+			BOOST_LOG_TRIVIAL(error) << "Unknown exception in open..." << std::endl;
 #endif // __CGGWIN__
 		}
 	}

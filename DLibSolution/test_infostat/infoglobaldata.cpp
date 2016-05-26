@@ -9,8 +9,8 @@ using namespace info;
 InfoGlobalInit::InfoGlobalInit() {
 	this->init_data();
 	this->fill_mortal_data();
-	//this->fill_conso_data();
-	//this->fill_test_data();
+	this->fill_conso_data();
+	this->fill_test_data();
 } // init
 InfoGlobalInit::~InfoGlobalInit() {
 	this->data_teardown();
@@ -18,6 +18,15 @@ InfoGlobalInit::~InfoGlobalInit() {
 void  InfoGlobalInit::data_teardown(void) {
 	this->m_man.reset();
 }// data_teardown
+void InfoGlobalInit::init_data(void) {
+	std::string filename;
+	InfoTestData::get_database_filename(filename);
+	assert(!filename.empty());
+	m_man.reset(new SQLiteStatHelper(filename));
+	SQLiteStatHelper *p = this->m_man.get();
+	assert(p != nullptr);
+	assert(p->is_valid());
+}// init_data
 void InfoGlobalInit::fill_mortal_data(void) {
 	std::string name;
 	size_t nRows = 0, nCols = 0;
@@ -63,15 +72,7 @@ void  InfoGlobalInit::fill_test_data(void) {
 	assert(gdata.size() >= (size_t)(nCols * nRows));
 	this->import(name, nRows, nCols, gdata, rowNames, colNames);
 }//fill_test_data
-void InfoGlobalInit::init_data(void) {
-	std::string filename;
-	InfoTestData::get_database_filename(filename);
-	assert(!filename.empty());
-	m_man.reset(new SQLiteStatHelper(filename));
-	SQLiteStatHelper *p = this->m_man.get();
-	assert(p != nullptr);
-	assert(p->is_valid());
-}// init_data
+
 void InfoGlobalInit::import(const std::string &name, size_t nRows, size_t nCols,
 	const std::vector<int> &data,
 	const std::vector<std::string> &rowNames,
@@ -80,11 +81,11 @@ void InfoGlobalInit::import(const std::string &name, size_t nRows, size_t nCols,
 	assert(p != nullptr);
 	assert(p->is_valid());
 	SQLiteStatHelper::DatasetType oSet(name);
-	bool bRet;
-	if (!p->find_dataset(oSet)) {
-		bRet = p->maintains_dataset(oSet);
-		assert(bRet);
+	if (p->find_dataset(oSet)) {
+		return;
 	}
+	bool bRet = p->maintains_dataset(oSet);
+	assert(bRet);
 	assert(oSet.id() != 0);
 	std::string type("float");
 	std::string genre("initial");

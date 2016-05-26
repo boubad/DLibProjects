@@ -2,8 +2,7 @@
 #ifndef __BASEITEM_H__
 #define __BASEITEM_H__
 /////////////////////////////////////
-#include "stringconvert.h"
-#include "infovalue.h"
+#include "info_global.h"
 //////////////////////////////////
 namespace info {
 	///////////////////////////////////////

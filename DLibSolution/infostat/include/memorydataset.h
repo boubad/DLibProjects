@@ -3,17 +3,6 @@
 #define __MEMORYDATASET_H__
 /////////////////////////////////
 #include "baseitem.h"
-#include "stringconvert.h"
-//////////////////////////////////////
-#include <sstream>
-#include <vector>
-#include <map>
-#include <set>
-#include <atomic>
-#include <mutex>
-#include <algorithm>
-///////////////////////////////////////
-#include <boost/noncopyable.hpp>
 /////////////////////////////////////
 namespace info {
 	////////////////////////////////
@@ -43,15 +32,22 @@ namespace info {
 		IDTYPE next_id(void) {
 			return (this->m_lastid++);
 		}
-		static void convert_to_string(const boost::any &v, std::wstring &s) {
+		static void convert_to_string(const boost::any &vx, std::wstring &s) {
 			s.clear();
+			if (vx.empty()) {
+				return;
+			}
+			boost::any v(vx);
+			if (v.type() == typeid(boost;; any)) {
+				v = boost::any_cast<boost::any>(v);
+			}
 			if (!v.empty())
 			{
 				const std::type_info & t = v.type();
 				if (t == typeid(bool))
 				{
 					bool b = boost::any_cast<bool>(v);
-					s = (b) ? L"true" : L"false";
+					s = (b) ? L"T" : L"F";
 				}
 				else if (t == typeid(char))
 				{
@@ -143,15 +139,22 @@ namespace info {
 				}
 			} // not empty
 		}
-		static void convert_to_string(const boost::any &v, std::string &s) {
+		static void convert_to_string(const boost::any &vx, std::string &s) {
 			s.clear();
+			if (vx.empty()) {
+				return;
+			}
+			boost::any v(vx);
+			if (v.type() == typeid(boost;; any)) {
+				v = boost::any_cast<boost::any>(v);
+			}
 			if (!v.empty())
 			{
 				const std::type_info & t = v.type();
 				if (t == typeid(bool))
 				{
 					bool b = boost::any_cast<bool>(v);
-					s = (b) ? "true" : "false";
+					s = (b) ? "T" : "F";
 				}
 				else if (t == typeid(char))
 				{
@@ -403,20 +406,27 @@ namespace info {
 		bool maintains_values(const values_vector &oList, bool bRemove = false) {
 			values_vector &values = this->m_values;
 			IDTYPE nMax = 0;
-			std::for_each(oList.begin(), oList.end(), [&](const ValueType &v) {
+			for (auto &v : oList) {
 				IDTYPE nx = v.id();
 				if (nx > nMax) {
 					nMax = nx;
 				}
-			});
+			}// v
 			if (nMax > this->m_lastid.load()) {
 				this->m_lastid.store(nMax + 1);
 			}
-			std::for_each(oList.begin(), oList.end(), [&](const ValueType &oVal) {
+			for (auto &oVal; oList) {
+				const ValueType &vx = oVal.value();
+				STRINGTYPE sval;
+				vx.string_value(sval);
 				ValueType xVal(oVal);
 				this->find_value(xVal, false);
 				IDTYPE nId = xVal.id();
-				if (bRemove && (nId != 0)) {
+				bool bMustRemove = bRemove && (nId != 0);
+				if ((nId != 0) && sval.empty()) {
+					bMustRemove = true;
+				}
+				if (bMustRemove) {
 					auto it = std::find_if(values.begin(), values.end(), [&](ValueType &v)->bool {
 						return (v.id() == nId);
 					});
@@ -424,7 +434,7 @@ namespace info {
 						values.erase(it);
 					}
 				}
-				else if (oVal.is_writeable()) {
+				else if (oVal.is_writeable() && (!sval.empty())) {
 					InfoValue v0 = oVal.value();
 					if (v0.empty() && (nId != 0)) {
 						auto it = std::find_if(values.begin(), values.end(), [&](ValueType &v)->bool {
@@ -463,7 +473,7 @@ namespace info {
 						}// insert
 					}
 				}// write
-			});
+			}// oVal
 			return (true);
 		}// maintains_values
 		bool find_value(ValueType &cur, bool bLock = true) {
@@ -520,24 +530,24 @@ namespace info {
 		bool remove_indivs(const indivs_vector &oList) {
 			indivs_vector &variables = this->m_indivs;
 			values_vector &values = this->m_values;
-			std::for_each(oList.begin(), oList.end(), [&](const IndivType &p) {
+			for (auto &p : oList) {
 				IndivType xVar(p);
 				if (this->find_indiv(xVar, false)) {
 					IDTYPE nVarId = xVar.id();
 					ints_set oVals;
-					std::for_each(values.begin(), values.end(), [&](ValueType &pv) {
+					for (auto &ov : values) {
 						if (pv.indiv_id() == nVarId) {
 							oVals.insert(pv.id());
 						}
-					});
-					std::for_each(oVals.begin(), oVals.end(), [&](IDTYPE nvalid) {
+					}
+					for (auto &nvalid : oVals) {
 						auto jt = std::find_if(values.begin(), values.end(), [&](ValueType &v)->bool {
 							return (v.id() == nvalid);
 						});
 						if (jt != values.end()) {
 							values.erase(jt);
 						}
-					});
+					}
 					auto it = std::find_if(variables.begin(), variables.end(), [&](IndivType &px)->bool {
 						return (px.id() == nVarId);
 					});
@@ -545,23 +555,23 @@ namespace info {
 						variables.erase(it);
 					}
 				}// found
-			});
+			}// p
 			return (true);
 		}// remove_indivs
 		bool maintains_indivs(const indivs_vector &oList) {
 			IDTYPE nCurrentDatasetId = this->get_datasetid();
 			indivs_vector &vv = this->m_indivs;
 			IDTYPE nMax = 0;
-			std::for_each(oList.begin(), oList.end(), [&](const IndivType &v) {
+			for (auto &v : oList) {
 				IDTYPE nx = v.id();
 				if (nx > nMax) {
 					nMax = nx;
 				}
-			});
+			}
 			if (nMax > this->m_lastid.load()) {
 				this->m_lastid.store(nMax + 1);
 			}
-			std::for_each(oList.begin(), oList.end(), [&](const IndivType &oVar) {
+			for (auto &oVar : oList) {
 				if (oVar.is_writeable()) {
 					IndivType xVar(oVar);
 					this->find_indiv(xVar, false);
@@ -590,7 +600,7 @@ namespace info {
 						}// i
 					}
 				}// writeable
-			});
+			}// oVar
 			return (true);
 		}// maintains_indivs
 		bool find_indiv(IndivType &cur, bool bLock = true) {
@@ -716,24 +726,24 @@ namespace info {
 		bool remove_variables(const variables_vector &oList) {
 			variables_vector &variables = this->m_variables;
 			values_vector &values = this->m_values;
-			std::for_each(oList.begin(), oList.end(), [&](const VariableType &p) {
+			for (auto &p : oList) {
 				VariableType xVar(p);
 				if (this->find_variable(xVar, false)) {
 					IDTYPE nVarId = xVar.id();
 					ints_set oVals;
-					std::for_each(values.begin(), values.end(), [&](ValueType &pv) {
+					for (auto &pv : values) {
 						if (pv.variable_id() == nVarId) {
 							oVals.insert(pv.id());
 						}
-					});
-					std::for_each(oVals.begin(), oVals.end(), [&](IDTYPE nvalid) {
+					}
+					for (auto & nvalid : oVals) {
 						auto jt = std::find_if(values.begin(), values.end(), [&](ValueType &v)->bool {
 							return (v.id() == nvalid);
 						});
 						if (jt != values.end()) {
 							values.erase(jt);
 						}
-					});
+					}
 					auto it = std::find_if(variables.begin(), variables.end(), [&](VariableType &px)->bool {
 						return (px.id() == nVarId);
 					});
@@ -741,23 +751,23 @@ namespace info {
 						variables.erase(it);
 					}
 				}// found
-			});
+			}
 			return (true);
 		}// remove_variables
 		bool maintains_variables(const variables_vector &oList) {
 			IDTYPE nCurrentDatasetId = this->get_datasetid();
 			variables_vector &vv = this->m_variables;
 			IDTYPE nMax = 0;
-			std::for_each(oList.begin(), oList.end(), [&](const VariableType &v) {
+			for (auto &v : oList) {
 				IDTYPE nx = v.id();
 				if (nx > nMax) {
 					nMax = nx;
 				}
-			});
+			}
 			if (nMax > this->m_lastid.load()) {
 				this->m_lastid.store(nMax + 1);
 			}
-			std::for_each(oList.begin(), oList.end(), [&](const VariableType &oVar) {
+			for (auto &oVar : oList) {
 				if (oVar.is_writeable()) {
 					VariableType xVar(oVar);
 					this->find_variable(xVar, false);
@@ -786,7 +796,7 @@ namespace info {
 						}// i
 					}
 				}// writeable
-			});
+			}// oVar
 			return (true);
 		}// maintains_variables
 		bool find_variable(VariableType &cur, bool bLock = true) {
@@ -1002,8 +1012,7 @@ namespace info {
 			assert(nCols == oVars.size());
 			//
 			std::map<STRINGTYPE, VariableType *> pVars;
-			std::for_each(colNames.begin(), colNames.end(),
-				[&](const STRINGTYPE  &s) {
+			for (auto &s : colNames) {
 				STRINGTYPE sigle = s;
 				STRINGTYPE rsigle;
 				VariableType ovar(oSet, sigle);
@@ -1019,10 +1028,9 @@ namespace info {
 				} // i
 				assert(p != nullptr);
 				pVars[sigle] = p;
-			});
+			}// s
 			std::map<STRINGTYPE, IndivType *> pInds;
-			std::for_each(rowNames.begin(), rowNames.end(),
-				[&](const STRINGTYPE  &s) {
+			for (auto &s : rowNames) {
 				STRINGTYPE  sigle = s;
 				STRINGTYPE  rsigle;
 				IndivType ovar(oSet, sigle);
@@ -1038,7 +1046,7 @@ namespace info {
 				} // i
 				assert(p != nullptr);
 				pInds[sigle] = p;
-			});
+			}// s
 			values_vector oVals;
 			for (size_t i = 0; i < nRows; ++i) {
 				STRINGTYPE  sigleind = rowNames[i];

@@ -31,30 +31,37 @@
 #include <future>
 #include <condition_variable>
 /////////////////////////////////
+#include "stringconvert.h"
 #include "infovalue.h"
 //////////////////////////////
 #include <boost/noncopyable.hpp>
 ////////////////////////////////////
 namespace info {
 	///////////////////////////////////
+#if defined(__CYGWIN__)
 	template<typename Iterator, typename Func>
-	void info_parallel_for_each(Iterator first, Iterator last, Func f)
+	void info_parallel_for_each(Iterator first, Iterator last, Func &&f, ptrdiff_t range = 16)
+	{
+		for (auto it = first; it != last; ++it) {
+			f(*it);
+			}//it
+	}//info_parallel_for_each
+#else
+	template<typename Iterator, typename Func>
+	void info_parallel_for_each(Iterator first, Iterator last, Func &&f, ptrdiff_t range = 16)
 	{
 		const ptrdiff_t range_length = last - first;
-		if (range_length == 0) {
-			return;
-		}
-		if (range_length == 1)
-		{
-			f(*first);
+		if (range_length <= range) {
+			for (auto it = first; it != last; ++it) {
+				f(*it);
+			}// ir
 			return;
 		}
 		const Iterator mid = first + (range_length / 2);
-
-		std::future<void> bgtask = std::async(&info_parallel_for_each<Iterator, Func>, first, mid, f);
+		std::future<void> bgtask = std::async(&info_parallel_for_each<Iterator, Func>, first, mid, f,range);
 		try
 		{
-			info_parallel_for_each(mid, last, f);
+			info_parallel_for_each(mid, last, f,range);
 		}
 		catch (...)
 		{
@@ -63,6 +70,7 @@ namespace info {
 		}
 		bgtask.get();
 	}// info_parallel_for_each
+#endif // __CYGWIN__
 	//////////////////////////////////
 	template<typename U>
 	void info_global_write_map(const std::map<U, info::InfoValue> &oMap,

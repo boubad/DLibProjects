@@ -6,8 +6,6 @@
 #include "memorydataset.h"
 #include "indiv.h"
 /////////////////////////////
-#include <memory>
-/////////////////////////////////////////
 namespace info {
 	////////////////////////////////
 	template <typename IDTYPE = unsigned long, typename INTTYPE = int, typename STRINGTYPE = std::string, typename WEIGHTYPE = float>
@@ -254,7 +252,6 @@ namespace info {
 				return (false);
 			}
 			{
-				//MemoryDatasetType *pRet = nullptr;
 				pmemorydatasets_vector &vv = this->m_osets;
 				size_t nc = vv.size();
 				for (size_t i = 0; i < nc; ++i) {

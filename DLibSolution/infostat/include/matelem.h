@@ -5,12 +5,15 @@
 #include "indiv.h"
 #include "distancemap.h"
 #include "interruptable_object.h"
+#include "crititem.h"
 //////////////////////////////////
 namespace info {
 	/////////////////////////////////////
 	template<typename IDTYPE = unsigned long, typename DISTANCETYPE = long, typename STRINGTYPE = std::string>
 	class MatElem : public InterruptObject {
 	public:
+		using CritItemType = CritItem<IDTYPE, DISTANCETYPE>;
+		using crititems_vector = std::vector<CritItemType>;
 		using sizets_pair = std::pair<size_t, size_t>;
 		using pairs_queue = std::queue<sizets_pair>;
 		using ints_vector = std::vector<IDTYPE>;
@@ -25,7 +28,7 @@ namespace info {
 		DistanceMapType *m_pdist;
 		ints_vector *m_pids;
 		sizets_vector m_indexes;
-		sizets_vector m_args;
+		crititems_vector m_args;
 	public:
 		MatElem() :m_crit(0), m_pdist(nullptr), m_pids(nullptr) {}
 		MatElem(DistanceMapType *pMap, ints_vector *pids, sizets_vector *pindexes = nullptr, std::atomic_bool *pCancel = nullptr) :InterruptObject(pCancel),
@@ -35,20 +38,17 @@ namespace info {
 			const size_t n = pids->size();
 			assert(n > 0);
 			sizets_vector &indexes = this->m_indexes;
-			sizets_vector &args = this->m_args;
 			indexes.resize(n);
-			args.resize(n);
+			CritItemType::generate(n, this->m_args);
 			if (pindexes != nullptr) {
 				assert(pindexes->size() >= n);
 				for (size_t i = 0; i < n; ++i) {
 					indexes[i] = (*pindexes)[i];
-					args[i] = i;
 				}// i
 			}
 			else {
 				for (size_t i = 0; i < n; ++i) {
 					indexes[i] = i;
-					args[i] = i;
 				}
 			}
 			this->m_crit = this->criteria(indexes);
@@ -217,36 +217,68 @@ namespace info {
 			}
 			return (false);
 		} // try_permute
-		bool find_best_try(pairs_queue &q, DISTANCETYPE &crit) const {
+		bool find_best_try(pairs_queue &qq, DISTANCETYPE &crit) const {
 			const sizets_vector &indexes = this->m_indexes;
 			std::mutex _mutex;
-			const sizets_vector &args = this->m_args;
+			crititems_vector &args = const_cast<crititems_vector &>(this->m_args);
 			std::atomic<DISTANCETYPE> resCrit(this->m_crit);
-			info_parallel_for_each(args.begin(), args.end(), [&](const size_t &i) {
-				for (size_t j = 0; j < i; ++j) {
-					sizets_vector temp(indexes);
-					const size_t tt = temp[i];
-					temp[i] = temp[j];
-					temp[j] = tt;
-					sizets_pair oPair(std::make_pair(j, i));
-					DISTANCETYPE c = this->criteria(temp);
-					DISTANCETYPE cur = resCrit.load();
-					if (c == cur) {
-						std::lock_guard<std::mutex> oLock(_mutex);
-						if (!q.empty()) {
-							q.push(oPair);
+			crititems_vector q;
+			//for (auto &cc : args) {
+			info_parallel_for_each(args.begin(), args.end(), [&](CritItemType &cc) {
+				const size_t i = (size_t)cc.first();
+				const size_t j = (size_t)cc.second();
+				sizets_vector temp(indexes);
+				const size_t tt = temp[i];
+				temp[i] = temp[j];
+				temp[j] = tt;
+				DISTANCETYPE c = this->criteria(temp);
+				cc.criteria(c);
+				if (c <= resCrit.load()) {
+					std::lock_guard<std::mutex> oLock(_mutex);
+					auto it = std::find(q.begin(), q.end(), cc);
+					if (it == q.end()) {
+						if ((c == resCrit.load()) && (!q.empty())) {
+							CritItemType cx(cc);
+							q.push_back(cx);
+						}
+						else if (c < resCrit.load()) {
+							resCrit.store(c);
+							q.clear();
+							CritItemType cx(cc);
+							q.push_back(cx);
 						}
 					}
-					else if (c < cur) {
-						std::lock_guard<std::mutex> oLock(_mutex);
-						while (!q.empty()) {
-							q.pop();
-						}
+				}// check
+			});// cc
+			for (auto &cc : q) {
+				sizets_pair p(std::make_pair(cc.first(), cc.second()));
+				qq.push(p);
+			}
+			/*
+			info_parallel_for_each(args.begin(), args.end(), [&](CritItemType &cc) {
+				const size_t i = (size_t)cc.first();
+				const size_t j = (size_t)cc.second();
+				sizets_vector temp(indexes);
+				const size_t tt = temp[i];
+				temp[i] = temp[j];
+				temp[j] = tt;
+				DISTANCETYPE c = this->criteria(temp);
+				sizets_pair oPair(std::make_pair(j, i));
+				if (c == resCrit.load()) {
+					std::lock_guard<std::mutex> oLock(_mutex);
+					if (!q.empty()) {
 						q.push(oPair);
-						resCrit.store(c);
 					}
-				} // j
-			});
+				}
+				else if (c < resCrit.load()) {
+					resCrit.store(c);
+					std::lock_guard<std::mutex> oLock(_mutex);
+					while (!q.empty()) {
+						q.pop();
+					}
+					q.push(oPair);
+				}
+			});*/
 			crit = resCrit.load();
 			return (!q.empty());
 		} //find_best_try

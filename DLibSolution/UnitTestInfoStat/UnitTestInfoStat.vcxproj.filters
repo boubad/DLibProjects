@@ -15,9 +15,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <Text Include="ReadMe.txt" />
-  </ItemGroup>
-  <ItemGroup>
     <ClInclude Include="stdafx.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -27,16 +24,7 @@
     <ClInclude Include="infotestdata.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="infoglobaldata.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="memorystorefixture.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="storeindivprovider_fixture.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="testsourceprovider.h">
+    <ClInclude Include="memorystore_fixture.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -44,40 +32,13 @@
     <ClCompile Include="stdafx.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="test_infostat.cpp">
+    <ClCompile Include="unittest_infovalue.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="infotestdata.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="infoglobaldata.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="test_sqlitestore.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="test_memorystatstore.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="test_indivprovider.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="test_clusterize.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="test_treeitem.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="test_matitem.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="test_matelem.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="test_clusterize_hierar.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="test_clusterize_multi.cpp">
+    <ClCompile Include="test_sqlitehelper.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

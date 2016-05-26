@@ -3,7 +3,6 @@
 #define __INFOTESTDATA_H__
 ///////////////////////////////////
 #include <string>
-#include <memory>
 #include <vector>
 //////////////////////////////////////
 namespace info {

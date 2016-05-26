@@ -27,6 +27,8 @@ namespace info {
 		STRINGTYPE m_sigle;
 		indivptrs_vector m_indivs;
 		DataMap m_center;
+	private:
+		std::mutex _mutex;
 	public:
 		IndivCluster(const IndexType aIndex = 0, const STRINGTYPE & sSigle =
 			STRINGTYPE(), std::atomic_bool *pCancel = nullptr) :
@@ -108,6 +110,7 @@ namespace info {
 			return (this->m_indivs.back());
 		}
 		bool add(const IndivTypePtr &oInd) {
+			std::lock_guard<std::mutex> oLock(this->_mutex);
 			if (this->check_interrupt()) {
 				return (false);
 			}

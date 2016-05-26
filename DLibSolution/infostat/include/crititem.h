@@ -59,7 +59,7 @@ public:
 		}
 	}
 	CritItem(const CritItemType &other) :
-			m_first(other.m_crit), m_second(other.m_second), m_crit(
+			m_first(other.m_first), m_second(other.m_second), m_crit(
 					other.m_crit), m_mode(other.m_mode) {
 	}
 	CritItemType & operator=(const CritItemType &other) {

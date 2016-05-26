@@ -34,7 +34,6 @@ private:
 	size_t m_niter;
 	ints_sizet_map m_map;
 	sizets_vector m_args;
-	std::mutex _mutex;
 public:
 	ClusterizeKMeans(std::atomic_bool *pCancel = nullptr) :
 			ClustersCollectionType(pCancel), m_niter(0) {
@@ -130,6 +129,7 @@ protected:
 			c.clear_members();
 		}
 		const sizets_vector &args = this->m_args;
+		std::mutex _mutex;
 		info_parallel_for_each(args.begin(), args.end(), [&](const size_t &i) {
 			DISTANCETYPE dMin = 0;
 			IndivClusterType *pRes = nullptr;
@@ -150,7 +150,7 @@ protected:
 					} // distance
 				} // j
 				if (pRes != nullptr) {
-					std::lock_guard<std::mutex> oLock(this->_mutex);
+					std::lock_guard<std::mutex> oLock(_mutex);
 					pRes->add(oInd);
 				}
 			} // ind
