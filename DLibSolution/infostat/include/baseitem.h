@@ -71,6 +71,9 @@ namespace info {
 		virtual bool is_writeable(void) const {
 			return (false);
 		}
+		virtual bool is_valid(void) const {
+			return ((this->id() != 0) && this->is_writeable());
+		}
 	}; // class BaseInfoStatItem<IDTYPE,INTTYPE,STRINGTYPE>
 	/////////////////////////////////////////
 	template <typename IDTYPE, typename INTTYPE, typename STRINGTYPE>
@@ -355,6 +358,10 @@ namespace info {
 			this->m_varid = 0;
 			this->m_indid = 0;
 			this->m_val = InfoValue();
+		}
+		virtual bool is_valid(void) const {
+			return ((this->id() != 0) && this->is_writeable() &&
+				(!this->m_val.empty()));
 		}
 	}; // class StatValue<IDTYPE, INTTYPE, STRINGTYPE>;
 	////////////////////////////////////

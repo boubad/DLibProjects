@@ -145,7 +145,7 @@ namespace info {
 				return;
 			}
 			boost::any v(vx);
-			if (v.type() == typeid(boost;; any)) {
+			if (v.type() == typeid(boost::any)) {
 				v = boost::any_cast<boost::any>(v);
 			}
 			if (!v.empty())
@@ -415,8 +415,8 @@ namespace info {
 			if (nMax > this->m_lastid.load()) {
 				this->m_lastid.store(nMax + 1);
 			}
-			for (auto &oVal; oList) {
-				const ValueType &vx = oVal.value();
+			for (auto &oVal : oList) {
+				const InfoValue &vx = oVal.value();
 				STRINGTYPE sval;
 				vx.string_value(sval);
 				ValueType xVal(oVal);
@@ -535,7 +535,7 @@ namespace info {
 				if (this->find_indiv(xVar, false)) {
 					IDTYPE nVarId = xVar.id();
 					ints_set oVals;
-					for (auto &ov : values) {
+					for (auto &pv : values) {
 						if (pv.indiv_id() == nVarId) {
 							oVals.insert(pv.id());
 						}
