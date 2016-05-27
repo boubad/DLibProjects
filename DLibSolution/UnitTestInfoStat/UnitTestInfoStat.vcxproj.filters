@@ -24,10 +24,10 @@
     <ClInclude Include="infotestdata.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="memorystore_fixture.h">
+    <ClInclude Include="indivsource_fixture.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="indivsource_fixture.h">
+    <ClInclude Include="store_fixture.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -39,12 +39,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="infotestdata.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="test_sqlitehelper.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="test_memorystore.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="test_indivprovider.cpp">

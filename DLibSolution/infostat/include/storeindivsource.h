@@ -90,6 +90,9 @@ namespace info {
 				if (!pStore->find_indiv_values_count(oInd, nc)) {
 					return (oRet);
 				}
+				if (nc < 1) {
+					return (oRet);
+				}
 				values_vector oVals;
 				if (!pStore->find_indiv_values(oInd, oVals, 0, nc)) {
 					return (oRet);

@@ -1,24 +1,24 @@
 #pragma once
-#ifndef __MEMORYSTOREFIXTURE_H__
-#define __MEMORYSTOREFIXTURE_H__
+#ifndef __SQLITESTORE_FIXTURE_H__
+#define __SQLITESTORE_FIXTURE_H__
 ////////////////////////////////////
-#include <memorystatstore.h>
+#include <infosqlitestore.h>
 /////////////////////////////////
 #include "infotestdata.h"
 ////////////////////////////////
 namespace info {
 	////////////////////////////////
-	template<typename IDTYPE = unsigned long, typename INTTYPE = int,
-		typename STRINGTYPE = std::string, typename WEIGHTYPE = float>
-		class MemoryStoreFixture {
+	template<typename IDTYPE = unsigned long, typename INTTYPE = unsigned long,
+		typename STRINGTYPE = std::string, typename WEIGHTYPE = double>
+		class SQLiteStoreFixture {
 		public:
-			using MemoryStoreType = MemoryStatStore<IDTYPE, INTTYPE, STRINGTYPE, WEIGHTYPE>;
+			using ImplStoreType = SQLiteStatHelper;
 			using IStoreType = IStatStore<IDTYPE, INTTYPE, STRINGTYPE, WEIGHTYPE>;
 			using DatasetType = typename IStoreType::DatasetType;
 			//
-			std::unique_ptr<MemoryStoreType> m_man;
+			std::unique_ptr<ImplStoreType> m_man;
 		public:
-			MemoryStoreFixture(){
+			MemoryStoreFixture() {
 				this->init_data();
 				this->fill_mortal_data();
 				this->fill_conso_data();
@@ -95,12 +95,16 @@ namespace info {
 				MemoryStoreType *p = this->m_man.get();
 				assert(p != nullptr);
 				assert(p->is_valid());
-				std::string stype("float");
-				bool bRet = p->import(name, nRows, nCols, data, rowNames, colNames,
-					stype);
+				DatasetType oSet(name);
+				bool bRet = p->find_dataset(oSet);
+				if (!bRet) {
+					bRet = p->maintains_dataset(oSet);
+					assert(bRet);
+				}
+				bRet = p->import(oSet, nRows, nCols, data, rowNames, colNames);
 				assert(bRet);
 			} // import
 	};
 }// namespace info
-/////////////////////////////////////
+ /////////////////////////////////////
 #endif // !__MEMORYSTOREFIXTURE_H__

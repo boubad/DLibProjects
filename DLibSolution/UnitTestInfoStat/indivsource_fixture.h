@@ -2,14 +2,14 @@
 #ifndef __INDIVSTORE_FIXTURE_H__
 #define  __INDIVSTORE_FIXTURE_H__
 ////////////////////////////////////
-#include "memorystore_fixture.h"
+#include "store_fixture.h"
 ///////////////////////////////////////
 #include <storeindivsource.h>
 ////////////////////////////////////////
 namespace info {
 	///////////////////////////////////////
-	template<typename IDTYPE = unsigned long, typename INTTYPE = int,
-		typename STRINGTYPE = std::string, typename WEIGHTYPE = float>
+	template<typename IDTYPE = unsigned long, typename INTTYPE = unsigned long,
+		typename STRINGTYPE = std::string, typename WEIGHTYPE = double>
 		class TestSourceFixture {
 		public:
 			using IndivType = Indiv<IDTYPE, STRINGTYPE>;
@@ -19,20 +19,24 @@ namespace info {
 			using StoreIndivSourceType = StoreIndivSource<IDTYPE, INTTYPE, STRINGTYPE, WEIGHTYPE>;
 			using SourceType = IIndivSource<IDTYPE, STRINGTYPE>;
 			using StoreIndivSourceType = StoreIndivSource<IDTYPE, INTTYPE, STRINGTYPE, WEIGHTYPE>;
-			using StoreFixture = MemoryStoreFixture<IDTYPE, INTTYPE, STRINGTYPE, WEIGHTYPE>;
+			using StoreFixture = TestStoreFixture<IDTYPE, INTTYPE, STRINGTYPE, WEIGHTYPE>;
+			using SourceFixture = TestSourceFixture<IDTYPE, INTTYPE, STRINGTYPE, WEIGHTYPE>;
 		private:
 			std::unique_ptr<StoreFixture> m_store;
 			std::unique_ptr<StoreIndivSourceType> m_test_source;
 			std::unique_ptr<StoreIndivSourceType> m_conso_source;
 			std::unique_ptr<StoreIndivSourceType> m_mortal_source;
 		public:
-			TestSourceFixture(StoreType *pStore = nullptr) {
+			TestSourceFixture(StoreType *pStore = nullptr, bool bMemory = true) {
 				StoreType *ps = pStore;
 				if (ps == nullptr) {
-					m_store.reset(new StoreFixture());
 					StoreFixture *pf = m_store.get();
-					assert(pf != nullptr);
-					ps = pf->get_store();
+					if (pf == nullptr) {
+						m_store.reset(new StoreFixture());
+						pf = m_store.get();
+						assert(pf != nullptr);
+					}
+					ps = pf->get_source(bMemory);
 					assert(ps != nullptr);
 				}
 				{

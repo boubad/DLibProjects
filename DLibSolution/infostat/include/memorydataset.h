@@ -6,7 +6,7 @@
 /////////////////////////////////////
 namespace info {
 	////////////////////////////////
-	template <typename IDTYPE = unsigned long, typename INTTYPE = int, typename STRINGTYPE = std::string, typename WEIGHTYPE = float>
+	template <typename IDTYPE = unsigned long, typename INTTYPE = unsigned long, typename STRINGTYPE = std::string, typename WEIGHTYPE = double>
 	class MemoryDataset : private boost::noncopyable {
 	public:
 		using ints_set = std::set<IDTYPE>;
@@ -23,7 +23,7 @@ namespace info {
 		using ValueType = StatValue<IDTYPE, INTTYPE, STRINGTYPE>;
 		using values_vector = std::vector<ValueType>;
 	private:
-		std::atomic<IDTYPE> m_lastid;
+		IDTYPE m_lastid;
 		DatasetType m_oset;
 		variables_vector m_variables;
 		indivs_vector m_indivs;
@@ -250,8 +250,8 @@ namespace info {
 		MemoryDataset() :m_lastid(1) {}
 		MemoryDataset(const DatasetType &oSet) :m_lastid(1), m_oset(oSet) {
 			size_t nMax = this->m_oset.id();
-			if (nMax >= this->m_lastid.load()) {
-				this->m_lastid.store((IDTYPE)(nMax + 1));
+			if (nMax >= this->m_lastid) {
+				this->m_lastid = (IDTYPE)(nMax + 1);
 			}
 		}
 		~MemoryDataset() {}
@@ -412,18 +412,17 @@ namespace info {
 					nMax = nx;
 				}
 			}// v
-			if (nMax > this->m_lastid.load()) {
-				this->m_lastid.store(nMax + 1);
+			if (nMax > this->m_lastid) {
+				this->m_lastid = (IDTYPE) (nMax + 1);
 			}
+			const IDTYPE nDatasetId = this->m_oset.id();
 			for (auto &oVal : oList) {
 				const InfoValue &vx = oVal.value();
-				STRINGTYPE sval;
-				vx.string_value(sval);
 				ValueType xVal(oVal);
 				this->find_value(xVal, false);
 				IDTYPE nId = xVal.id();
 				bool bMustRemove = bRemove && (nId != 0);
-				if ((nId != 0) && sval.empty()) {
+				if ((nId != 0) && vx.empty()) {
 					bMustRemove = true;
 				}
 				if (bMustRemove) {
@@ -434,9 +433,8 @@ namespace info {
 						values.erase(it);
 					}
 				}
-				else if (oVal.is_writeable() && (!sval.empty())) {
-					InfoValue v0 = oVal.value();
-					if (v0.empty() && (nId != 0)) {
+				else if (oVal.is_writeable()) {
+					if (vx.empty() && (nId != 0)) {
 						auto it = std::find_if(values.begin(), values.end(), [&](ValueType &v)->bool {
 							return (v.id() == nId);
 						});
@@ -451,10 +449,10 @@ namespace info {
 						if (nId != 0) {
 							const size_t n = values.size();
 							for (size_t i = 0; i < n; ++i) {
-								ValueType &vx = values[i];
-								if (vx.id() == nId) {
-									vx.value(v0);
-									vx.status(status);
+								ValueType &vz = values[i];
+								if (vz.id() == nId) {
+									vz.value(vx);
+									vz.status(status);
 									break;
 								}
 							}// i
@@ -462,8 +460,13 @@ namespace info {
 						else {
 							VariableType xx(nVarId);
 							IndivType yy(nIndId);
+							xx.dataset_id(nDatasetId);
+							yy.dataset_id(nDatasetId);
 							if (this->find_variable(xx, false) && this->find_indiv(yy, false)) {
 								ValueType oo(oVal);
+								oo.variable_id(nVarId);
+								oo.indiv_id(nIndId);
+								oo.value(vx);
 								IDTYPE nx = oo.id();
 								if (nx == 0) {
 									oo.id(this->next_id());
@@ -568,14 +571,14 @@ namespace info {
 					nMax = nx;
 				}
 			}
-			if (nMax > this->m_lastid.load()) {
-				this->m_lastid.store(nMax + 1);
+			if (nMax > this->m_lastid) {
+				this->m_lastid = (IDTYPE)(nMax + 1);
 			}
 			for (auto &oVar : oList) {
 				if (oVar.is_writeable()) {
 					IndivType xVar(oVar);
 					this->find_indiv(xVar, false);
-					IDTYPE nId = xVar.dataset_id();
+					IDTYPE nId = xVar.id();
 					if (nId == 0) {
 						xVar = oVar;
 						xVar.version(1);
@@ -764,14 +767,14 @@ namespace info {
 					nMax = nx;
 				}
 			}
-			if (nMax > this->m_lastid.load()) {
-				this->m_lastid.store(nMax + 1);
+			if (nMax > this->m_lastid) {
+				this->m_lastid = (IDTYPE)(nMax + 1);
 			}
 			for (auto &oVar : oList) {
 				if (oVar.is_writeable()) {
 					VariableType xVar(oVar);
 					this->find_variable(xVar, false);
-					IDTYPE nId = xVar.dataset_id();
+					IDTYPE nId = xVar.id();
 					if (nId == 0) {
 						xVar = oVar;
 						xVar.version(1);
@@ -964,114 +967,6 @@ namespace info {
 			return (nRet);
 		}//get_datasetid
 		//
-		template <typename T>
-		void import(size_t nRows, size_t nCols,
-			const std::vector<T> &data,
-			const strings_vector &rowNames,
-			const strings_vector &colNames,
-			const STRINGTYPE &stype) {
-			bool bRet = false;
-			DatasetType &oSet = this->m_oset;
-			assert(oSet.id() != 0);
-			variables_vector oVars;
-			for (size_t i = 0; i < nCols; ++i) {
-				STRINGTYPE sigle = colNames[i];
-				VariableType v(oSet, sigle);
-				if (!this->find_variable(v)) {
-					v.sigle(sigle);
-					v.dataset_id(oSet.id());
-					v.vartype(stype);
-					oVars.push_back(v);
-				}
-			} // i
-			if (!oVars.empty()) {
-				bRet = this->maintains_variables(oVars);
-				assert(bRet);
-			}
-			indivs_vector oInds;
-			for (size_t i = 0; i < nRows; ++i) {
-				STRINGTYPE sigle = rowNames[i];
-				IndivType v(oSet, sigle);
-				if (!this->find_indiv(v)) {
-					v.sigle(sigle);
-					v.dataset_id(oSet.id());
-					oInds.push_back(v);
-				}
-			} // i
-			if (!oInds.empty()) {
-				bRet = this->maintains_indivs(oInds);
-				assert(bRet);
-			}
-			oInds.clear();
-			bRet = this->get_indivs(oInds, 0, nRows);
-			assert(bRet);
-			assert(nRows == oInds.size());
-			oVars.clear();
-			bRet = this->get_variables(oVars, 0, nCols);
-			assert(bRet);
-			assert(nCols == oVars.size());
-			//
-			std::map<STRINGTYPE, VariableType *> pVars;
-			for (auto &s : colNames) {
-				STRINGTYPE sigle = s;
-				STRINGTYPE rsigle;
-				VariableType ovar(oSet, sigle);
-				rsigle = ovar.sigle();
-				VariableType *p = nullptr;
-				for (size_t i = 0; i < oVars.size(); ++i) {
-					VariableType &vv = oVars[i];
-					STRINGTYPE  sx = vv.sigle();
-					if (sx == rsigle) {
-						p = &vv;
-						break;
-					}
-				} // i
-				assert(p != nullptr);
-				pVars[sigle] = p;
-			}// s
-			std::map<STRINGTYPE, IndivType *> pInds;
-			for (auto &s : rowNames) {
-				STRINGTYPE  sigle = s;
-				STRINGTYPE  rsigle;
-				IndivType ovar(oSet, sigle);
-				rsigle = ovar.sigle();
-				IndivType *p = nullptr;
-				for (size_t i = 0; i < oInds.size(); ++i) {
-					IndivType &vv = oInds[i];
-					STRINGTYPE  sx = vv.sigle();
-					if (sx == rsigle) {
-						p = &vv;
-						break;
-					}
-				} // i
-				assert(p != nullptr);
-				pInds[sigle] = p;
-			}// s
-			values_vector oVals;
-			for (size_t i = 0; i < nRows; ++i) {
-				STRINGTYPE  sigleind = rowNames[i];
-				IndivType *pInd = pInds[sigleind];
-				assert(pInd != nullptr);
-				for (size_t j = 0; j < nCols; ++j) {
-					STRINGTYPE  siglevar = colNames[j];
-					VariableType *pVar = pVars[siglevar];
-					assert(pVar != nullptr);
-					ValueType val(*pVar, *pInd);
-					if (!this->find_value(val)) {
-						double f = (double)data[i * nCols + j];
-						InfoValue vv(f);
-						val.value(vv);
-						val.variable_id(pVar->id());
-						val.indiv_id(pInd->id());
-						oVals.push_back(val);
-					}
-				} // j
-			} // i
-			if (!oVals.empty()) {
-				bRet = this->maintains_values(oVals);
-				assert(bRet);
-			}
-		} // import
 	}; // class MemoryDataset<IDTYPE, INTTYPE, STRINGTYPE, WEIGHTYPE>
 	////////////////////////////////////
 }// namespâce info
