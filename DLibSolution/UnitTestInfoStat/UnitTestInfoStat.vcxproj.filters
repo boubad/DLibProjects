@@ -44,5 +44,8 @@
     <ClCompile Include="test_indivprovider.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="test_clusterize.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

@@ -65,6 +65,16 @@ namespace info {
 			os << s << std::endl;
 			return (os);
 		} // write_to
+		void to_string(std::string &s)const {
+			std::stringstream os;
+			this->write_to(os);
+			s = os.str();
+		}
+		void to_string(std::wstring &s)const {
+			std::wstringstream os;
+			this->write_to(os);
+			s = os.str();
+		}
 	public:
 		bool get_random_indivs(const size_t nc, indivptrs_vector &oRes) {
 			assert(nc > 0);
