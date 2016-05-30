@@ -1,6 +1,12 @@
-#pragma once
-#ifndef __STOREINDIVSOURCE_H__
-#define __STOREINDIVSOURCE_H__
+/*
+ * storevariablesource.h
+ *
+ *  Created on: 29 mai 2016
+ *      Author: boubad
+ */
+
+#ifndef STOREVARIABLESOURCE_H_
+#define STOREVARIABLESOURCE_H_
 /////////////////////////////////
 #include "istatstore.h"
 #include "infostat.h"
@@ -10,7 +16,7 @@ namespace info {
 	/////////////////////////////
 	template<typename U = unsigned long, typename INTTYPE = int,
 		typename STRINGTYPE = std::string, typename WEIGHTYPE = float>
-		class StoreIndivSource : public IIndivSource<U, STRINGTYPE>, private boost::noncopyable {
+		class StoreVariableSource : public IIndivSource<U, STRINGTYPE>, private boost::noncopyable {
 		public:
 		    using IndexType = U;
 			using ints_vector = std::vector<U>;
@@ -19,10 +25,11 @@ namespace info {
 			using IndivTypePtr = std::shared_ptr<IndivType>;
 			using StoreType = IStatStore<U, INTTYPE, STRINGTYPE, WEIGHTYPE>;
 			using DBIndivType = StatIndiv<U, INTTYPE, STRINGTYPE, WEIGHTYPE>;
+			using DBVariableType = StatVariable<U, INTTYPE, STRINGTYPE, WEIGHTYPE>;
 			using DatasetType = StatDataset<U, INTTYPE, STRINGTYPE>;
 			using ValueType = StatValue<U, INTTYPE, STRINGTYPE>;
 			using values_vector = std::vector<ValueType>;
-			using StoreIndivSourceType = StoreIndivSource<U, INTTYPE, STRINGTYPE, WEIGHTYPE>;
+			using StoreVariableSourceType = StoreVariableSource<U, INTTYPE, STRINGTYPE, WEIGHTYPE>;
 			using indivptrs_vector = std::vector<IndivTypePtr>;
 			using SourceType = IIndivSource<U, STRINGTYPE>;
 		private:
@@ -32,7 +39,7 @@ namespace info {
 			DatasetType m_oset;
 			indivptrs_vector m_indivs;
 		public:
-			StoreIndivSource(StoreType *pStore, const STRINGTYPE &datasetName) :
+			StoreVariableSource(StoreType *pStore, const STRINGTYPE &datasetName) :
 				m_pstore(pStore), m_current(0) {
 				assert(this->m_pstore != nullptr);
 				assert(this->m_pstore->is_valid());
@@ -41,13 +48,13 @@ namespace info {
 				pStore->find_dataset(oSet);
 				assert(oSet.id() != 0);
 				size_t nc = 0;
-				pStore->find_dataset_indivs_count(oSet, nc);
-				pStore->find_dataset_indivs_ids(oSet, this->m_ids, 0, nc);
+				pStore->find_dataset_variables_count(oSet, nc);
+				pStore->find_dataset_variables_ids(oSet, this->m_ids, 0, nc);
 				if (nc > 0) {
 					this->m_indivs.resize(nc);
 				}
 			}
-			virtual ~StoreIndivSource() {
+			virtual ~StoreVariableSource() {
 			}
 		public:
 			virtual size_t count(void) {
@@ -84,23 +91,23 @@ namespace info {
 				assert(pStore != nullptr);
 				DatasetType &oSet = this->m_oset;
 				U aIndex = (this->m_ids)[pos];
-				DBIndivType oInd(aIndex);
+				DBVariableType oInd(aIndex);
 				oInd.dataset_id(oSet.id());
 				size_t nc = 0;
-				if (!pStore->find_indiv_values_count(oInd, nc)) {
+				if (!pStore->find_variable_values_count(oInd, nc)) {
 					return (oRet);
 				}
 				if (nc < 1) {
 					return (oRet);
 				}
 				values_vector oVals;
-				if (!pStore->find_indiv_values(oInd, oVals, 0, nc)) {
+				if (!pStore->find_variable_values(oInd, oVals, 0, nc)) {
 					return (oRet);
 				}
 				DataMap oMap;
 				for (auto &v : oVals) {
 					if (!v.empty()) {
-						const U key = (U)v.variable_id();
+						const U key = (U)v.indiv_id();
 						InfoValue val = v.value();
 						oMap[key] = val;
 					} // v
@@ -116,8 +123,8 @@ namespace info {
 				size_t nc = 0;
 				DatasetType &oSet = this->m_oset;
 				this->m_indivs.clear();
-				pStore->find_dataset_indivs_count(oSet, nc);
-				pStore->find_dataset_indivs_ids(oSet, this->m_ids, 0, nc);
+				pStore->find_dataset_variables_count(oSet, nc);
+				pStore->find_dataset_variables_ids(oSet, this->m_ids, 0, nc);
 				if (nc > 0) {
 					this->m_indivs.resize(nc);
 				}
@@ -136,4 +143,4 @@ namespace info {
 	/////////////////////////////////
 }// namespace info
 ////////////////////////////////////
-#endif // __STOREINDIVSOURCE_H__
+#endif /* STOREVARIABLESOURCE_H_ */

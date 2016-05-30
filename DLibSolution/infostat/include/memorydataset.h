@@ -38,7 +38,7 @@ namespace info {
 				return;
 			}
 			boost::any v(vx);
-			if (v.type() == typeid(boost;; any)) {
+			if (v.type() == typeid(boost::any)) {
 				v = boost::any_cast<boost::any>(v);
 			}
 			if (!v.empty())

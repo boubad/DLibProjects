@@ -1,27 +1,27 @@
 /*
- * test_clusterize.cpp
+ * test_variableprovider.cpp
  *
- *  Created on: 27 mai 2016
+ *  Created on: 29 mai 2016
  *      Author: boubad
  */
 #include <boost/test/unit_test.hpp>
 /////////////////////////////
-#include "mytestfixture.h"
+#include "mytestvariablefixture.h"
 ////////////////////////////////////
 #include "global_defs.h"
 ////////////////////
 using namespace info;
 using namespace std;
 ///////////////////////////////////
-using MyFixture = MyTestFixture<IDTYPE, INTTYPE, STRINGTYPE, WEIGHTYPE>;
+using MyFixture = MyTestVariableFixture<IDTYPE, INTTYPE, STRINGTYPE, WEIGHTYPE>;
 /////////////////////////////////////
 using IndivType = typename MyFixture::IndivType;
 using DataMap = typename MyFixture::DataMap;
 using IndivTypePtr = typename MyFixture::IndivTypePtr;
 using SourceType = typename MyFixture::SourceType;
 /////////////////////////////////////
-BOOST_FIXTURE_TEST_SUITE(IndivProviderTestSuite,MyFixture)
-BOOST_AUTO_TEST_CASE(testMortalProvider) {
+BOOST_FIXTURE_TEST_SUITE(VariableProviderTestSuite,MyFixture)
+BOOST_AUTO_TEST_CASE(testMortalProviderVariable) {
 	SourceType *pProvider = this->mortal_source();
 	BOOST_CHECK(pProvider != nullptr);
 	size_t nCount = pProvider->count();
@@ -56,7 +56,7 @@ BOOST_AUTO_TEST_CASE(testMortalProvider) {
 	} while (true);
 	BOOST_CHECK(nc == nCount);
 } //testMortalProvider
-BOOST_AUTO_TEST_CASE(testConsoProvider) {
+BOOST_AUTO_TEST_CASE(testConsoProviderVariable) {
 	SourceType *pProvider = this->conso_source();
 	BOOST_CHECK(pProvider != nullptr);
 	size_t nCount = pProvider->count();
@@ -91,7 +91,7 @@ BOOST_AUTO_TEST_CASE(testConsoProvider) {
 	} while (true);
 	BOOST_CHECK(nc == nCount);
 } //testConsoProvider
-BOOST_AUTO_TEST_CASE(testTestProvider) {
+BOOST_AUTO_TEST_CASE(testTestProviderVariable) {
 	SourceType *pProvider = this->test_source();
 	BOOST_CHECK(pProvider != nullptr);
 	size_t nCount = pProvider->count();
@@ -127,4 +127,8 @@ BOOST_AUTO_TEST_CASE(testTestProvider) {
 	BOOST_CHECK(nc == nCount);
 } //testTestProvider
 BOOST_AUTO_TEST_SUITE_END();
+
+
+
+
 

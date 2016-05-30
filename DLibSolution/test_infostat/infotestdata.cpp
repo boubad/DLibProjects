@@ -1,4 +1,3 @@
-#include "stdafx.h"
 #include "infotestdata.h"
 ////////////////////////////////
 #include <cassert>
@@ -48,7 +47,7 @@ namespace info {
 		121,102,220,26,273,158
 	};
 	static const size_t TEST_NROWS = 256;
-	static const size_t TEST_NCOLS = 10;
+	static const size_t TEST_NCOLS = 20;
 	////////////////////////////////////
 	static const char *st_type = "float";
 	static const char *st_genre = "I";
