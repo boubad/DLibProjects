@@ -24,60 +24,60 @@
     <ClInclude Include="targetver.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="global_defs.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="indivsource_fixture.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="infotestdata.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="infoglobaldata.h">
+    <ClInclude Include="mytestfixture.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="memorystorefixture.h">
+    <ClInclude Include="mytestvariablefixture.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="storeindivprovider_fixture.h">
+    <ClInclude Include="store_fixture.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="testsourceprovider.h">
+    <ClInclude Include="variablesource_fixture.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="stdafx.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="test_infostat.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="infotestdata.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="infoglobaldata.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="test_sqlitestore.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="test_memorystatstore.cpp">
+    <ClCompile Include="test_cluterize.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="test_indivprovider.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="test_clusterize.cpp">
+    <ClCompile Include="test_infostat.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="test_treeitem.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="test_matitem.cpp">
+    <ClCompile Include="test_infovalue.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="test_matelem.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="test_clusterize_hierar.cpp">
+    <ClCompile Include="test_matord.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="test_clusterize_multi.cpp">
+    <ClCompile Include="test_treeelem.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="test_variableprovider.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="mytestmain.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="stdafx.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

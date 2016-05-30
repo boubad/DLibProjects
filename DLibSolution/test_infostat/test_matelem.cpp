@@ -4,6 +4,7 @@
  *  Created on: 28 mai 2016
  *      Author: boubad
  */
+#include "stdafx.h"
 #include <boost/test/unit_test.hpp>
 /////////////////////////
 #include <matelem.h>

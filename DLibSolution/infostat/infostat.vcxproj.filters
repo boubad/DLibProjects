@@ -96,6 +96,15 @@
     <ClInclude Include="include\matelem.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\info_includes.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\matrice.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\storevariablesource.h">
+      <Filter>include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\infovalue.cpp">
