@@ -105,6 +105,15 @@
     <ClInclude Include="include\storevariablesource.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\intramat.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\matresult.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\activeobject.h">
+      <Filter>include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\infovalue.cpp">

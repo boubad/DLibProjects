@@ -145,6 +145,7 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="include\activeobject.h" />
     <ClInclude Include="include\arrangeindiv.h" />
     <ClInclude Include="include\baseitem.h" />
     <ClInclude Include="include\clusterize.h" />
@@ -159,10 +160,12 @@
     <ClInclude Include="include\info_global.h" />
     <ClInclude Include="include\info_includes.h" />
     <ClInclude Include="include\interruptable_object.h" />
+    <ClInclude Include="include\intramat.h" />
     <ClInclude Include="include\istatstore.h" />
     <ClInclude Include="include\matcomputeparams.h" />
     <ClInclude Include="include\matelem.h" />
     <ClInclude Include="include\matitem.h" />
+    <ClInclude Include="include\matresult.h" />
     <ClInclude Include="include\matrice.h" />
     <ClInclude Include="include\memorydataset.h" />
     <ClInclude Include="include\memorystatstore.h" />

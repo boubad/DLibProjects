@@ -184,6 +184,7 @@
     <ClCompile Include="test_indivprovider.cpp" />
     <ClCompile Include="test_infostat.cpp" />
     <ClCompile Include="test_infovalue.cpp" />
+    <ClCompile Include="test_intramatelem.cpp" />
     <ClCompile Include="test_matelem.cpp" />
     <ClCompile Include="test_matord.cpp" />
     <ClCompile Include="test_treeelem.cpp" />
