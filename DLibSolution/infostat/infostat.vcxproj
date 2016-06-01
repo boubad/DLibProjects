@@ -146,12 +146,14 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\activeobject.h" />
+    <ClInclude Include="include\anacompo.h" />
     <ClInclude Include="include\arrangeindiv.h" />
     <ClInclude Include="include\baseitem.h" />
     <ClInclude Include="include\clusterize.h" />
     <ClInclude Include="include\clusterscollection.h" />
     <ClInclude Include="include\crititem.h" />
     <ClInclude Include="include\distancemap.h" />
+    <ClInclude Include="include\eigen_impl.h" />
     <ClInclude Include="include\indiv.h" />
     <ClInclude Include="include\indivcluster.h" />
     <ClInclude Include="include\indivsummator.h" />
@@ -169,6 +171,7 @@
     <ClInclude Include="include\matrice.h" />
     <ClInclude Include="include\memorydataset.h" />
     <ClInclude Include="include\memorystatstore.h" />
+    <ClInclude Include="include\sharedqueue.h" />
     <ClInclude Include="include\storeindivsource.h" />
     <ClInclude Include="include\storevariablesource.h" />
     <ClInclude Include="include\stringconvert.h" />
@@ -177,6 +180,7 @@
     <ClInclude Include="include\treeitem.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\eigen_impl.cpp" />
     <ClCompile Include="src\infovalue.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

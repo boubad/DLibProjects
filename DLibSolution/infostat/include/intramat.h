@@ -5,7 +5,7 @@
 #include "matresult.h"
 #include "indiv.h"
 #include "distancemap.h"
-#include "activeobject.h"
+#include "sharedqueue.h"
 /////////////////////////////////
 #include <boost/signals2/signal.hpp>
 //////////////////////////////////
@@ -30,8 +30,8 @@ namespace info {
 			using SignalType = typename boost::signals2::signal<void(IntraMatElemResultPtr)>;
 			using SlotType = typename SignalType::slot_type;
 			using ConnectionType = boost::signals2::connection;
+			using IntraMatElemType = IntraMatElem<IDTYPE, DISTANCETYPE, STRINGTYPE>;
 		private:
-			Backgrounder *m_pbackgrounder;
 			bool m_hasconnect;
 			DISTANCETYPE m_crit;
 			DistanceMapType *m_pdist;
@@ -39,8 +39,7 @@ namespace info {
 			SignalType m_signal;
 			std::unique_ptr<DistanceMapType> m_odist;
 		public:
-			IntraMatElem(Backgrounder *pBackgrounder = nullptr) :
-				m_pbackgrounder(pBackgrounder), m_hasconnect(false), m_crit(0), m_pdist(nullptr) {
+			IntraMatElem() : m_hasconnect(false), m_crit(0), m_pdist(nullptr) {
 			}
 			virtual ~IntraMatElem() {
 			}
@@ -80,15 +79,8 @@ namespace info {
 					if (!this->one_iteration(oCrit)) {
 						break;
 					}
-					if (this->m_hasconnect) {
-						IntraMatElemResultPtr res = this->getResult();
-						this->m_signal(res);
-					}
+					this->notify();
 				} while (true);
-				if (this->m_hasconnect) {
-					IntraMatElemResultPtr res;
-					this->m_signal(res);
-				}
 			} // arrange
 			void arrange(DistanceMapType *pDist) {
 				this->initialize(pDist);
@@ -97,32 +89,20 @@ namespace info {
 					if (!this->one_iteration(oCrit)) {
 						break;
 					}
-					if (this->m_hasconnect) {
-						this->notify();
-					}
+					this->notify();
 				} while (true);
-				if (this->m_hasconnect) {
-					IntraMatElemResultType res;
-					this->m_signal(res);
-				}
 			} // arrange
 			static IntraMatElemResultPtr perform_arrange(SourceType *pProvider) {
 				IntraMatElemType oMat;
 				oMat.arrange(pProvider);
-				IntraMatElemResultPtr oRet(
-					new IntraMatElemResultType(oMat.m_crit, oMat.m_indexes));
+				IntraMatElemResultPtr oRet = oMat.getResult();
 				return (oRet);
 			} //perform_arrange
 		protected:
 			void notify(void) {
-				IntraMatElemResultType res = this->getResult();
-				if (this->m_pbackgrounder == nullptr) {
+				if (this->m_hasconnect) {
+					IntraMatElemResultPtr res = this->getResult();
 					this->m_signal(res);
-				}
-				else {
-					this->m_pbackgrounder->send([res, this]() {
-						this->m_signal(res);
-					});
 				}
 			}//notify
 			bool one_iteration(DISTANCETYPE &oCrit) {
@@ -270,10 +250,12 @@ namespace info {
 		public:
 			using MatElemType = IntraMatElem<IDTYPE, DISTANCETYPE, STRINGTYPE>;
 			//
+			using IntraMatOrdResultType = IntraMatOrdResult<IDTYPE, DISTANCETYPE>;
+			using IntraMatOrdResultTypePtr = std::shared_ptr<IntraMatOrdResultType>;
 			using DistanceMapType = typename MatElemType::DistanceMapType;
 			using MatElemResultType = typename MatElemType::IntraMatElemResultType;
 			using MatElemResultPtr = typename MatElemType::IntraMatElemResultPtr;
-			using SignalType = typename boost::signals2::signal<void(MatElemResultPtr, MatElemResultPtr)>;
+			using SignalType = typename boost::signals2::signal<void(IntraMatOrdResultTypePtr)>;
 			using SlotType = typename SignalType::slot_type;
 			using ConnectionType = typename MatElemType::ConnectionType;
 			using SourceType = typename MatElemType::SourceType;
@@ -284,6 +266,8 @@ namespace info {
 			using IndivTypePtr = typename MatElemType::IndivTypePtr;
 			using MatOrdType = IntraMatOrd<IDTYPE, DISTANCETYPE, STRINGTYPE>;
 		private:
+			std::atomic_bool m_done;
+			std::atomic_bool m_running;
 			bool m_hasconnect;
 			std::unique_ptr<MatElemType> m_vars;
 			std::unique_ptr<MatElemType> m_inds;
@@ -292,68 +276,99 @@ namespace info {
 			SignalType m_signal;
 			MatElemResultPtr m_varsResults;
 			MatElemResultPtr m_indsResults;
-			Backgrounder m_back;
 			//
 			mutex_type _mutex;
 		protected:
 			bool has_clients(void) const {
 				return (this->m_hasconnect);
 			}
+			void notify_variable(MatElemResultPtr oCrit) {
+				if (this->m_hasconnect) {
+					MatElemResultType *p = oCrit.get();
+					if (p != nullptr) {
+						p->disposition = DispositionType::variable;
+					}
+					MatElemResultPtr o;
+					{
+						std::unique_lock<mutex_type> oLock(this->_mutex);
+						this->m_varsResults = oCrit;
+						o = this->m_indsResults;
+					}
+					IntraMatOrdResultTypePtr oRes(new IntraMatOrdResultType(o, oCrit));
+					this->m_signal(oRes);
+				}
+			}// notify_variable
 			bool prep_vars(SourceType *pProvider) {
-				this->m_vars.reset(new MatElemType(&m_back));
+				this->m_vars.reset(new MatElemType());
 				MatElemType *pMat = this->m_vars.get();
 				assert(pMat != nullptr);
 				this->m_connectVars = pMat->connect([this](MatElemResultPtr oCrit) {
-					std::unique_lock<mutex_type> oLock(this->_mutex);
-					this->m_varsResults = oCrit;
-					MatElemResultPtr o = this->m_indsResults;
-					if (this->has_clients()) {
-						this->notify(o, oCrit);
-					}
+					this->notify_variable(oCrit);
 				});
 				pMat->arrange(pProvider);
 				return (true);
 			} // prep_vars
+			void notify_indiv(MatElemResultPtr oCrit) {
+				if (this->m_hasconnect) {
+					MatElemResultType *p = oCrit.get();
+					if (p != nullptr) {
+						p->disposition = DispositionType::indiv;
+					}
+					MatElemResultPtr o;
+					{
+						std::unique_lock<mutex_type> oLock(this->_mutex);
+						this->m_indsResults = oCrit;
+						o = this->m_varsResults;
+					}
+					IntraMatOrdResultTypePtr oRes(new IntraMatOrdResultType(oCrit, o));
+					this->m_signal(oRes);
+				}
+			}// notify_indiv
 			bool prep_inds(SourceType *pProvider) {
-				this->m_inds.reset(new MatElemType(&m_back));
+				this->m_inds.reset(new MatElemType());
 				MatElemType *pMat = this->m_inds.get();
 				assert(pMat != nullptr);
 				this->m_connectInds = pMat->connect([this](MatElemResultPtr oCrit) {
-					std::unique_lock<mutex_type> oLock(this->_mutex);
-					this->m_indsResults = oCrit;
-					MatElemResultPtr o = this->m_varsResults;
-					if (this->has_clients()) {
-						this->notify(oCrit, o);
-					}
+					this->notify_indiv(oCrit);
 				});
 				pMat->arrange(pProvider);
 				return (true);
 			} // prep_inds
-			void notify(MatElemResultPtr oInd, MatElemResultPtr oVar) {
-				this->m_signal(oInd, oVar);
-			}//notify
 		public:
-			IntraMatOrd() : m_hasconnect(false) {
+			IntraMatOrd() :m_done(false),m_running(false),m_hasconnect(false) {
 			} // MatOrd
 			virtual ~IntraMatOrd() {
+			}
+			bool is_done(void) {
+				return (this->m_done.load());
+			}
+			bool is_running(void) {
+				return (this->m_running.load());
 			}
 			ConnectionType connect(const SlotType &subscriber) {
 				this->m_hasconnect = true;
 				return m_signal.connect(subscriber);
 			}
 			void get_variables_results(MatElemResultPtr &oRes) {
-				std::lock_guard<std::mutex> oLock(this->_mutex);
+				std::unique_lock<mutex_type> oLock(this->_mutex);
 				oRes = this->m_varsResults;
 			}
 			void get_indivs_results(MatElemResultPtr &oRes) {
-				std::lock_guard<std::mutex> oLock(this->_mutex);
+				std::unique_lock<mutex_type> oLock(this->_mutex);
 				oRes = this->m_indsResults;
+			}
+			IntraMatOrdResultTypePtr getResult(void)  {
+				std::unique_lock<mutex_type> oLock(this->_mutex);
+				IntraMatOrdResultTypePtr oRes(new IntraMatOrdResultType(this->m_indsResults, this->m_varsResults));
+				return (oRes);
 			}
 			void arrange(SourceType *pIndsSource, SourceType *pVarsSource) {
 				assert(pIndsSource != nullptr);
 				assert(pVarsSource != nullptr);
+				this->m_running.store(true);
 				this->m_varsResults.reset();
 				this->m_indsResults.reset();
+				this->m_done.store(false);
 				MatOrdType *pMat = this;
 				std::thread t1([pIndsSource, this]() {
 					this->prep_inds(pIndsSource);
@@ -363,6 +378,8 @@ namespace info {
 				});
 				t2.join();
 				t1.join();
+				this->m_running.store(false);
+				this->m_done.store(true);
 			} // process
 	};
 	////////////////////////////////////

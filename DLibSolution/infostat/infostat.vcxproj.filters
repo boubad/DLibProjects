@@ -114,10 +114,22 @@
     <ClInclude Include="include\activeobject.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\sharedqueue.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\eigen_impl.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\anacompo.h">
+      <Filter>include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\infovalue.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\eigen_impl.cpp">
+      <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

@@ -76,6 +76,9 @@ namespace info {
 		const DataMap & center(void) const {
 			return (this->m_center);
 		}
+		DataMap & center(void)  {
+			return (this->m_center);
+		}
 		bool empty(void) const {
 			return (this->m_center.empty());
 		}
