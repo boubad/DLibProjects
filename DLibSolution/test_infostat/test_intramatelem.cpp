@@ -66,7 +66,6 @@ BOOST_AUTO_TEST_CASE(testMortalMatElemIntra) {
 	//
 	
 } //testMortalMatElem
-#ifdef MYTOTO
 BOOST_AUTO_TEST_CASE(testMortalMatElemIntraIntraMatOrd) {
 	//
 	SourceType *pIndsProvider = this->mortal_source();
@@ -107,8 +106,8 @@ BOOST_AUTO_TEST_CASE(testMortalMatElemIntraIntraMatOrd) {
 	});
 	oMat.arrange(pIndsProvider, pVarProvider);
 } //testMortalMatElemIntraIntraMatOrd
-#endif // MyTOTO
 //
+#ifdef MYTOTO
 BOOST_AUTO_TEST_CASE(testTesMatElemIntraIntraMatOrd) {
 	//
 	SourceType *pIndsProvider = this->test_source();
@@ -119,7 +118,8 @@ BOOST_AUTO_TEST_CASE(testTesMatElemIntraIntraMatOrd) {
 	BOOST_CHECK(pVarProvider != nullptr);
 	//
 	//
-	MatOrdType oMat;
+	Backgrounder oBack;
+	MatOrdType oMat(&oBack);
 	auto conn =
 		oMat.connect(
 			[&](MatElemResultPtr oIndCrit, MatElemResultPtr oVarCrit) {
@@ -141,6 +141,7 @@ BOOST_AUTO_TEST_CASE(testTesMatElemIntraIntraMatOrd) {
 	});
 	oMat.arrange(pIndsProvider, pVarProvider);
 } //testMortalMatElemIntraIntraMatOrd
+#endif
 //
 BOOST_AUTO_TEST_SUITE_END();
 
