@@ -6,12 +6,13 @@
 ///////////////////////////////////
 namespace info {
 	/////////////////////////////
-	template<typename U = unsigned long, typename INTTYPE = int,
-		typename STRINGTYPE = std::string, typename WEIGHTYPE = float>
+	template<typename U = unsigned long, typename INTTYPE = unsigned long,
+		typename STRINGTYPE = std::string, typename WEIGHTYPE = double>
 		class TranformedStoreIndivSource : public StoreIndivSource<U, INTTYPE,
 		STRINGTYPE, WEIGHTYPE> {
 		public:
 			using ints_vector = std::vector<U>;
+			using strings_vector = std::vector<STRINGTYPE>;
 			using IndivType = Indiv<U, STRINGTYPE>;
 			using DataMap = std::map<U, InfoValue>;
 			using IndivTypePtr = std::shared_ptr<IndivType>;
@@ -29,6 +30,7 @@ namespace info {
 			StatSummatorType m_summator;
 			ints_vector m_varids;
 			ints_vector m_indids;
+			strings_vector m_names;
 			//
 		public:
 			TranformedStoreIndivSource(StoreType *pStore, const STRINGTYPE &datasetName,
@@ -46,6 +48,9 @@ namespace info {
 			virtual ~TranformedStoreIndivSource() {
 			}
 		public:
+			const StatSummatorType &get_summator(void) const {
+				return (this->m_summator);
+			}
 			TransformationType transformation(void) {
 				return (this->m_transf);
 			}
@@ -98,6 +103,12 @@ namespace info {
 			size_t get_variables_count(void) const {
 				return (this->m_varids.size());
 			}
+			void get_variables_ids(ints_vector &v) const {
+				v = this->m_varids;
+			}
+			void get_indivs_names(strings_vector &v) const {
+				v = this->m_names;
+			}
 			bool get_variable_id(const size_t pos, U &aIndex) const {
 				bool bRet = false;
 				const ints_vector &vars = this->m_varids;
@@ -109,6 +120,9 @@ namespace info {
 					aIndex = 0;
 				}
 				return	(bRet);
+			}
+			void get_indivs_ids(ints_vector &v) const {
+				v = this->m_indids;
 			}
 			bool get_indiv_id(const size_t pos, U &aIndex) const {
 				bool bRet = false;
@@ -134,13 +148,15 @@ namespace info {
 					return (false);
 				}
 				data.resize(nn);
-				for (size_t i = 0; i < n; ++i) {
+				this->m_names.resize(nRows);
+				for (size_t i = 0; i < nRows; ++i) {
 					const U aIndex = inds[i];
 					IndivTypePtr oInd = this->find(aIndex);
 					IndivType *pIndiv = oInd.get();
 					if (pIndiv != nullptr) {
 						const DataMap &oMap = pIndiv->center();
 						size_t base_pos = (size_t)(i * nCols);
+						(this->m_names)[i] = pIndiv->sigle();
 						for (size_t j = 0; j < nCols; ++j) {
 							const U nVarId = vars[j];
 							auto it = oMap.find(nVarId);

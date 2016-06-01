@@ -8,8 +8,8 @@
 ///////////////////////////////////
 namespace info {
 	/////////////////////////////
-	template<typename U = unsigned long, typename INTTYPE = int,
-		typename STRINGTYPE = std::string, typename WEIGHTYPE = float>
+	template<typename U = unsigned long, typename INTTYPE = unsigned long,
+		typename STRINGTYPE = std::string, typename WEIGHTYPE = double>
 		class StoreIndivSource : public IIndivSource<U, STRINGTYPE>, private boost::noncopyable {
 		public:
 		    using IndexType = U;

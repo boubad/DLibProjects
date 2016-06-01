@@ -147,11 +147,13 @@
   <ItemGroup>
     <ClInclude Include="include\activeobject.h" />
     <ClInclude Include="include\anacompo.h" />
+    <ClInclude Include="include\anacompoindivprovider.h" />
     <ClInclude Include="include\arrangeindiv.h" />
     <ClInclude Include="include\baseitem.h" />
     <ClInclude Include="include\clusterize.h" />
     <ClInclude Include="include\clusterscollection.h" />
     <ClInclude Include="include\crititem.h" />
+    <ClInclude Include="include\datavector_indivprovider.h" />
     <ClInclude Include="include\distancemap.h" />
     <ClInclude Include="include\eigen_impl.h" />
     <ClInclude Include="include\indiv.h" />
