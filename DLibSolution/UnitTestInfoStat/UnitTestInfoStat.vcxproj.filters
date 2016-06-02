@@ -30,6 +30,21 @@
     <ClInclude Include="store_fixture.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="global_defs.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="mytestfixture.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="mytestvariablefixture.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sqlitestore_fixture.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="variablesource_fixture.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">

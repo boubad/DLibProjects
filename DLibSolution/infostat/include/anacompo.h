@@ -176,8 +176,8 @@ namespace info {
 		template<typename X, class ALLOCX, class ALLOCT>
 		static bool compute_anacompo(const size_t nr, const size_t nv,
 			const std::vector<X, ALLOCX> &oSrc, size_t &nFacts,
-			std::vector<T, ALLOCT> &oVars, std::vector<T, ALLOCT> &oInds) {
-			std::vector<T, ALLOCT> oMeans, oStds, oCorr, oFreq, oVals, oVecs;
+			std::vector<T, ALLOCT> &oVars, std::vector<T, ALLOCT> &oInds, std::vector<T, ALLOCT> &oFreq) {
+			std::vector<T, ALLOCT> oMeans, oStds, oCorr, oVals, oVecs;
 			return (AnaCompoType::compute_anacompo(nr, nv, oSrc, oMeans,
 				oStds, oCorr, nFacts, oFreq, oVals, oVecs, oVars, oInds));
 		}

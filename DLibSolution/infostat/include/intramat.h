@@ -378,6 +378,8 @@ namespace info {
 				});
 				t2.join();
 				t1.join();
+				//this->prep_vars(pVarsSource);
+				//this->prep_inds(pIndsSource);
 				this->m_running.store(false);
 				this->m_done.store(true);
 			} // process

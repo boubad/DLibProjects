@@ -18,7 +18,6 @@ namespace info {
 			using StoreType = IStatStore<IDTYPE, INTTYPE, STRINGTYPE, WEIGHTYPE>;
 			using StoreIndivSourceType = StoreIndivSource<IDTYPE, INTTYPE, STRINGTYPE, WEIGHTYPE>;
 			using SourceType = IIndivSource<IDTYPE, STRINGTYPE>;
-			using StoreIndivSourceType = StoreIndivSource<IDTYPE, INTTYPE, STRINGTYPE, WEIGHTYPE>;
 			using StoreFixture = TestStoreFixture<IDTYPE, INTTYPE, STRINGTYPE, WEIGHTYPE>;
 			using SourceFixture = TestSourceFixture<IDTYPE, INTTYPE, STRINGTYPE, WEIGHTYPE>;
 		private:
@@ -36,7 +35,7 @@ namespace info {
 						pf = m_store.get();
 						assert(pf != nullptr);
 					}
-					ps = pf->get_source(bMemory);
+					ps = pf->get_store(bMemory);
 					assert(ps != nullptr);
 				}
 				{

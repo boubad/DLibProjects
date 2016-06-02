@@ -26,7 +26,7 @@ namespace info {
 			} // init
 			virtual ~TestStoreFixture() {
 			}
-			IStoreType *get_source(bool bMemory = true) {
+			IStoreType *get_store(bool bMemory = true) {
 				if (bMemory) {
 					return (this->get_memory_store());
 				}
@@ -51,7 +51,7 @@ namespace info {
 				IStoreType *p = this->m_sqlite.get();
 				if (p == nullptr) {
 					m_sqlite.reset(new SQLiteStoreType());
-					p = m_man.get();
+					p = m_sqlite.get();
 					assert(p != nullptr);
 					assert(p->is_valid());
 					this->init_data(p);

@@ -30,6 +30,7 @@ namespace info {
 			using DatasetType = StatDataset<U, INTTYPE, STRINGTYPE>;
 			using VariableType = StatVariable<U, INTTYPE, STRINGTYPE, WEIGHTYPE>;
 			using variables_vector = std::vector<VariableType>;
+			using ints_doubles_map = std::map<U, double>;
 		public:
 			static DataVectorIndivSourceTuple create(StoreType *pStore,
 				const STRINGTYPE &datasetSigle,const size_t nbFactsMax = 4) {
@@ -47,9 +48,9 @@ namespace info {
 				if (!src.get_data_array(nRows, nCols, oSrcData)) {
 					return (std::make_tuple(sInd, sVar));
 				}
-				std::vector<double> oVars, oInds;
+				std::vector<double> oVars, oInds, oFreq;
 				size_t nFacts = 0;
-				if (!AnaCompo<double>::compute_anacompo(nRows, nCols, oSrcData, nFacts, oVars, oInds)) {
+				if (!AnaCompo<double>::compute_anacompo(nRows, nCols, oSrcData, nFacts, oVars, oInds,oFreq)) {
 					return (std::make_tuple(sInd, sVar));
 				}
 				ints_vector varIds, indIds;
@@ -81,13 +82,17 @@ namespace info {
 				if (nf > nFacts) {
 					nf = nFacts;
 				}
+				ints_doubles_map weights;
 				ints_vector factIds(nf);
 				for (size_t i = 0; i < nf; ++i) {
-					factIds[i] = (U)(i + 1);
+					U aIndex = (U)(i + 1);
+					factIds[i] = aIndex;
+					double f = oFreq[i];
+					weights[aIndex] = f;
 				}
 				//
-				sInd.reset(new DataVectorIndivSourceType(nRows, nf, oInds, indIds, factIds, indsNames));
-				sVar.reset(new DataVectorIndivSourceType(nCols, nf, oVars, varIds, factIds, varsNames));
+				sInd.reset(new DataVectorIndivSourceType(nRows, nf, oInds, indIds, factIds, indsNames,weights));
+				sVar.reset(new DataVectorIndivSourceType(nCols, nf, oVars, varIds, factIds, varsNames,weights));
 				return (std::make_tuple(sInd, sVar));
 			}// create
 	};

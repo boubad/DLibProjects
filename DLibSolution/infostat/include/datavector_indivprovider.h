@@ -19,25 +19,27 @@ namespace info {
 		using doubles_vector = std::vector<double>;
 		using strings_vector = std::vector<STRINGTYPE>;
 		using indivptrs_vector = std::vector<IndivTypePtr>;
+		using ints_doubles_map = std::map<U, double>;
 	private:
 		std::atomic<size_t> m_current;
-		size_t m_nrows;
+		std::atomic<size_t> m_nrows;
 		size_t m_ncols;
 		doubles_vector m_data;
 		ints_vector m_ids;
 		ints_vector m_varids;
 		strings_vector m_names;
 		indivptrs_vector m_inds;
+		ints_doubles_map m_weights;
 		//
 		mutex_type _mutex;
 	public:
 		template <typename T>
 		DataVectorIndivSource(const size_t nRows, const size_t nCols, const std::vector<T> &data,
-			const ints_vector &indIds, const ints_vector &varIds, const strings_vector &names) :m_current(0), m_nrows(nRows), m_ncols(nCols),
-			m_data(nRows * nCols),m_ids(nRows),m_varids(nCols),m_names(nRows),m_inds(nRows){
-			assert(this->m_nrows > 0);
-			assert(this->m_ncols > 0);
-			size_t nn = (size_t)(this->m_nrows * this->m_ncols);
+			const ints_vector &indIds, const ints_vector &varIds, const strings_vector &names, ints_doubles_map &oWeights) :m_current(0), m_nrows(nRows), m_ncols(nCols),
+			m_data(nRows * nCols),m_ids(nRows),m_varids(nCols),m_names(nRows),m_inds(nRows),m_weights(oWeights){
+			assert(nRows > 0);
+			assert(nCols > 0);
+			size_t nn = (size_t)(nRows * nCols);
 			assert(data.size() >= nn);
 			assert(indIds.size() >= nRows);
 			assert(varIds.size() >= nCols);
@@ -56,16 +58,19 @@ namespace info {
 			}
 		}
 	public:
+		virtual void weights(ints_doubles_map &oWeights) {
+			oWeights = this->m_weights;
+		}
 		virtual size_t count(void) {
-			return (this->m_nrows);
+			return (this->m_nrows.load());
 		}
 		virtual IndivTypePtr get(const size_t pos) {
-			std::unique_lock<mutex_type> oLock(this->_mutex);
-			indivptrs_vector &vv = this->m_inds;
-			if (pos >= vv.size()) {
-				return (IndivTypePtr());
+			IndivTypePtr oRet;
+			if (pos >= this->m_nrows.load()) {
+				return (oRet);
 			}
-			IndivTypePtr oRet = vv[pos];
+			indivptrs_vector &vv = this->m_inds;
+			oRet = vv[pos];
 			if (oRet.get() != nullptr) {
 				return (oRet);
 			}
@@ -83,7 +88,10 @@ namespace info {
 			U aIndex = (this->m_ids)[pos];
 			STRINGTYPE sSigle = (this->m_names)[pos];
 			oRet.reset(new IndivType(aIndex, oMap, sSigle));
-			vv[pos] = oRet;
+			{
+				std::unique_lock<mutex_type> oLock(this->_mutex);
+				vv[pos] = oRet;
+			}
 			return (oRet);
 		}
 		virtual void reset(void) {
