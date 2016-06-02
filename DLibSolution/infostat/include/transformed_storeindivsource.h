@@ -44,6 +44,9 @@ namespace info {
 					oSum.add(oInd);
 				} // i
 				oSum.get_keys(this->m_varids);
+				for (size_t i = 0; i < nc; ++i) {
+					(void)this->get(i);
+				}
 			}
 			virtual ~TranformedStoreIndivSource() {
 			}
@@ -64,7 +67,7 @@ namespace info {
 				if (pInd != nullptr) {
 					StatSummatorType &oSum = this->m_summator;
 					DataMap &center = pInd->center();
-					for (auto &key : this->m_ids) {
+					for (auto &key : this->m_varids) {
 						if (center.find(key) == center.end()) {
 							StatInfoType info;
 							if (oSum.get(key, info)) {
@@ -77,7 +80,7 @@ namespace info {
 					IndivTypePtr rr = oSum.transform(oInd, this->m_transf);
 					IndivType *pRet = rr.get();
 					if (pRet != nullptr) {
-						ints_vector &m = this->m_map;
+						ints_vector &m = this->m_indids;
 						const U nId = pRet->id();
 						auto it = std::find(m.begin(), m.end(), nId);
 						if (it == m.end()) {

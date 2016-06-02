@@ -29,6 +29,7 @@ namespace info {
 			int nx = (int)nr;
 			EigenResultType r = EigenSolverType::compute(nx, oSrc);
 			int iFacts = std::get<0>(r);
+			nFacts = (size_t)iFacts;
 			FloatTypePtr vals = std::get<1>(r);
 			FloatTypePtr vecs = std::get<2>(r);
 			int nz = std::get<3>(r);
@@ -40,7 +41,7 @@ namespace info {
 				for (int i = 0; i < iFacts; ++i) {
 					oVals[i] = (Z)pVals[i];
 					for (int j = 0; j < nz; ++j) {
-						int pos = (j * iFact) + i;
+						int pos = (j * iFacts) + i;
 						oVecs[pos] = pVecs[pos];
 					}// j
 				}// i

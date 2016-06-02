@@ -26,36 +26,54 @@ namespace info {
 			using StatInfoType = StatInfo<U, STRINGTYPE>;
 			using TranformedStoreIndivSourceType = TranformedStoreIndivSource<U, INTTYPE, STRINGTYPE, WEIGHTYPE>;
 			using SourceType = IIndivSource<U, STRINGTYPE>;
+			using StoreType = IStatStore<U, INTTYPE, STRINGTYPE, WEIGHTYPE>;
+			using DatasetType = StatDataset<U, INTTYPE, STRINGTYPE>;
+			using VariableType = StatVariable<U, INTTYPE, STRINGTYPE, WEIGHTYPE>;
+			using variables_vector = std::vector<VariableType>;
 		public:
-			template <typename XU, typename XSTRING>
-			DataVectorIndivSourceTuple create(IIndivSource<XU, XSTRING> *pIndProvider,
-				IIndivSource<XU, XSTRING> *pVarProvider, const size_t nbFactsMax = 4) {
-				//
-				assert(pIndProvider != nullptr);
-				assert(pVarProvider != nullptr);
-				//
+			static DataVectorIndivSourceTuple create(StoreType *pStore,
+				const STRINGTYPE &datasetSigle,const size_t nbFactsMax = 4) {
 				DataVectorIndivSourcePtr sInd, sVar;
-				TranformedStoreIndivSourceType src(pIndProvider, datasetSigle);
+				//
+				assert(pStore != nullptr);
+				DatasetType oSet(datasetSigle);
+				if (!pStore->find_dataset(oSet)) {
+					return (std::make_tuple(sInd, sVar));
+				}
+				//
+				TranformedStoreIndivSourceType src(pStore, datasetSigle);
 				size_t nRows = 0, nCols = 0;
 				std::vector<double> oSrcData;
 				if (!src.get_data_array(nRows, nCols, oSrcData)) {
-					return (std::make_tuple<DataVectorIndivSourcePtr>(sInd, sVar));
+					return (std::make_tuple(sInd, sVar));
 				}
 				std::vector<double> oVars, oInds;
 				size_t nFacts = 0;
 				if (!AnaCompo<double>::compute_anacompo(nRows, nCols, oSrcData, nFacts, oVars, oInds)) {
-					return (std::make_tuple<DataVectorIndivSourcePtr>(sInd, sVar));
+					return (std::make_tuple(sInd, sVar));
 				}
 				ints_vector varIds, indIds;
 				src.get_indivs_ids(indIds);
 				src.get_variables_ids(varIds);
 				strings_vector indsNames(nRows), varsNames(nCols);
 				src.get_indivs_names(indsNames);
+				std::map<U, STRINGTYPE> xMap;
+				size_t nv = 0;
+				if (!pStore->find_dataset_variables_count(oSet, nv)) {
+					return (std::make_tuple(sInd, sVar));
+				}
+				variables_vector vvx;
+				if (!pStore->find_dataset_variables(oSet, vvx, 0, nv)) {
+					return (std::make_tuple(sInd, sVar));
+				}
 				for (size_t i = 0; i < nCols; ++i) {
-					IndivTypePtr o = pVarProvider->find(varIds[i]);
-					IndivType *p = o.get();
-					if (p != nullptr) {
-						varsNames[i] = p->sigle();
+					U aIndex = varIds[i];
+					auto it = std::find_if(vvx.begin(), vvx.end(), [aIndex](const VariableType &v)->bool {
+						return (v.id() == aIndex);
+					});
+					if (it != vvx.end()) {
+						auto v = *it;
+						varsNames[i] = v.sigle();
 					}
 				}// i
 				//
@@ -65,12 +83,12 @@ namespace info {
 				}
 				ints_vector factIds(nf);
 				for (size_t i = 0; i < nf; ++i) {
-					facts[i] = (U)(i + 1);
+					factIds[i] = (U)(i + 1);
 				}
 				//
 				sInd.reset(new DataVectorIndivSourceType(nRows, nf, oInds, indIds, factIds, indsNames));
-				sVar.reset(new DataVectorIndivSourceType(nCols, nf, oVars, varIds, factIds, indsNames));
-				return (std::make_tuple<DataVectorIndivSourcePtr>(sInd, sVar));
+				sVar.reset(new DataVectorIndivSourceType(nCols, nf, oVars, varIds, factIds, varsNames));
+				return (std::make_tuple(sInd, sVar));
 			}// create
 	};
 	/////////////////////////////////////

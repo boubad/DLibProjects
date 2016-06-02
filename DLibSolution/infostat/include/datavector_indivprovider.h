@@ -45,7 +45,7 @@ namespace info {
 			doubles_vector &vv = this->m_data;
 			for (size_t i = 0; i < nRows; ++i) {
 				(this->m_ids)[i] = indIds[i];
-				(this->m_names)[i] = nammes[i];
+				(this->m_names)[i] = names[i];
 				for (size_t j = 0; j < nCols; ++j) {
 					size_t pos = (size_t)(i * nCols + j);
 					vv[pos] = (double)data[pos];
@@ -93,7 +93,7 @@ namespace info {
 		virtual IndivTypePtr next(void) {
 			size_t n = this->m_current.load();
 			if (n < this->m_ids.size()) {
-				this->m_current.load((size_t)(n + 1));
+				this->m_current.store((size_t)(n + 1));
 				return (this->get(n));
 			}
 			return (IndivTypePtr());

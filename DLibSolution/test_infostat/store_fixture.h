@@ -26,7 +26,7 @@ namespace info {
 			} // init
 			virtual ~TestStoreFixture() {
 			}
-			IStoreType *get_source(bool bMemory = true) {
+			IStoreType *get_store(bool bMemory = true) {
 				if (bMemory) {
 					return (this->get_memory_store());
 				}
