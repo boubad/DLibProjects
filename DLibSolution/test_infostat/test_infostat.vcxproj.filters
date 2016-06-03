@@ -24,32 +24,8 @@
     <ClInclude Include="targetver.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="global_defs.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="indivsource_fixture.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="infotestdata.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="mytestfixture.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="mytestvariablefixture.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="store_fixture.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="variablesource_fixture.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="infotestdata.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="test_cluterize.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

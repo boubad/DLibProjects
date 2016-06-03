@@ -7,9 +7,9 @@
 #include "stdafx.h"
 #include <boost/test/unit_test.hpp>
 /////////////////////////////
-#include "mytestvariablefixture.h"
+#include <mytestvariablefixture.h>
 ////////////////////////////////////
-#include "global_defs.h"
+#include <global_defs.h>
 ////////////////////
 using namespace info;
 using namespace std;
@@ -25,6 +25,7 @@ BOOST_FIXTURE_TEST_SUITE(VariableProviderTestSuite,MyFixture)
 BOOST_AUTO_TEST_CASE(testMortalProviderVariable) {
 	SourceType *pProvider = this->mortal_source();
 	BOOST_CHECK(pProvider != nullptr);
+	pProvider->reset();
 	size_t nCount = pProvider->count();
 	BOOST_CHECK(nCount > 0);
 	size_t nbVars = 0;
@@ -60,6 +61,7 @@ BOOST_AUTO_TEST_CASE(testMortalProviderVariable) {
 BOOST_AUTO_TEST_CASE(testConsoProviderVariable) {
 	SourceType *pProvider = this->conso_source();
 	BOOST_CHECK(pProvider != nullptr);
+	pProvider->reset();
 	size_t nCount = pProvider->count();
 	BOOST_CHECK(nCount > 0);
 	size_t nbVars = 0;
@@ -95,6 +97,7 @@ BOOST_AUTO_TEST_CASE(testConsoProviderVariable) {
 BOOST_AUTO_TEST_CASE(testTestProviderVariable) {
 	SourceType *pProvider = this->test_source();
 	BOOST_CHECK(pProvider != nullptr);
+	pProvider->reset();
 	size_t nCount = pProvider->count();
 	BOOST_CHECK(nCount > 0);
 	size_t nbVars = 0;

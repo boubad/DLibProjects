@@ -1,11 +1,11 @@
 #include "stdafx.h"
 #include "CppUnitTest.h"
 //////////////////////
-#include "mytestfixture.h"
+#include <mytestfixture.h>
 //////////////////////
 #include <clusterize.h>
 ///////////////////////////
-#include "global_defs.h"
+#include <global_defs.h>
 //////////////////////////
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 using namespace info;

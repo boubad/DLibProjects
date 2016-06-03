@@ -5,9 +5,9 @@
 //#define BOOST_TEST_DYN_LINK
 #include <boost/test/unit_test.hpp>
 /////////////////////////////
-#include "store_fixture.h"
+#include <store_fixture.h>
 ////////////////////////////////////
-#include "global_defs.h"
+#include <global_defs.h>
 ////////////////////
 using namespace info;
 using namespace std;

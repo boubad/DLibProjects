@@ -1,22 +1,22 @@
 /*
- * mytestvariablefixture.h
+ * mytestfixture.h
  *
- *  Created on: 29 mai 2016
+ *  Created on: 28 mai 2016
  *      Author: boubad
  */
 
-#ifndef MYTESTVARIABLEFIXTURE_H_
-#define MYTESTVARIABLEFIXTURE_H_
+#ifndef MYTESTFIXTURE_H_
+#define MYTESTFIXTURE_H_
 ////////////////////////////////
 #include "store_fixture.h"
-#include "variablesource_fixture.h"
+#include "indivsource_fixture.h"
 /////////////////////////////////////
 template<typename IDTYPE = unsigned long, typename INTTYPE = unsigned long,
 		typename STRINGTYPE = std::string, typename WEIGHTYPE = double>
-class MyTestVariableFixture {
+class MyTestFixture {
 public:
 	using StoreFixture = info::TestStoreFixture<IDTYPE, INTTYPE, STRINGTYPE, WEIGHTYPE>;
-	using SourceFixture = info::TestVariableSourceFixture<IDTYPE, INTTYPE, STRINGTYPE, WEIGHTYPE>;
+	using SourceFixture = info::TestSourceFixture<IDTYPE, INTTYPE, STRINGTYPE, WEIGHTYPE>;
 	using StoreType = info::IStatStore<IDTYPE, INTTYPE, STRINGTYPE, WEIGHTYPE>;
 	using IndivType = info::Indiv<IDTYPE, STRINGTYPE>;
 	using DataMap = std::map<IDTYPE, info::InfoValue>;
@@ -26,24 +26,30 @@ private:
 	std::unique_ptr<StoreFixture> m_store;
 	std::unique_ptr<SourceFixture> m_fixture;
 public:
-	MyTestVariableFixture() {
+	MyTestFixture() {
 		StoreFixture *p = new StoreFixture();
 		assert(p != nullptr);
 		m_store.reset(p);
 		StoreType *ps = p->get_memory_store();
 		assert(ps != nullptr);
 		m_fixture.reset(new SourceFixture(ps));
-		//SourceFixture *px = m_fixture.get();
-		//assert(px != nullptr);
+		SourceFixture *px = m_fixture.get();
+		assert(px != nullptr);
 	} // MyTestFixture
-	virtual ~MyTestVariableFixture() {
+	virtual ~MyTestFixture() {
 	}
 public:
+	StoreType *get_store(bool bMemory = true) {
+		StoreFixture *px = m_store.get();
+		assert(px != nullptr);
+		return (px->get_store(bMemory));
+	}
 	SourceType *mortal_source(void) {
 		SourceFixture *px = m_fixture.get();
 		assert(px != nullptr);
 		SourceType *pProvider = px->mortal_source();
 		assert(pProvider != nullptr);
+		pProvider->reset();
 		return (pProvider);
 	}
 	SourceType *conso_source(void) {
@@ -51,6 +57,7 @@ public:
 		assert(px != nullptr);
 		SourceType *pProvider = px->conso_source();
 		assert(pProvider != nullptr);
+		pProvider->reset();
 		return (pProvider);
 	}
 	SourceType *test_source(void) {
@@ -58,13 +65,10 @@ public:
 		assert(px != nullptr);
 		SourceType *pProvider = px->test_source();
 		assert(pProvider != nullptr);
+		pProvider->reset();
 		return (pProvider);
 	}
 };
 // class MyTestFuxture<IDTYPE,INTTYPE,STRINGNAME,WEIGHTYPE>
 ///////////////////////////////
-
-
-
-
-#endif /* MYTESTVARIABLEFIXTURE_H_ */
+#endif /* MYTESTFIXTURE_H_ */

@@ -1,4 +1,3 @@
-#include "stdafx.h"
 #include "infotestdata.h"
 ////////////////////////////////
 #include <cassert>

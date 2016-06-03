@@ -9,9 +9,9 @@
 /////////////////////////
 #include <infostat.h>
 /////////////////////////////
-#include "mytestfixture.h"
+#include <mytestfixture.h>
 ////////////////////////////////////
-#include "global_defs.h"
+#include <global_defs.h>
 ////////////////////
 using namespace info;
 using namespace std;

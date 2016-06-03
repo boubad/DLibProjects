@@ -6,10 +6,10 @@
 #include <clusterize.h>
 #include <matrice.h>
 /////////////////////////////
-#include "mytestfixture.h"
-#include "mytestvariablefixture.h"
+#include <mytestfixture.h>
+#include <mytestvariablefixture.h>
 ////////////////////////////////////
-#include "global_defs.h"
+#include <global_defs.h>
 //////////////////////////
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 using namespace info;
@@ -87,10 +87,10 @@ namespace UnitTestInfoStat
 			DataVectorIndivSourcePtr oVar = std::get<1>(r);
 			DataVectorIndivSourceType *pSourceInd = oInd.get();
 			Assert::IsTrue(pSourceInd != nullptr);
-			pSourceInd->recode();
+			pSourceInd->recode(100);
 			DataVectorIndivSourceType *pSourceVar = oVar.get();
 			Assert::IsTrue(pSourceVar != nullptr);
-			pSourceVar->recode();
+			pSourceVar->recode(100);
 			//
 			MatOrdType oMat;
 			auto conn =
