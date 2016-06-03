@@ -81,7 +81,7 @@ namespace UnitTestInfoStat
 			strings_vector varNames, indsNames;
 			STRINGTYPE name;
 			//
-			InfoTestData::get_mortal_data(name, nRows, nCols, data, indsNames, varNames);
+			InfoTestData::get_mortal_name(name, nRows, nCols);
 			//
 			SourceType *pProvider = m_pMortalSource;
 			Assert::IsNotNull(pProvider);

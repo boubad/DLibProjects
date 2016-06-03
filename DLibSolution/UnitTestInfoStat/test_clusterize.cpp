@@ -1,9 +1,11 @@
 #include "stdafx.h"
 #include "CppUnitTest.h"
 //////////////////////
-#include "indivsource_fixture.h"
+#include "mytestfixture.h"
 //////////////////////
 #include <clusterize.h>
+///////////////////////////
+#include "global_defs.h"
 //////////////////////////
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 using namespace info;
@@ -11,67 +13,66 @@ using namespace std;
 ////////////////////////////////
 namespace UnitTestInfoStat
 {
-	using IDTYPE = unsigned long;
-	using INTTYPE = unsigned long;
-	using STRINGTYPE = std::string;
-	using WEIGHTYPE = double;
-	using DISTANCETYPE = long;
-	//
-	using StoreFixture = TestStoreFixture<IDTYPE, INTTYPE, STRINGTYPE, WEIGHTYPE>;
-	using SourceFixture = TestSourceFixture<IDTYPE, INTTYPE, STRINGTYPE, WEIGHTYPE>;
-	using StoreType = IStatStore<IDTYPE, INTTYPE, STRINGTYPE, WEIGHTYPE>;
-	using IndivType = Indiv<IDTYPE, STRINGTYPE>;
-	using DataMap = std::map<IDTYPE, InfoValue>;
-	using IndivTypePtr = std::shared_ptr<IndivType>;
-	using SourceType = IIndivSource<IDTYPE, STRINGTYPE>;
+	///////////////////////////////////
+	using MyFixture = MyTestFixture<IDTYPE, INTTYPE, STRINGTYPE, WEIGHTYPE>;
+	/////////////////////////////////////
+	using IndivType = typename MyFixture::IndivType;
+	using DataMap = typename MyFixture::DataMap;
+	using IndivTypePtr = typename MyFixture::IndivTypePtr;
+	using SourceType = typename MyFixture::SourceType;
+	using ints_doubles_map = std::map<IDTYPE, double>;
+	using strings_vector = std::vector<STRINGTYPE>;
+	using data_vector = std::vector<DATATYPE>;
+	using DistanceMapType = DistanceMap<IDTYPE, DISTANCETYPE>;
+	using ints_vector = std::vector<IDTYPE>;
 	//
 	using ClusterizeKMeansType = ClusterizeKMeans<IDTYPE, STRINGTYPE, DISTANCETYPE>;
 	//
 	TEST_CLASS(UnitTestClusterizeKMeans)
 	{
-		static unique_ptr<StoreFixture> st_m_store;
+		static unique_ptr<MyFixture> st_m_fixture;
 		//
+		SourceType *m_pMortalSource;
+		SourceType *m_pConsoSource;
+		SourceType *m_pTestSource;
 		size_t m_nbClusters;
 		size_t m_nbIters;
-		unique_ptr<SourceFixture> m_fixture;
 		//
 	public:
 		TEST_CLASS_INITIALIZE(ClassInitialize)
 		{
-			StoreFixture *p = new StoreFixture();
+			st_m_fixture.reset(new MyFixture());
+			MyFixture *p = st_m_fixture.get();
 			Assert::IsNotNull(p);
-			st_m_store.reset(p);
-			StoreType *ps = p->get_memory_store();
-			Assert::IsNotNull(ps);
 		}
 		TEST_CLASS_CLEANUP(ClassCleanup)
 		{
-			st_m_store.reset();
+			st_m_fixture.reset();
 		}
 
 		TEST_METHOD_INITIALIZE(setUp)
 		{
-			StoreFixture *pf = st_m_store.get();
-			Assert::IsNotNull(pf);
-			StoreType *ps = pf->get_memory_store();
-			Assert::IsNotNull(ps);
-			m_fixture.reset(new SourceFixture(ps));
-			SourceFixture *px = m_fixture.get();
-			Assert::IsNotNull(px);
+			MyFixture *p = st_m_fixture.get();
+			Assert::IsNotNull(p);
+			m_pMortalSource = p->mortal_source();
+			m_pConsoSource = p->conso_source();
+			m_pTestSource = p->test_source();
+			//
 			m_nbClusters = 5;
 			m_nbIters = 100;
 		}// setUp
 		TEST_METHOD_CLEANUP(tearDown)
 		{
-			m_fixture.reset();
+			m_pMortalSource = nullptr;
+			m_pConsoSource = nullptr;
+			m_pTestSource = nullptr;
 		}// tearDown
 	public:
 		TEST_METHOD(TestMortalClusterize)
 		{
-			SourceFixture *px = m_fixture.get();
-			Assert::IsNotNull(px);
-			SourceType *pProvider = px->mortal_source();
+			SourceType *pProvider = m_pMortalSource;
 			Assert::IsNotNull(pProvider);
+			pProvider->reset();
 			//
 			ClusterizeKMeansType oMan;
 			size_t nIters = oMan.process(pProvider, m_nbClusters, m_nbIters);
@@ -82,10 +83,9 @@ namespace UnitTestInfoStat
 		}// TestFillMortalData
 		TEST_METHOD(TestConsoClusterize)
 		{
-			SourceFixture *px = m_fixture.get();
-			Assert::IsNotNull(px);
-			SourceType *pProvider = px->conso_source();
+			SourceType *pProvider = m_pConsoSource;
 			Assert::IsNotNull(pProvider);
+			pProvider->reset();
 			//
 			ClusterizeKMeansType oMan;
 			size_t nbClusters = 3;
@@ -97,10 +97,9 @@ namespace UnitTestInfoStat
 		}// TestFillConsolData
 		TEST_METHOD(TestTestClusterize)
 		{
-			SourceFixture *px = m_fixture.get();
-			Assert::IsNotNull(px);
-			SourceType *pProvider = px->test_source();
+			SourceType *pProvider = m_pTestSource;
 			Assert::IsNotNull(pProvider);
+			pProvider->reset();
 			//
 			ClusterizeKMeansType oMan;
 			size_t nIters = oMan.process(pProvider, m_nbClusters, m_nbIters);
@@ -110,5 +109,5 @@ namespace UnitTestInfoStat
 			Logger::WriteMessage(ss.c_str());
 		}// TestFillMortalData
 	};
-	unique_ptr<StoreFixture> UnitTestClusterizeKMeans::st_m_store;
+	unique_ptr<MyFixture> UnitTestClusterizeKMeans::st_m_fixture;
 }

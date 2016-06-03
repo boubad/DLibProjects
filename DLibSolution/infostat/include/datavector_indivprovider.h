@@ -9,6 +9,7 @@ namespace info {
 	template<typename U = unsigned long, typename STRINGTYPE = std::string>
 	class DataVectorIndivSource : public IIndivSource<U, STRINGTYPE>, private boost::noncopyable {
 		using mutex_type = std::mutex;
+		using lock_type = std::lock_guard<mutex_type>;
 	public:
 		using IndexType = U;
 		using IndivType = Indiv<U, STRINGTYPE>;
@@ -58,6 +59,11 @@ namespace info {
 			}
 		}
 	public:
+		void set_weights(const ints_doubles_map &oWeights) {
+			lock_type oLock(this->_mutex);
+			this->m_weights = oWeights;
+		}// weights
+	public:
 		virtual void weights(ints_doubles_map &oWeights) {
 			oWeights = this->m_weights;
 		}
@@ -89,13 +95,13 @@ namespace info {
 			STRINGTYPE sSigle = (this->m_names)[pos];
 			oRet.reset(new IndivType(aIndex, oMap, sSigle));
 			{
-				std::unique_lock<mutex_type> oLock(this->_mutex);
+				lock_type oLock(this->_mutex);
 				vv[pos] = oRet;
 			}
 			return (oRet);
 		}
 		virtual void reset(void) {
-			std::unique_lock<mutex_type> oLock(this->_mutex);
+			lock_type oLock(this->_mutex);
 			m_current = 0;
 		}
 		virtual IndivTypePtr next(void) {

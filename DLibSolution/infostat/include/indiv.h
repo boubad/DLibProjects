@@ -178,7 +178,12 @@ namespace info {
 		virtual void reset(void) = 0;
 		virtual IndivTypePtr next(void) = 0;
 		virtual IndivTypePtr find(const IndexType aIndex) = 0;
-		virtual void weights(ints_doubles_map &oWeights) = 0;
+	public:
+		virtual void weights(ints_doubles_map &oWeights) {
+			oWeights.clear();
+		}
+		virtual void set_weights(const ints_doubles_map & /*oWeights*/) {
+		}// weights
 	public:
 		virtual ~IIndivSource() {
 		}
