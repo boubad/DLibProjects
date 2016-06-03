@@ -59,11 +59,33 @@ namespace info {
 			}
 		}
 	public:
-		void set_weights(const ints_doubles_map &oWeights) {
+		bool recode(double vMax = 1000.0, double vMin = 0.0) {
+			if (vMax <= vMin) {
+				return (false);
+			}
+			doubles_vector &vv = this->m_data;
+			double v1 = 0, v2 = 0;
+			auto it = std::min_element(vv.begin(), vv.end());
+			if (it != vv.end()) {
+				v1 = *it;
+			}
+			auto jt = std::max_element(vv.begin(), vv.end());
+			if (jt != vv.end()) {
+				v2 = *jt;
+			}
+			if (v1 >= v2) {
+				return (false);
+			}
+			double delta = (vMax - vMin) / (v2 - v1);
+			std::transform(vv.begin(), vv.end(), vv.begin(), [vMin, v1, delta](const double &v)->double {
+				return ((v - v1) * delta + vMin);
+			});
+			return (true);
+		}// recode
+		virtual void set_weights(const ints_doubles_map &oWeights) {
 			lock_type oLock(this->_mutex);
 			this->m_weights = oWeights;
 		}// weights
-	public:
 		virtual void weights(ints_doubles_map &oWeights) {
 			oWeights = this->m_weights;
 		}

@@ -28,8 +28,10 @@ namespace info {
 			using ints_doubles_map = std::map<U, double>;
 			using StatSummatorType = StatSummator<U, STRINGTYPE>;
 			using StatInfoType = StatInfo<U, STRINGTYPE>;
+			using SourceBaseType = StoreBaseProvider<U, INTTYPE, STRINGTYPE, WEIGHTYPE>;
 		private:
 			StoreType *m_pstore;
+			STRINGTYPE m_sigle;
 			std::atomic<size_t> m_ncount;
 			std::atomic<size_t> m_current;
 			ints_vector m_ids;
@@ -69,23 +71,16 @@ namespace info {
 			}
 		public:
 			StoreBaseProvider(StoreType *pStore, const STRINGTYPE &datasetName) :
-				m_pstore(pStore), m_ncount(0), m_current(0) {
+				m_pstore(pStore), m_sigle(datasetName), m_ncount(0), m_current(0) {
 				assert(this->m_pstore != nullptr);
 				assert(this->m_pstore->is_valid());
-				DatasetType &oSet = this->m_oset;
-				oSet.sigle(datasetName);
-				pStore->find_dataset(oSet);
-				assert(oSet.id() != 0);
-				size_t nc = impl_get_count(pStore,oSet);
-				this->impl_get_ids(pStore,oSet,this->m_ids);
-				if (nc > 0) {
-					m_indivs.resize(nc);
-				}
-				this->m_ncount.store(nc);
 			}
 			virtual ~StoreBaseProvider() {
 			}
 		public:
+			StatSummatorType & get_summator(void) {
+				return (this->m_summator);
+			}
 			virtual void set_weights(const ints_doubles_map &oWeights) {
 				lock_type oLock(this->_mutex);
 				this->m_weights = oWeights;
@@ -142,19 +137,19 @@ namespace info {
 					StoreType *pStore = this->m_pstore;
 					this->m_current.store(0);
 					DatasetType &oSet = this->m_oset;
+					oSet.sigle(this->m_sigle);
+					pStore->find_dataset(oSet);
 					this->m_indivs.clear();
 					this->m_summator.clear();
-					size_t nc = impl_get_count(pStore,oSet);
-					this->impl_get_ids(pStore, oSet, this->m_ids);
-					if (nc > 0) {
-						m_indivs.resize(nc);
-					}
+					size_t nc = impl_get_count(pStore, oSet);
+					impl_get_ids(pStore, oSet, this->m_ids);
+					m_indivs.resize(nc);
 					this->m_ncount.store(nc);
 					this->m_weights.clear();
 				}// sync
 				size_t nc = this->m_ncount.load();
 				for (size_t i = 0; i < nc; ++i) {
-					(void)this->get(i);
+					(void)SourceBaseType::get(i);
 				}
 				update_weights();
 			} // reset

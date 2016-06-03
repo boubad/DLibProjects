@@ -62,5 +62,11 @@
     <ClCompile Include="test_clusterize.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="test_anacompo.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="test_matord.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

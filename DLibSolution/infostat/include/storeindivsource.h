@@ -26,6 +26,7 @@ namespace info {
 			using StatSummatorType = StatSummator<U, STRINGTYPE>;
 			using StatInfoType = StatInfo<U, STRINGTYPE>;
 			using SourceBaseType = StoreBaseProvider<U, INTTYPE, STRINGTYPE, WEIGHTYPE>;
+			using StoreIndivSourceType = StoreIndivSource<U, INTTYPE, STRINGTYPE, WEIGHTYPE>;
 		public:
 			StoreIndivSource(StoreType *pStore, const STRINGTYPE &datasetName) : SourceBaseType(pStore, datasetName) {
 			}

@@ -10,6 +10,8 @@ namespace info {
 		typename STRINGTYPE = std::string, typename WEIGHTYPE = double>
 		class TranformedStoreIndivSource : public StoreIndivSource<U, INTTYPE,
 		STRINGTYPE, WEIGHTYPE> {
+		using mutex_type = std::mutex;
+		using lock_type = std::lock_guard<mutex_type>;
 		public:
 			using ints_vector = std::vector<U>;
 			using strings_vector = std::vector<STRINGTYPE>;
@@ -27,33 +29,22 @@ namespace info {
 			using StatInfoType = StatInfo<U, STRINGTYPE>;
 		protected:
 			TransformationType m_transf;
-			StatSummatorType m_summator;
 			ints_vector m_varids;
 			ints_vector m_indids;
 			strings_vector m_names;
+			indivptrs_vector m_cache;
+			//
+		private:
+			mutex_type _xmutex;
 			//
 		public:
 			TranformedStoreIndivSource(StoreType *pStore, const STRINGTYPE &datasetName,
 				const TransformationType mode = TransformationType::noTransf) :
 				StoreIndivSourceType(pStore, datasetName), m_transf(mode) {
-				StatSummatorType &oSum = this->m_summator;
-				oSum.clear();
-				const size_t nc = this->count();
-				for (size_t i = 0; i < nc; ++i) {
-					IndivTypePtr oInd = StoreIndivSourceType::get(i);
-					oSum.add(oInd);
-				} // i
-				oSum.get_keys(this->m_varids);
-				for (size_t i = 0; i < nc; ++i) {
-					(void)this->get(i);
-				}
 			}
 			virtual ~TranformedStoreIndivSource() {
 			}
 		public:
-			const StatSummatorType &get_summator(void) const {
-				return (this->m_summator);
-			}
 			TransformationType transformation(void) {
 				return (this->m_transf);
 			}
@@ -62,46 +53,71 @@ namespace info {
 			}
 		public:
 			virtual IndivTypePtr get(const size_t pos) {
-				IndivTypePtr oInd = StoreIndivSourceType::get(pos);
+				IndivTypePtr oRet;
+				indivptrs_vector &vv = this->m_cache;
+				if (pos >= vv.size()) {
+					return (oRet);
+				}
+				oRet = vv[pos];
+				if (oRet.get() != nullptr) {
+					return (oRet);
+				}
+				IndivTypePtr o = StoreIndivSourceType::get(pos);
+				IndivType *p0 = o.get();
+				if (p0 == nullptr) {
+					return (oRet);
+				}
+				IndivTypePtr oInd = std::make_shared<IndivType>(*p0);
 				IndivType *pInd = oInd.get();
-				if (pInd != nullptr) {
-					StatSummatorType &oSum = this->m_summator;
-					DataMap &center = pInd->center();
-					for (auto &key : this->m_varids) {
-						if (center.find(key) == center.end()) {
-							StatInfoType info;
-							if (oSum.get(key, info)) {
-								double vx = info.get_mean();
-								InfoValue v(vx);
-								center[key] = v;
-							}//
-						}
-					}// key
-					IndivTypePtr rr = oSum.transform(oInd, this->m_transf);
-					IndivType *pRet = rr.get();
-					if (pRet != nullptr) {
-						ints_vector &m = this->m_indids;
-						const U nId = pRet->id();
-						auto it = std::find(m.begin(), m.end(), nId);
-						if (it == m.end()) {
-							m.push_back(nId);
-						}
+				if (pInd == nullptr) {
+					return (IndivTypePtr());
+				}
+				StatSummatorType &oSum = this->get_summator();
+				DataMap &center = pInd->center();
+				ints_vector &vx = this->m_varids;
+				for (auto &key : vx) {
+					if (center.find(key) == center.end()) {
+						StatInfoType info;
+						if (oSum.get(key, info)) {
+							double vx = info.get_mean();
+							InfoValue v(vx);
+							center[key] = v;
+						}//
 					}
-					return (rr);
+				}// key
+				IndivTypePtr rr;
+				if (this->m_transf == TransformationType::noTransf) {
+					rr = oInd;
 				}
 				else {
-					return (oInd);
+					rr = oSum.transform(oInd, this->m_transf);
 				}
-			}
+				{
+					lock_type oLock(this->_xmutex);
+					this->m_indids.push_back(pInd->id());
+					vv[pos] = rr;
+				}// sync
+				return (rr);
+			}// get
 			virtual void reset(void) {
 				StoreIndivSourceType::reset();
-				StatSummatorType &oSum = this->m_summator;
-				oSum.clear();
-				const size_t nc = this->count();
-				for (size_t i = 0; i < nc; ++i) {
-					IndivTypePtr oInd = StoreIndivSourceType::get(i);
-					oSum.add(oInd);
-				} // i
+				{
+					size_t nc = count();
+					lock_type oLock(this->_xmutex);
+					this->m_cache.resize(nc);
+					StatSummatorType &oSum = this->get_summator();
+					ints_vector &oIds = this->m_varids;
+					oIds.clear();
+					ints_vector temp;
+					oSum.get_keys(temp);
+					for (auto &aIndex : temp) {
+						StatInfoType info;
+						oSum.get(aIndex, info);
+						if ((info.get_count() > 1) && (info.get_variance() > 0)) {
+							oIds.push_back(aIndex);
+						}
+					}// aIndex
+				}// sync
 			} // reset
 			size_t get_variables_count(void) const {
 				return (this->m_varids.size());
@@ -141,6 +157,11 @@ namespace info {
 			}
 			template <typename T>
 			bool get_data_array(size_t &nRows, size_t &nCols, std::vector<T> &data) {
+				this->reset();
+				size_t nx = this->count();
+				for (size_t i = 0; i < nx; ++i) {
+					(void)get(i);
+				}
 				ints_vector &inds = this->m_indids;
 				ints_vector &vars = this->m_varids;
 				nRows = inds.size();
