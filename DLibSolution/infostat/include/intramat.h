@@ -5,7 +5,8 @@
 #include "matresult.h"
 #include "indiv.h"
 #include "distancemap.h"
-#include "sharedqueue.h"
+#include "indivmap.h"
+#include "activeobject.h"
 /////////////////////////////////
 #include <boost/signals2/signal.hpp>
 //////////////////////////////////
@@ -13,7 +14,7 @@ namespace info {
 	///////////////////////////////////////////
 	template<typename IDTYPE = unsigned long, typename DISTANCETYPE = long,
 		typename STRINGTYPE = std::string>
-		class IntraMatElem {
+		class IntraMatElem : boost::noncopyable {
 		public:
 			using sizets_pair = std::pair<size_t, size_t>;
 			using pairs_list = std::list<sizets_pair>;
@@ -30,7 +31,7 @@ namespace info {
 			using SignalType = typename boost::signals2::signal<void(IntraMatElemResultPtr)>;
 			using SlotType = typename SignalType::slot_type;
 			using ConnectionType = boost::signals2::connection;
-			using IntraMatElemType = IntraMatElem<IDTYPE, DISTANCETYPE, STRINGTYPE>;
+			using IndivMapType = IndivMap<IDTYPE, STRINGTYPE, DISTANCETYPE>;
 		private:
 			bool m_hasconnect;
 			DISTANCETYPE m_crit;
@@ -39,7 +40,7 @@ namespace info {
 			SignalType m_signal;
 			std::unique_ptr<DistanceMapType> m_odist;
 		public:
-			IntraMatElem() : m_hasconnect(false), m_crit(0), m_pdist(nullptr) {
+			IntraMatElem() :m_hasconnect(false), m_crit(0), m_pdist(nullptr) {
 			}
 			virtual ~IntraMatElem() {
 			}
@@ -72,32 +73,53 @@ namespace info {
 			void indexes(sizets_vector &oIndex) {
 				oIndex = this->m_indexes;
 			}
-			void arrange(SourceType *pProvider) {
+			void arrange(const SlotType *pSubscriber = nullptr) {
+				assert(this->m_pdist != nullptr);
+				ConnectionType conn;
+				if (pSubscriber != nullptr) {
+					conn = this->connect(*pSubscriber);
+				}
+				DISTANCETYPE oCrit(this->m_crit);
+				do {
+					this->notify();
+					if (!this->one_iteration(oCrit)) {
+						break;
+					}
+				} while (true);
+			}// arrange
+			void arrange(SourceType *pProvider,
+				const SlotType *pSubscriber = nullptr) {
+				assert(pProvider != nullptr);
 				this->initialize(pProvider);
-				DISTANCETYPE oCrit(this->m_crit);
-				do {
-					if (!this->one_iteration(oCrit)) {
-						break;
-					}
-					this->notify();
-				} while (true);
-			} // arrange
-			void arrange(DistanceMapType *pDist) {
+				this->arrange(pSubscriber);
+			}// arrange
+			void arrange(IndivMapType *pMap,
+				const SlotType *pSubscriber = nullptr) {
+				assert(pMap != nullptr);
+				this->initialize(pMap);
+				this->arrange(pSubscriber);
+			}// arrange
+			void arrange(DistanceMapType *pDist,
+				const SlotType *pSubscriber = nullptr) {
+				assert(pDist != nullptr);
 				this->initialize(pDist);
-				DISTANCETYPE oCrit(this->m_crit);
-				do {
-					if (!this->one_iteration(oCrit)) {
-						break;
-					}
-					this->notify();
-				} while (true);
-			} // arrange
-			static IntraMatElemResultPtr perform_arrange(SourceType *pProvider) {
+				this->arrange(pSubscriber);
+			}// arrange
+			static IntraMatElemResultPtr perform_arrange(SourceType *pSource, const SlotType *pSubscriber = nullptr) {
 				IntraMatElemType oMat;
-				oMat.arrange(pProvider);
-				IntraMatElemResultPtr oRet = oMat.getResult();
-				return (oRet);
-			} //perform_arrange
+				oMat.arrange(pSource, pSubscriber);
+				return (oMat.getResult());
+			}// perform_arrange
+			static IntraMatElemResultPtr perform_arrange(DistanceMapType *pSource, const SlotType *pSubscriber = nullptr) {
+				IntraMatElemType oMat;
+				oMat.arrange(pSource, pSubscriber);
+				return (oMat.getResult());
+			}// perform_arrange
+			static IntraMatElemResultPtr perform_arrange(IndivMapType *pSource, const SlotType *pSubscriber = nullptr) {
+				IntraMatElemType oMat;
+				oMat.arrange(pSource, pSubscriber);
+				return (oMat.getResult());
+			}// perform_arrange
 		protected:
 			void notify(void) {
 				if (this->m_hasconnect) {
@@ -154,12 +176,16 @@ namespace info {
 				return (true);
 			} //one_iteration
 			bool find_best_try(pairs_list &qq, DISTANCETYPE &oCrit) {
-				const sizets_vector &indexes = this->m_indexes;
+				const sizets_vector indexes(this->m_indexes);
 				const size_t n = this->m_pdist->size();
+
 				DISTANCETYPE oldCrit = oCrit;
 				for (size_t i = 0; i < n; ++i) {
 					for (size_t j = 0; j < i; ++j) {
 						sizets_vector temp(indexes);
+						if (temp.size() < n) {
+							return (false);
+						}
 						const size_t tt = temp[i];
 						temp[i] = temp[j];
 						temp[j] = tt;
@@ -233,6 +259,11 @@ namespace info {
 					indexes[i] = i;
 				} // i
 				this->m_crit = this->criteria(indexes);
+			} // initialize
+			void initialize(IndivMapType *pMat) {
+				assert(pMap != nullptr);
+				DistanceMapType *pDist = pMap->distance_map();
+				this->initialize(pDist);
 			} // initialize
 			void initialize(SourceType *pProvider) {
 				assert(pProvider != nullptr);
@@ -335,7 +366,7 @@ namespace info {
 				return (true);
 			} // prep_inds
 		public:
-			IntraMatOrd() :m_done(false),m_running(false),m_hasconnect(false) {
+			IntraMatOrd() :m_done(false), m_running(false), m_hasconnect(false) {
 			} // MatOrd
 			virtual ~IntraMatOrd() {
 			}
@@ -357,7 +388,7 @@ namespace info {
 				std::unique_lock<mutex_type> oLock(this->_mutex);
 				oRes = this->m_indsResults;
 			}
-			IntraMatOrdResultTypePtr getResult(void)  {
+			IntraMatOrdResultTypePtr getResult(void) {
 				std::unique_lock<mutex_type> oLock(this->_mutex);
 				IntraMatOrdResultTypePtr oRes(new IntraMatOrdResultType(this->m_indsResults, this->m_varsResults));
 				return (oRes);

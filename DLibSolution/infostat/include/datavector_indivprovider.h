@@ -36,7 +36,7 @@ namespace info {
 	public:
 		template <typename T>
 		DataVectorIndivSource(const size_t nRows, const size_t nCols, const std::vector<T> &data,
-			const ints_vector &indIds, const ints_vector &varIds, const strings_vector &names, ints_doubles_map &oWeights) :m_current(0), m_nrows(nRows), m_ncols(nCols),
+			const ints_vector &indIds, const ints_vector &varIds, const strings_vector &names, const ints_doubles_map &oWeights) :m_current(0), m_nrows(nRows), m_ncols(nCols),
 			m_data(nRows * nCols),m_ids(nRows),m_varids(nCols),m_names(nRows),m_inds(nRows),m_weights(oWeights){
 			assert(nRows > 0);
 			assert(nCols > 0);

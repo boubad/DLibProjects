@@ -6,6 +6,7 @@
 #include "distancemap.h"
 #include "interruptable_object.h"
 #include "crititem.h"
+#include "indivmap.h"
 /////////////////////////////////
 #include <boost/signals2/signal.hpp>
 //////////////////////////////////
@@ -62,6 +63,7 @@ public:
 	using SignalType = typename boost::signals2::signal<void (MatElemResultPtr)>;
 	using SlotType = typename SignalType::slot_type;
 	using ConnectionType = boost::signals2::connection;
+	using IndivMapType = IndivMap<IDTYPE, STRINGTYPE, DISTANCETYPE>;
 private:
 	DISTANCETYPE m_crit;
 	DistanceMapType *m_pdist;
@@ -72,6 +74,28 @@ private:
 public:
 	MatElem(std::atomic_bool *pCancel = nullptr) :
 			InterruptObject(pCancel), m_crit(0), m_pdist(nullptr) {
+	}
+	MatElem(IndivMapType pIndivMap, std::atomic_bool *pCancel = nullptr) :InterruptObject(pCancel), m_crit(0), m_pdist(pIndivMap->distance_map()) {
+		assert(this->m_pdist != nullptr);
+		pIndivMap->ids(this->m_resids);
+		const size_t n = pIndivMap->size();
+		assert(n > 0);
+		sizets_vector &indexes = this->m_indexes;
+		indexes.resize(n);
+		CritItemType::generate(n, this->m_args);
+		if (pindexes != nullptr) {
+			assert(pindexes->size() >= n);
+			sizets_vector &oids = *pindexes;
+			for (size_t i = 0; i < n; ++i) {
+				indexes[i] = oids[i];
+			} // i
+		}
+		else {
+			for (size_t i = 0; i < n; ++i) {
+				indexes[i] = i;
+			}
+		}
+		this->m_crit = this->criteria(indexes)
 	}
 	MatElem(DistanceMapType *pMap, ints_vector *pids, sizets_vector *pindexes =
 			nullptr, std::atomic_bool *pCancel = nullptr) :

@@ -31,11 +31,14 @@ namespace UnitTestInfoStat
 	using ints_vector = std::vector<IDTYPE>;
 	//
 	////////////////////////////////
-	using CreatorType = AnaCompoIndivSourceCreator<IDTYPE, INTTYPE, STRINGTYPE, WEIGHTYPE>;
+	using CreatorType = AnaCompoIndivSourceCreator<IDTYPE, INTTYPE, STRINGTYPE, WEIGHTYPE,DISTANCETYPE>;
 	using DataVectorIndivSourceType = DataVectorIndivSource<IDTYPE, STRINGTYPE>;
 	using DataVectorIndivSourcePtr = std::shared_ptr<DataVectorIndivSourceType>;
 	using StoreType = IStatStore<IDTYPE, INTTYPE, STRINGTYPE, WEIGHTYPE>;
 	using DataVectorIndivSourceTuple = std::tuple<DataVectorIndivSourcePtr, DataVectorIndivSourcePtr>;
+	using IndivMapType = IndivMap<IDTYPE, STRINGTYPE, DISTANCETYPE>;
+	using IndivMapTypePtr = std::shared_ptr<IndivMapType>;
+	using IndivMapTuple = std::tuple<IndivMapTypePtr, IndivMapTypePtr>;
 	///////////////////////////////////
 	using ClusterizeKMeansType = ClusterizeKMeans<IDTYPE, STRINGTYPE, DISTANCETYPE>;
 	/////////////////////////////////
@@ -69,6 +72,22 @@ namespace UnitTestInfoStat
 			m_pStore = nullptr;
 		}// tearDown
 	public:
+		TEST_METHOD(TestClusterizeAnaIndivMap)
+		{
+			//
+			STRINGTYPE sigle;
+			InfoTestData::get_mortal_name(sigle);
+			//
+			StoreType *pStore = this->m_pStore;
+			IndivMapTuple r = CreatorType::create_indivmaps(pStore, sigle);
+			IndivMapTypePtr oInd = std::get<0>(r);
+			IndivMapType *pIndMap = oInd.get();
+			Assert::IsNotNull(pIndMap);
+			IndivMapTypePtr oVar = std::get<1>(r);
+			IndivMapType *pVarMap = oVar.get();
+			Assert::IsNotNull(pVarMap);
+			//
+		}//TestClusterizeAnaIndivMap
 		TEST_METHOD(TestClusterizeAnaCompo)
 		{
 			//

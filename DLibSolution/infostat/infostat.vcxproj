@@ -158,6 +158,7 @@
     <ClInclude Include="include\eigen_impl.h" />
     <ClInclude Include="include\indiv.h" />
     <ClInclude Include="include\indivcluster.h" />
+    <ClInclude Include="include\indivmap.h" />
     <ClInclude Include="include\indivsummator.h" />
     <ClInclude Include="include\infostat.h" />
     <ClInclude Include="include\infovalue.h" />

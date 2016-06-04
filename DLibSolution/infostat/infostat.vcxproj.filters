@@ -132,6 +132,9 @@
     <ClInclude Include="include\storebaseprovider.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\indivmap.h">
+      <Filter>include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\infovalue.cpp">
