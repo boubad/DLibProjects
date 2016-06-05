@@ -102,11 +102,7 @@ namespace UnitTestInfoStat
 		if (p != nullptr) {
 			os << "\t";
 			DISTANCETYPE crit = p->first;
-			const sizets_vector indexes = p->second;
-			os << "Crit: " << crit << "\t";
-			STRINGTYPE sx;
-			write_vector(indexes, sx);
-			os << sx;
+			os << "Crit: " << crit;
 		}// p
 		STRINGTYPE ss = os.str();
 		{
@@ -208,6 +204,11 @@ namespace UnitTestInfoStat
 		}// TestAnaCompoArrange
 		TEST_METHOD(TestIntraMatElemDistanceMap)
 		{
+			std::thread t0([&]() {
+				DistanceMapType oMap(m_pTestProvider);
+				IntraMatElemType oMat;
+				oMat.arrange(&oMap, &callbackTest);
+			});
 			std::thread t1([&]() {
 				DistanceMapType oMap(m_pMortalProvider);
 				IntraMatElemType oMat;
@@ -220,9 +221,15 @@ namespace UnitTestInfoStat
 			});
 			t1.join();
 			t2.join();
+			t0.join();
 		}// TestIntraMatElemDistanceMap
 		TEST_METHOD(TestIntraMatElemIndivMap)
 		{
+			std::thread t0([&]() {
+				IndivMapType oMap(m_pTestProvider);
+				IntraMatElemType oMat;
+				oMat.arrange(&oMap, &callbackTest);
+			});
 			std::thread t1([&]() {
 				IndivMapType oMap(m_pMortalProvider);
 				IntraMatElemType oMat;
@@ -235,9 +242,14 @@ namespace UnitTestInfoStat
 			});
 			t1.join();
 			t2.join();
+			t0.join();
 		}// TestIntraMap
 		TEST_METHOD(TestIntraMatElemProvider)
 		{
+			std::thread t0([&]() {
+				IntraMatElemType oMat;
+				oMat.arrange(m_pTestProvider, &callbackTest);
+			});
 			std::thread t1([&]() {
 				IntraMatElemType oMat;
 				oMat.arrange(m_pMortalProvider, &callbackMortal);
@@ -248,6 +260,7 @@ namespace UnitTestInfoStat
 			});
 			t1.join();
 			t2.join();
+			t0.join();
 		}// TestIntraMap
 	};
 	unique_ptr<MyFixture> UnitTestIntraMatElem::st_m_fixture;
