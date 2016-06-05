@@ -48,7 +48,7 @@ namespace info {
 			IntraMatElemResultPtr getResult(StageType stage = StageType::current) const {
 				const DistanceMapType *pDist = this->m_pdist;
 				assert(pDist != nullptr);
-				IntraMatElemResultPtr oRet(new IntraMatElemResultType(this->m_crit, this->m_indexes, this->m_disp,stage));
+				IntraMatElemResultPtr oRet(new IntraMatElemResultType(this->m_crit, this->m_indexes, this->m_disp, stage));
 				IntraMatElemResultType *p = oRet.get();
 				assert(p != nullptr);
 				p->sigle = this->m_sigle;
@@ -115,7 +115,81 @@ namespace info {
 					this->m_pqueue->put(res);
 				}
 			}//notify
+#if defined(_MSC_VER)
 			bool one_iteration(DISTANCETYPE &oCrit) {
+				using task_type = concurrency::task<IntraMatElemResultPtr>;
+				using tasks_vector = std::vector<task_type>;
+				using results_vector = std::vector<IntraMatElemResultPtr>;
+				//
+				pairs_list q;
+				bool bRet = this->find_best_try(q, oCrit);
+				if (!bRet) {
+					return (false);
+				}
+				const size_t nx = q.size();
+				if (nx < 1) {
+					return (false);
+				}
+				size_t i1 = 0, i2 = 0;
+				sizets_pair p = q.front();
+				q.pop_front();
+				i1 = p.first;
+				i2 = p.second;
+				if (i1 == i2) {
+					return (false);
+				}
+				if (oCrit >= this->m_crit) {
+					return (false);
+				}
+				this->permute_items(i1, i2);
+				this->m_crit = oCrit;
+				if (q.empty()) {
+					return (true);
+				}
+				sizets_vector oldIndexes(this->m_indexes);
+				DISTANCETYPE oldCrit(oCrit);
+				tasks_vector tasks;
+				DistanceMapType *pDist = this->m_pdist;
+				while(!q.empty()) {
+					sizets_pair pp = q.front();
+					size_t j1 = pp.first;
+					size_t j2 = pp.second;
+					q.pop_front();
+					if (j1 != j2) {
+						task_type t([j1, j2, pDist,oldIndexes]()->IntraMatElemResultPtr {
+							IntraMatElemType xMat;
+							xMat.m_pdist = pDist;
+							xMat.m_indexes = oldIndexes;
+							xMat.permute_items(j1, j2);
+							xMat.m_crit = xMat.criteria(xMat.m_indexes);
+							DISTANCETYPE cx(xMat.m_crit);
+							do {
+								if (!xMat.one_iteration(cx)) {
+									break;
+								}
+							} while (true);
+							return (xMat.getResult());
+						});
+						tasks.push_back(t);
+					}
+				}// q
+				auto joinTask = concurrency::when_all(tasks.begin(), tasks.end()).then([this](results_vector vv) {
+					for (auto &oRes : vv) {
+						IntraMatElemResultType *p = oRes.get();
+						if (p != nullptr) {
+							if (p->first < this->m_crit) {
+								this->m_crit = p->first;
+								this->m_indexes = p->second;
+							}
+						}// p
+					}// oRes
+				});
+				joinTask.wait();
+				return (true);
+			} //one_iteration
+#else
+			bool one_iteration(DISTANCETYPE &oCrit) {
+				//
 				pairs_list q;
 				bool bRet = this->find_best_try(q, oCrit);
 				if (!bRet) {
@@ -163,6 +237,8 @@ namespace info {
 				} // not empty
 				return (true);
 			} //one_iteration
+#endif // _MSC_VER
+
 			bool find_best_try(pairs_list &qq, DISTANCETYPE &oCrit) {
 				const sizets_vector indexes(this->m_indexes);
 				const size_t n = this->m_pdist->size();
@@ -328,10 +404,10 @@ namespace info {
 					pq = pRes;
 				}
 #if defined(_MSC_VER)
-				concurrency::parallel_invoke([&]() {
+				concurrency::parallel_invoke([this,pIndsSource,pq]() {
 					(void)this->prep_inds(pIndsSource, pq);
-				}, 
-					[&]() {
+				},
+					[this,pVarsSource,pq]() {
 					(void)this->prep_vars(pVarsSource, pq);
 				});
 #else
@@ -343,11 +419,11 @@ namespace info {
 				});
 				bool bRet = fInd.get() && fVar.get();
 #endif // _MSC_VER
-				
+
 			} // arrange
 	};
 	////////////////////////////////////
-	
+
 }// namespace infO
  ///////////////////////////////////
 #endif /* INTRAMAT_H_ */

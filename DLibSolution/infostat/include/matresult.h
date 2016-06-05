@@ -66,11 +66,11 @@ namespace info {
 		std::unique_ptr<std::thread> runnable;
 	public:
 		MatElemResultBackgounder():done(false) {
-			this->runnable.reset(new std::thread([&]() {
+			this->runnable.reset(new std::thread([this]() {
 				while (!this->done.load()) {
 					IntraMatElemResultPtr o = this->dispatchQueue.take();
 					if (o.get() == nullptr) {
-						done.store(true);
+						this->done.store(true);
 						break;
 					}
 					this->process_result(o);

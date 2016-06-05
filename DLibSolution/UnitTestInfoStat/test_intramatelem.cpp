@@ -160,27 +160,24 @@ namespace UnitTestInfoStat
 		{
 			MatElemLogger oQueue;
 			//
-			std::thread t0([&]() {
+			concurrency::parallel_invoke(
+				[&]() {
 				IntraMatElemType oMat(DispositionType::indiv, &oQueue);
 				STRINGTYPE sId("TEST ");
 				oMat.sigle(sId);
 				oMat.arrange(m_pTestProvider);
-			});
-			std::thread t1([&]() {
+			}, [&]() {
 				IntraMatElemType oMat(DispositionType::indiv, &oQueue);
 				STRINGTYPE sId("MORTAL ");
 				oMat.sigle(sId);
 				oMat.arrange(m_pMortalProvider);
-			});
-			std::thread t2([&]() {
+			}, [&]() {
 				IntraMatElemType oMat(DispositionType::indiv, &oQueue);
 				STRINGTYPE sId("CONSO ");
 				oMat.sigle(sId);
 				oMat.arrange(m_pConsoProvider);
-			});
-			t1.join();
-			t2.join();
-			t0.join();
+			}
+			);
 		}// TestIntraMatElem
 	};
 	unique_ptr<MyFixture> UnitTestIntraMatElem::st_m_fixture;
