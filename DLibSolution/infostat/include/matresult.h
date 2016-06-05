@@ -8,6 +8,7 @@
 namespace info {
 	///////////////////////////////////////////
 	enum class DispositionType {invalid,indiv,variable};
+	enum class StageType {started, finished, aborted, current};
 	///////////////////////////////////////////
 	template<typename IDTYPE = unsigned long, typename DISTANCETYPE = long, typename STRINGTYPE = std::string>
 	class IntraMatElemResult {
@@ -17,21 +18,24 @@ namespace info {
 		using IntraMatElemResultType = IntraMatElemResult<IDTYPE,DISTANCETYPE,STRINGTYPE>;
 		using IntraMatElemResultPtr = std::shared_ptr<IntraMatElemResultType>;
 		//
+		StageType stage;
 		DispositionType disposition;
 		DISTANCETYPE first;
 		sizets_vector second;
 		STRINGTYPE sigle;
 	public:
-		IntraMatElemResult() : disposition(DispositionType::invalid),first(0) {
+		IntraMatElemResult() : stage(StageType::current),disposition(DispositionType::invalid),first(0) {
 		}
-		IntraMatElemResult(const DISTANCETYPE c, const sizets_vector &v,DispositionType disp = DispositionType::invalid) :
-			disposition(disp),first(c), second(v) {
+		IntraMatElemResult(const DISTANCETYPE c, const sizets_vector &v,
+			DispositionType disp = DispositionType::invalid, StageType st = StageType::current) :
+			stage(st),disposition(disp),first(c), second(v) {
 		}
 		IntraMatElemResult(const IntraMatElemResultType &other) :
-			disposition(other.disposition),first(other.first), second(other.second),sigle(other.sigle) {
+			stage(other.stage),disposition(other.disposition),first(other.first), second(other.second),sigle(other.sigle) {
 		}
 		IntraMatElemResultType & operator=(const IntraMatElemResultType &other) {
 			if (this != &other) {
+				this->stage = other.stage;
 				this->disposition = other.disposition;
 				this->first = other.first;
 				this->second = other.second;
@@ -42,6 +46,7 @@ namespace info {
 		virtual ~IntraMatElemResult() {
 		}
 		void clear(void) {
+			this->stage = StageType::current;
 			this->disposition = DispositionType::invalid;
 			this->first = 0;
 			this->second.clear();

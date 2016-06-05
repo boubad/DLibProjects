@@ -45,10 +45,10 @@ namespace info {
 			void sigle(const STRINGTYPE &s) {
 				this->m_sigle = s;
 			}
-			IntraMatElemResultPtr getResult(void) const {
+			IntraMatElemResultPtr getResult(StageType stage = StageType::current) const {
 				const DistanceMapType *pDist = this->m_pdist;
 				assert(pDist != nullptr);
-				IntraMatElemResultPtr oRet(new IntraMatElemResultType(this->m_crit, this->m_indexes, this->m_disp));
+				IntraMatElemResultPtr oRet(new IntraMatElemResultType(this->m_crit, this->m_indexes, this->m_disp,stage));
 				IntraMatElemResultType *p = oRet.get();
 				assert(p != nullptr);
 				p->sigle = this->m_sigle;
@@ -66,12 +66,14 @@ namespace info {
 					this->m_pqueue = pSubscriber;
 				}
 				DISTANCETYPE oCrit(this->m_crit);
+				this->notify(StageType::started);
 				do {
-					this->notify();
 					if (!this->one_iteration(oCrit)) {
 						break;
 					}
+					this->notify(StageType::current);
 				} while (true);
+				this->notify(StageType::finished);
 			}// arrange
 			void arrange(SourceType *pProvider,
 				queue_type *pSubscriber = nullptr) {
@@ -107,9 +109,9 @@ namespace info {
 				return (oMat.getResult());
 			}// perform_arrange
 		protected:
-			void notify(void) {
+			void notify(StageType stage = StageType::current) {
 				if (this->m_pqueue != nullptr) {
-					IntraMatElemResultPtr res = this->getResult();
+					IntraMatElemResultPtr res = this->getResult(stage);
 					this->m_pqueue->put(res);
 				}
 			}//notify
@@ -325,11 +327,23 @@ namespace info {
 				if (pRes != nullptr) {
 					pq = pRes;
 				}
-				std::future<bool> fInd = std::async(std::launch::async, [&]()->bool {
+#if defined(_MSC_VER)
+				concurrency::parallel_invoke([&]() {
+					(void)this->prep_inds(pIndsSource, pq);
+				}, 
+					[&]() {
+					(void)this->prep_vars(pVarsSource, pq);
+				});
+#else
+				std::future<bool> fInd = std::async([&]()->bool {
 					return this->prep_inds(pIndsSource, pq);
 				});
-				bool bRet = this->prep_vars(pVarsSource, pq);
-				bRet = bRet && fInd.get();
+				std::future<bool> fVar = std::async([&]()->bool {
+					return this->prep_vars(pVarsSource, pq);
+				});
+				bool bRet = fInd.get() && fVar.get();
+#endif // _MSC_VER
+				
 			} // arrange
 	};
 	////////////////////////////////////

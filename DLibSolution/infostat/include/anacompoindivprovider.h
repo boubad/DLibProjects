@@ -81,7 +81,43 @@ namespace info {
 					double f = (oFreq[i] / ss);
 					weights[aIndex] = f;
 				}
-				std::future<IndivMapTypePtr> fVar = std::async(std::launch::async,[&]()->IndivMapTypePtr {
+#if defined(_MSC_VER)
+				concurrency::parallel_invoke([&]() {
+					ints_vector varIds;
+					src.get_variables_ids(varIds);
+					strings_vector varsNames(nCols);
+					std::map<U, STRINGTYPE> xMap;
+					size_t nv = 0;
+					if (!pStore->find_dataset_variables_count(oSet, nv)) {
+						return (IndivMapTypePtr());
+					}
+					variables_vector vvx;
+					if (!pStore->find_dataset_variables(oSet, vvx, 0, nv)) {
+						return (IndivMapTypePtr());
+					}
+					for (size_t i = 0; i < nCols; ++i) {
+						U aIndex = varIds[i];
+						auto it = std::find_if(vvx.begin(), vvx.end(), [aIndex](const VariableType &v)->bool {
+							return (v.id() == aIndex);
+						});
+						if (it != vvx.end()) {
+							auto v = *it;
+							varsNames[i] = v.sigle();
+						}
+					}// i
+					DataVectorIndivSourceType oProvider(nCols, nf, oVars, varIds, factIds, varsNames, weights);
+					sVar = std::make_shared<IndivMapType>(&oProvider);
+				},
+					[&]() {
+					ints_vector indIds;
+					src.get_indivs_ids(indIds);
+					strings_vector indsNames(nRows);
+					src.get_indivs_names(indsNames);
+					DataVectorIndivSourceType oProvider(nRows, nf, oInds, indIds, factIds, indsNames, weights);
+					sInd = std::make_shared<IndivMapType>(&oProvider);
+				});
+#else
+				std::future<IndivMapTypePtr> fVar = std::async(std::launch::async, [&]()->IndivMapTypePtr {
 					ints_vector varIds;
 					src.get_variables_ids(varIds);
 					strings_vector varsNames(nCols);
@@ -114,73 +150,11 @@ namespace info {
 				DataVectorIndivSourceType oProvider(nRows, nf, oInds, indIds, factIds, indsNames, weights);
 				sInd = std::make_shared<IndivMapType>(&oProvider);
 				sVar = fVar.get();
+#endif // _MSC_VER
 				return (std::make_tuple(sInd, sVar));
-			}//create_indivmaps
-			static DataVectorIndivSourceTuple create(StoreType *pStore,
-				const STRINGTYPE &datasetSigle, const size_t nbFactsMax = 4) {
-				DataVectorIndivSourcePtr sInd, sVar;
-				//
-				assert(pStore != nullptr);
-				DatasetType oSet(datasetSigle);
-				if (!pStore->find_dataset(oSet)) {
-					return (std::make_tuple(sInd, sVar));
-				}
-				//
-				TranformedStoreIndivSourceType src(pStore, datasetSigle);
-				size_t nRows = 0, nCols = 0;
-				std::vector<double> oSrcData;
-				if (!src.get_data_array(nRows, nCols, oSrcData)) {
-					return (std::make_tuple(sInd, sVar));
-				}
-				std::vector<double> oVars, oInds, oFreq;
-				size_t nFacts = 0;
-				if (!AnaCompo<double>::compute_anacompo(nRows, nCols, oSrcData, nFacts, oVars, oInds, oFreq)) {
-					return (std::make_tuple(sInd, sVar));
-				}
-				ints_vector varIds, indIds;
-				src.get_indivs_ids(indIds);
-				src.get_variables_ids(varIds);
-				strings_vector indsNames(nRows), varsNames(nCols);
-				src.get_indivs_names(indsNames);
-				std::map<U, STRINGTYPE> xMap;
-				size_t nv = 0;
-				if (!pStore->find_dataset_variables_count(oSet, nv)) {
-					return (std::make_tuple(sInd, sVar));
-				}
-				variables_vector vvx;
-				if (!pStore->find_dataset_variables(oSet, vvx, 0, nv)) {
-					return (std::make_tuple(sInd, sVar));
-				}
-				for (size_t i = 0; i < nCols; ++i) {
-					U aIndex = varIds[i];
-					auto it = std::find_if(vvx.begin(), vvx.end(), [aIndex](const VariableType &v)->bool {
-						return (v.id() == aIndex);
-					});
-					if (it != vvx.end()) {
-						auto v = *it;
-						varsNames[i] = v.sigle();
-					}
-				}// i
-				//
-				size_t nf = nbFactsMax;
-				if (nf > nFacts) {
-					nf = nFacts;
-				}
-				ints_doubles_map weights;
-				ints_vector factIds(nf);
-				for (size_t i = 0; i < nf; ++i) {
-					U aIndex = (U)(i + 1);
-					factIds[i] = aIndex;
-					double f = oFreq[i];
-					weights[aIndex] = f;
-				}
-				//
-				sInd.reset(new DataVectorIndivSourceType(nRows, nf, oInds, indIds, factIds, indsNames, weights));
-				sVar.reset(new DataVectorIndivSourceType(nCols, nf, oVars, varIds, factIds, varsNames, weights));
-				return (std::make_tuple(sInd, sVar));
-			}// create
-	};
+				}//create_indivmaps
+			};
 	/////////////////////////////////////
-}// namespace info
-///////////////////////////////////////
+	}// namespace info
+	///////////////////////////////////////
 #endif // !__ANACOMPOINDIVPROVIDER_H__

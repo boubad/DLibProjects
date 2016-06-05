@@ -180,7 +180,6 @@
     <ClCompile Include="test_clusterize.cpp" />
     <ClCompile Include="test_indivprovider.cpp" />
     <ClCompile Include="test_intramatelem.cpp" />
-    <ClCompile Include="test_matord.cpp" />
     <ClCompile Include="unittest_infovalue.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

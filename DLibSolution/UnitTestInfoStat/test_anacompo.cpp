@@ -72,7 +72,7 @@ namespace UnitTestInfoStat
 			m_pStore = nullptr;
 		}// tearDown
 	public:
-		TEST_METHOD(TestClusterizeAnaIndivMap)
+		TEST_METHOD(TestAnaIndivMap)
 		{
 			//
 			STRINGTYPE sigle;
@@ -88,112 +88,6 @@ namespace UnitTestInfoStat
 			Assert::IsNotNull(pVarMap);
 			//
 		}//TestClusterizeAnaIndivMap
-		TEST_METHOD(TestClusterizeAnaCompo)
-		{
-			//
-			STRINGTYPE sigle;
-			InfoTestData::get_mortal_name(sigle);
-			//
-			StoreType *pStore = this->m_pStore;
-			DataVectorIndivSourceTuple r = CreatorType::create(pStore, sigle);
-			DataVectorIndivSourcePtr oInd = std::get<0>(r);
-			DataVectorIndivSourceType *pProvider= oInd.get();
-			Assert::IsTrue(pProvider != nullptr);
-			pProvider->recode();
-			//
-			size_t nbClusters = 5;
-			size_t nbIters = 100;
-			pProvider->reset();
-			//
-			ClusterizeKMeansType oMan;
-			size_t nIters = oMan.process(pProvider, nbClusters, nbIters);
-			Assert::IsTrue(nIters > 0);
-			STRINGTYPE ss;
-			oMan.to_string(ss);
-			Logger::WriteMessage(ss.c_str());
-		}//TestClusterizeAnaCompo
-		TEST_METHOD(TestAnaCompo)
-		{
-			//
-			STRINGTYPE sigle;
-			InfoTestData::get_mortal_name(sigle);
-			//
-			StoreType *pStore = this->m_pStore;
-			DataVectorIndivSourceTuple r = CreatorType::create(pStore, sigle);
-			DataVectorIndivSourcePtr oInd = std::get<0>(r);
-			DataVectorIndivSourcePtr oVar = std::get<1>(r);
-			DataVectorIndivSourceType *pSourceInd = oInd.get();
-			Assert::IsTrue(pSourceInd != nullptr);
-			DataVectorIndivSourceType *pSourceVar = oVar.get();
-			Assert::IsTrue(pSourceVar != nullptr);
-			//
-			SourceType *pProvider = pSourceInd;
-			size_t nCount = pProvider->count();
-			Assert::IsTrue(nCount > 0);
-			size_t nbVars = 0;
-			for (size_t i = 0; i < nCount; ++i) {
-				IndivTypePtr oInd = pProvider->get(i);
-				IndivType *pIndiv = oInd.get();
-				Assert::IsTrue(pIndiv != nullptr);
-				IDTYPE aIndex = pIndiv->id();
-				Assert::IsTrue(aIndex != 0);
-				IndivTypePtr xInd = pProvider->find(aIndex);
-				IndivType *pIndiv2 = xInd.get();
-				Assert::IsTrue(pIndiv2 != nullptr);
-				const DataMap &oCenter = pIndiv->center();
-				Assert::IsTrue(oCenter.size() > 0);
-				Assert::IsTrue(pIndiv->has_numeric_fields());
-				if (nbVars == 0) {
-					nbVars = oCenter.size();
-				}
-				Assert::IsTrue(nbVars == oCenter.size());
-			} //i
-			pProvider->reset();
-			size_t nc = 0;
-			do {
-				IndivTypePtr oInd = pProvider->next();
-				IndivType *pIndiv = oInd.get();
-				if (pIndiv == nullptr) {
-					break;
-				}
-				++nc;
-			} while (true);
-			Assert::IsTrue(nc == nCount);
-			//
-			pProvider = pSourceVar;
-			nCount = pProvider->count();
-			Assert::IsTrue(nCount > 0);
-			nbVars = 0;
-			for (size_t i = 0; i < nCount; ++i) {
-				IndivTypePtr oInd = pProvider->get(i);
-				IndivType *pIndiv = oInd.get();
-				Assert::IsTrue(pIndiv != nullptr);
-				IDTYPE aIndex = pIndiv->id();
-				Assert::IsTrue(aIndex != 0);
-				IndivTypePtr xInd = pProvider->find(aIndex);
-				IndivType *pIndiv2 = xInd.get();
-				Assert::IsTrue(pIndiv2 != nullptr);
-				const DataMap &oCenter = pIndiv->center();
-				Assert::IsTrue(oCenter.size() > 0);
-				Assert::IsTrue(pIndiv->has_numeric_fields());
-				if (nbVars == 0) {
-					nbVars = oCenter.size();
-				}
-				Assert::IsTrue(nbVars == oCenter.size());
-			} //i
-			pProvider->reset();
-			nc = 0;
-			do {
-				IndivTypePtr oInd = pProvider->next();
-				IndivType *pIndiv = oInd.get();
-				if (pIndiv == nullptr) {
-					break;
-				}
-				++nc;
-			} while (true);
-			Assert::IsTrue(nc == nCount);
-			//
-		}// TestAnaCompo
 	};
 	unique_ptr<MyFixture> UnitTestAnaCompo::st_m_fixture;
 }

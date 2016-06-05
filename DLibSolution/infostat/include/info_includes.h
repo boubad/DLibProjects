@@ -39,5 +39,10 @@
 #include <boost/noncopyable.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/any.hpp>
+/////////////////////////////////
+#if defined(_MSC_VER)
+#include <ppl.h>
+#include <ppltasks.h>
+#endif// _MSC_VER
 ///////////////////////////////
 #endif /* INFO_INCLUDES_H_ */

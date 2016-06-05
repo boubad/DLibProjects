@@ -38,9 +38,6 @@
     <ClCompile Include="test_anacompo.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="test_matord.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="test_intramatelem.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

@@ -59,6 +59,13 @@ namespace UnitTestInfoStat
 			STRINGSTREAM os;
 			IntraMatElemResultType *p = oRes.get();
 			if (p != nullptr) {
+				StageType stage = p->stage;
+				if (stage == StageType::started) {
+					os << "STARTED...\t";
+				}
+				else if (stage == StageType::finished) {
+					os << "FINISHED!!!\t";
+				}
 				STRINGTYPE sx = p->sigle;
 				if (!sx.empty()) {
 					os << sx << "\t";
@@ -70,7 +77,7 @@ namespace UnitTestInfoStat
 					os << "VARS\t";
 				}
 				DISTANCETYPE crit = p->first;
-				os << "Crit: " << crit;
+				os << "Crit: " << crit << std::endl;
 			}// p
 			STRINGTYPE ss = os.str();
 			Logger::WriteMessage(ss.c_str());
@@ -128,28 +135,26 @@ namespace UnitTestInfoStat
 			//
 			MatElemLogger oQueue;
 			//
-			std::thread t0([&]() {
+			concurrency::parallel_invoke(
+				[&]() {
 				MatOrdType oMat;
 				STRINGTYPE sId("TEST ");
 				oMat.sigle(sId);
 				oMat.arrange(m_pTestProvider, pv->test_source(), &oQueue);
-			});
-			std::thread t1([&]() {
+			},
+				[&]() {
 				MatOrdType oMat;
 				STRINGTYPE sId("MORTAL ");
 				oMat.sigle(sId);
 				oMat.arrange(m_pMortalProvider, pv->mortal_source(), &oQueue);
-			});
-			std::thread t2([&]() {
+			}, [&]() {
 				MatOrdType oMat;
 				STRINGTYPE sId("CONSO ");
 				oMat.sigle(sId);
 				oMat.arrange(m_pConsoProvider, pv->conso_source(), &oQueue);
-			});
-			//
-			t1.join();
-			t2.join();
-			t0.join();
+			}
+
+			);
 		}// TestIntraMatOrd
 		TEST_METHOD(TestIntraMatElem)
 		{
