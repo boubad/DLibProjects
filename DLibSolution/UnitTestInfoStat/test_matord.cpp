@@ -14,6 +14,7 @@
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 using namespace info;
 using namespace std;
+
 ////////////////////////////////
 namespace UnitTestInfoStat
 {
@@ -44,6 +45,8 @@ namespace UnitTestInfoStat
 	using MatElemResultType = typename MatOrdType::MatElemResultType;
 	using MatElemResultPtr = typename MatOrdType::MatElemResultPtr;
 	using ConnectionType = typename MatOrdType::ConnectionType;
+	///////////////////////////////////////////
+	
 	/////////////////////////////////////
 	//
 	TEST_CLASS(UnitTestMatOrd)

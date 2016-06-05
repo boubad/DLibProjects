@@ -4,7 +4,6 @@
 #include <intramat.h>
 #include <indivmap.h>
 #include <anacompoindivprovider.h>
-#include <matrice.h>
 /////////////////////////////
 #include <mytestfixture.h>
 #include <mytestvariablefixture.h>
@@ -19,6 +18,7 @@ namespace UnitTestInfoStat
 {
 	///////////////////////////////////
 	using MyFixture = MyTestFixture<IDTYPE, INTTYPE, STRINGTYPE, WEIGHTYPE>;
+	using MyVariableFixture = MyTestVariableFixture<IDTYPE, INTTYPE, STRINGTYPE, WEIGHTYPE>;
 	/////////////////////////////////////
 	using IndivType = typename MyFixture::IndivType;
 	using DataMap = typename MyFixture::DataMap;
@@ -37,7 +37,7 @@ namespace UnitTestInfoStat
 	using RescritType = std::atomic<DISTANCETYPE>;
 	using IntraMatElemResultType = IntraMatElemResult<IDTYPE, DISTANCETYPE>;
 	using IntraMatElemResultPtr = std::shared_ptr<IntraMatElemResultType>;
-	using SlotType = typename IntraMatElemType::SlotType;
+	using queue_type = SharedQueue<IntraMatElemResultPtr>;
 	////////////////////////
 	using IndivMapType = IndivMap<IDTYPE, STRINGTYPE, DISTANCETYPE>;
 	/////////////////////////////////
@@ -46,87 +46,42 @@ namespace UnitTestInfoStat
 	using DataVectorIndivSourcePtr = std::shared_ptr<DataVectorIndivSourceType>;
 	using DataVectorIndivSourceTuple = std::tuple<DataVectorIndivSourcePtr, DataVectorIndivSourcePtr>;
 	/////////////////////////
-	using MatOrdType = MatOrd<IDTYPE, DISTANCETYPE, STRINGTYPE>;
-	using MatOrdResultType = typename MatOrdType::MatElemResultType;
-	using MatOrdResultPtr = typename MatOrdType::MatElemResultPtr;
-	using MatOrdConnectionType = typename MatOrdType::ConnectionType;
-	/////////////////////////////////////
-	////////////////////////
+	using MatOrdType = IntraMatOrd<IDTYPE, DISTANCETYPE, STRINGTYPE>;
 	using mutex_type = std::mutex;
 	using lock_type = std::lock_guard<mutex_type>;
-	//////////////////////////////////
-	mutex_type mutex;
-	////////////////////////////////////////
-	void MatOrdLogger(const STRINGTYPE &sId, MatOrdResultPtr oIndCrit,
-		MatOrdResultPtr oVarCrit) {
-		STRINGSTREAM os;
-		MatOrdResultType *pVarCrit = oVarCrit.get();
-		MatOrdResultType *pIndCrit = oIndCrit.get();
-		if ((pIndCrit != nullptr) && (pVarCrit != nullptr)) {
-			os << sId << "\t";
-			DISTANCETYPE varCrit = pVarCrit->first;
-			DISTANCETYPE indCrit = pIndCrit->first;
-			os << "Ind: " << indCrit << ",\tVar: " << varCrit ;
-			STRINGTYPE sz = os.str();
-			{
-				lock_type oLock(mutex);
-				Logger::WriteMessage(sz.c_str());
-			}
-		}
-		else if (pVarCrit != nullptr) {
-			os <<  sId << "\t";
-			DISTANCETYPE varCrit = pVarCrit->first;
-			os << "Var: " << varCrit;
-			STRINGTYPE sz = os.str();
-			{
-				lock_type oLock(mutex);
-				Logger::WriteMessage(sz.c_str());
-			}
-		}
-		else if (pIndCrit != nullptr) {
-			os << sId << "\t";
-			DISTANCETYPE indCrit = pIndCrit->first;
-			os << "Ind: " << indCrit;
-			STRINGTYPE sz = os.str();
-			{
-				lock_type oLock(mutex);
-				Logger::WriteMessage(sz.c_str());
-			}
-		}
-	}// MatOrdLogger
-	/////////////////////////////////////
-	void MatElemLogger(const STRINGTYPE &sId, IntraMatElemResultPtr oRes) {
-		STRINGSTREAM os;
-		os << sId;
-		IntraMatElemResultType *p = oRes.get();
-		if (p != nullptr) {
-			os << "\t";
-			DISTANCETYPE crit = p->first;
-			os << "Crit: " << crit;
-		}// p
-		STRINGTYPE ss = os.str();
-		{
-			lock_type oLock(mutex);
+	/////////////////////////////////////////
+	class MatElemLogger : public MatElemResultBackgounder<IDTYPE, DISTANCETYPE, STRINGTYPE> {
+	public:
+		MatElemLogger() {}
+		virtual ~MatElemLogger() {}
+	protected:
+		virtual void process_result(IntraMatElemResultPtr oRes) {
+			STRINGSTREAM os;
+			IntraMatElemResultType *p = oRes.get();
+			if (p != nullptr) {
+				STRINGTYPE sx = p->sigle;
+				if (!sx.empty()) {
+					os << sx << "\t";
+				}
+				if (p->disposition == DispositionType::indiv) {
+					os << "INDS\t";
+				}
+				else if (p->disposition == DispositionType::variable) {
+					os << "VARS\t";
+				}
+				DISTANCETYPE crit = p->first;
+				os << "Crit: " << crit;
+			}// p
+			STRINGTYPE ss = os.str();
 			Logger::WriteMessage(ss.c_str());
-		}
-	}// MatElemLogger
-	SlotType callbackMortal = [&](IntraMatElemResultPtr oRes) {
-		STRINGTYPE sId("MORTAL ");
-		MatElemLogger(sId, oRes);
-	};
-	SlotType callbackConso = [&](IntraMatElemResultPtr oRes) {
-		STRINGTYPE sId("CONSO ");
-		MatElemLogger(sId, oRes);
-	};
-	SlotType callbackTest = [&](IntraMatElemResultPtr oRes) {
-		STRINGTYPE sId("TEST ");
-		MatElemLogger(sId, oRes);
-	};
-	///////////////////////////////////////
+		}// process_result
+	};// class MatElemLogger
+	//////////////////////////////////
 	//
 	TEST_CLASS(UnitTestIntraMatElem)
 	{
 		static unique_ptr<MyFixture> st_m_fixture;
+		static unique_ptr<MyVariableFixture> st_m_varfixture;
 		//
 		SourceType *m_pMortalProvider;
 		SourceType *m_pConsoProvider;
@@ -137,10 +92,14 @@ namespace UnitTestInfoStat
 			st_m_fixture.reset(new MyFixture());
 			MyFixture *p = st_m_fixture.get();
 			Assert::IsNotNull(p);
+			st_m_varfixture.reset(new MyVariableFixture());
+			MyVariableFixture *pv = st_m_varfixture.get();
+			Assert::IsNotNull(pv);
 		}
 		TEST_CLASS_CLEANUP(ClassCleanup)
 		{
 			st_m_fixture.reset();
+			st_m_varfixture.reset();
 		}
 
 		TEST_METHOD_INITIALIZE(setUp)
@@ -160,108 +119,65 @@ namespace UnitTestInfoStat
 			m_pConsoProvider = nullptr;
 			m_pTestProvider = nullptr;
 		}// tearDown
-		void perform_test(const STRINGTYPE &sigle) {
-			//
-			MyFixture *p = st_m_fixture.get();
-			StoreType *pStore = p->get_store();
-			DataVectorIndivSourceTuple r = CreatorType::create(pStore, sigle);
-			DataVectorIndivSourcePtr oInd = std::get<0>(r);
-			DataVectorIndivSourcePtr oVar = std::get<1>(r);
-			DataVectorIndivSourceType *pSourceInd = oInd.get();
-			pSourceInd->recode(100);
-			DataVectorIndivSourceType *pSourceVar = oVar.get();
-			pSourceVar->recode(100);
-			//
-			MatOrdType oMat;
-			auto conn =
-				oMat.connect(
-					[&](MatOrdResultPtr oIndCrit, MatOrdResultPtr oVarCrit) {
-				MatOrdLogger(sigle, oIndCrit, oVarCrit);
-			});
-			(void)oMat.process(pSourceInd, pSourceVar);
-		} //perform_test}
+
 	public:
-		TEST_METHOD(TestAnaCompoArrange)
+		TEST_METHOD(TestIntraMatOrd)
 		{
+			MyVariableFixture *pv = st_m_varfixture.get();
+			Assert::IsNotNull(pv);
 			//
-			STRINGTYPE sigleMortal, sigleConso, sigleTest;
-			InfoTestData::get_mortal_name(sigleMortal);
-			InfoTestData::get_conso_name(sigleConso);
-			InfoTestData::get_test_name(sigleTest);
+			MatElemLogger oQueue;
 			//
 			std::thread t0([&]() {
-				perform_test(sigleTest);
+				MatOrdType oMat;
+				STRINGTYPE sId("TEST ");
+				oMat.sigle(sId);
+				oMat.arrange(m_pTestProvider, pv->test_source(), &oQueue);
 			});
 			std::thread t1([&]() {
-				perform_test(sigleMortal);
+				MatOrdType oMat;
+				STRINGTYPE sId("MORTAL ");
+				oMat.sigle(sId);
+				oMat.arrange(m_pMortalProvider, pv->mortal_source(), &oQueue);
 			});
 			std::thread t2([&]() {
-				perform_test(sigleConso);
+				MatOrdType oMat;
+				STRINGTYPE sId("CONSO ");
+				oMat.sigle(sId);
+				oMat.arrange(m_pConsoProvider, pv->conso_source(), &oQueue);
 			});
+			//
 			t1.join();
 			t2.join();
 			t0.join();
-		}// TestAnaCompoArrange
-		TEST_METHOD(TestIntraMatElemDistanceMap)
+		}// TestIntraMatOrd
+		TEST_METHOD(TestIntraMatElem)
 		{
+			MatElemLogger oQueue;
+			//
 			std::thread t0([&]() {
-				DistanceMapType oMap(m_pTestProvider);
-				IntraMatElemType oMat;
-				oMat.arrange(&oMap, &callbackTest);
+				IntraMatElemType oMat(DispositionType::indiv, &oQueue);
+				STRINGTYPE sId("TEST ");
+				oMat.sigle(sId);
+				oMat.arrange(m_pTestProvider);
 			});
 			std::thread t1([&]() {
-				DistanceMapType oMap(m_pMortalProvider);
-				IntraMatElemType oMat;
-				oMat.arrange(&oMap, &callbackMortal);
+				IntraMatElemType oMat(DispositionType::indiv, &oQueue);
+				STRINGTYPE sId("MORTAL ");
+				oMat.sigle(sId);
+				oMat.arrange(m_pMortalProvider);
 			});
 			std::thread t2([&]() {
-				DistanceMapType oMap(m_pConsoProvider);
-				IntraMatElemType oMat;
-				oMat.arrange(&oMap, &callbackConso);
+				IntraMatElemType oMat(DispositionType::indiv, &oQueue);
+				STRINGTYPE sId("CONSO ");
+				oMat.sigle(sId);
+				oMat.arrange(m_pConsoProvider);
 			});
 			t1.join();
 			t2.join();
 			t0.join();
-		}// TestIntraMatElemDistanceMap
-		TEST_METHOD(TestIntraMatElemIndivMap)
-		{
-			std::thread t0([&]() {
-				IndivMapType oMap(m_pTestProvider);
-				IntraMatElemType oMat;
-				oMat.arrange(&oMap, &callbackTest);
-			});
-			std::thread t1([&]() {
-				IndivMapType oMap(m_pMortalProvider);
-				IntraMatElemType oMat;
-				oMat.arrange(&oMap, &callbackMortal);
-			});
-			std::thread t2([&]() {
-				IndivMapType oMap(m_pConsoProvider);
-				IntraMatElemType oMat;
-				oMat.arrange(&oMap, &callbackConso);
-			});
-			t1.join();
-			t2.join();
-			t0.join();
-		}// TestIntraMap
-		TEST_METHOD(TestIntraMatElemProvider)
-		{
-			std::thread t0([&]() {
-				IntraMatElemType oMat;
-				oMat.arrange(m_pTestProvider, &callbackTest);
-			});
-			std::thread t1([&]() {
-				IntraMatElemType oMat;
-				oMat.arrange(m_pMortalProvider, &callbackMortal);
-			});
-			std::thread t2([&]() {
-				IntraMatElemType oMat;
-				oMat.arrange(m_pConsoProvider, &callbackConso);
-			});
-			t1.join();
-			t2.join();
-			t0.join();
-		}// TestIntraMap
+		}// TestIntraMatElem
 	};
 	unique_ptr<MyFixture> UnitTestIntraMatElem::st_m_fixture;
+	unique_ptr<MyVariableFixture> UnitTestIntraMatElem::st_m_varfixture;
 }
