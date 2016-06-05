@@ -58,6 +58,22 @@ namespace info {
 		}
 		virtual ~IndivMap() {}
 	public:
+		void distance_map(DistanceMap<U, W> &oDist) const {
+			oDist.clear();
+			const DistanceMapType &src = this->m_dist;
+			ints_vector ids;
+			src.indexes(ids);
+			for (auto it = ids.begin(); it != ids.end(); ++it) {
+				U aIndex1 = *it;
+				for (auto jt = ids.begin(); jt != it; ++jt) {
+					U aIndex2 = *jt;
+					W res = 0;
+					if (this->distance(aIndex1, aIndex2, res)) {
+						oDist.add(aIndex1, aIndex2, res);
+					}
+				}// jt
+			}// it
+		}// distance_map
 		DistanceMapType *distance_map(void) const {
 			return (&(this->m_dist));
 		}
@@ -119,7 +135,7 @@ namespace info {
 			this->indexed_distance(i1, i2, res);
 			return (res);
 		}
-		bool distance(U aIndex1n, U aIndex2, W &res) const {
+		bool distance(U aIndex1, U aIndex2, W &res) const {
 			double delta = this->m_fmax - this->m_fmin;
 			if (delta <= 0) {
 				return (false);

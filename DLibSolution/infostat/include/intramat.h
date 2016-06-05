@@ -260,9 +260,12 @@ namespace info {
 				} // i
 				this->m_crit = this->criteria(indexes);
 			} // initialize
-			void initialize(IndivMapType *pMat) {
+			void initialize(IndivMapType *pMap) {
 				assert(pMap != nullptr);
-				DistanceMapType *pDist = pMap->distance_map();
+				m_odist.reset(new DistanceMapType());
+				DistanceMapType *pDist = m_odist.get();
+				assert(pDist != nullptr);
+				pMap->distance_map(*pDist);
 				this->initialize(pDist);
 			} // initialize
 			void initialize(SourceType *pProvider) {
