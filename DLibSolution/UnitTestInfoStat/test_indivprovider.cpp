@@ -92,7 +92,7 @@ namespace UnitTestInfoStat
 			ints_doubles_map weights;
 			pProvider->weights(weights);
 			Assert::AreEqual(nCols, weights.size());
-			//STRINGSTREAM os;
+			STRINGSTREAM os;
 			for (size_t i = 0; i < nCount; ++i) {
 				IndivTypePtr oInd = pProvider->get(i);
 				IndivType *pIndiv = oInd.get();
@@ -105,7 +105,7 @@ namespace UnitTestInfoStat
 				const DataMap &oCenter = pIndiv->center();
 				Assert::AreEqual(nCols, oCenter.size());
 				Assert::IsTrue(pIndiv->has_numeric_fields());
-			//	os << *pIndiv << std::endl;
+			    os << *pIndiv << std::endl;
 			}//i
 			pProvider->reset();
 			size_t nc = 0;
@@ -118,8 +118,8 @@ namespace UnitTestInfoStat
 				++nc;
 			} while (true);
 			Assert::IsTrue(nc == nCount);
-		//	STRINGTYPE ss = os.str();
-		//	Logger::WriteMessage(ss.c_str());
+		    STRINGTYPE ss = os.str();
+			Logger::WriteMessage(ss.c_str());
 		}// TestFillMortalData
 		TEST_METHOD(TestVariableProvider)
 		{

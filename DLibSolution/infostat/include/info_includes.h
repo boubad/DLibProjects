@@ -41,8 +41,12 @@
 #include <boost/any.hpp>
 /////////////////////////////////
 #if defined(_MSC_VER)
+#include <agents.h>
 #include <ppl.h>
 #include <ppltasks.h>
+#include <concurrent_vector.h>
+#include <concurrent_unordered_map.h>
+#include <concurrent_queue.h>
 #endif// _MSC_VER
 ///////////////////////////////
 #endif /* INFO_INCLUDES_H_ */

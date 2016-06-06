@@ -175,6 +175,7 @@
     <ClInclude Include="include\memorydataset.h" />
     <ClInclude Include="include\memorystatstore.h" />
     <ClInclude Include="include\sharedqueue.h" />
+    <ClInclude Include="include\sqlitestore.h" />
     <ClInclude Include="include\storebaseprovider.h" />
     <ClInclude Include="include\storeindivsource.h" />
     <ClInclude Include="include\storevariablesource.h" />

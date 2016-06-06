@@ -138,6 +138,10 @@ namespace info {
 		using NamedBaseInfoStatItemType = NamedBaseInfoStatItem<IDTYPE, INTTYPE, STRINGTYPE>;
 		using StatDatasetType = StatDataset<IDTYPE, INTTYPE, STRINGTYPE>;
 	public:
+		using idtype = IDTYPE;
+		using inttype = INTTYPE;
+		using stringtype = STRINGTYPE;
+	public:
 		StatDataset() {}
 		StatDataset(const IDTYPE n) {
 			this->id(n);
@@ -203,6 +207,11 @@ namespace info {
 		using DatasetChildType = DatasetChild<IDTYPE, INTTYPE, STRINGTYPE, WEIGHTYPE>;
 		using StatDatasetType = StatDataset<IDTYPE, INTTYPE, STRINGTYPE>;
 		using StatVariableType = StatVariable<IDTYPE, INTTYPE, STRINGTYPE, WEIGHTYPE>;
+	public:
+		using idtype = IDTYPE;
+		using inttype = INTTYPE;
+		using stringtype = STRINGTYPE;
+		using weightype = WEIGHTYPE;
 	private:
 		bool m_categ;
 		int m_nbmodalites;
@@ -274,6 +283,11 @@ namespace info {
 		using StatDatasetType = StatDataset<IDTYPE, INTTYPE, STRINGTYPE>;
 		using StatIndivType = StatIndiv<IDTYPE, INTTYPE, STRINGTYPE, WEIGHTYPE>;
 	public:
+		using idtype = IDTYPE;
+		using inttype = INTTYPE;
+		using stringtype = STRINGTYPE;
+		using weightype = WEIGHTYPE;
+	public:
 		StatIndiv(){}
 		StatIndiv(const IDTYPE n) {
 			this->id(n);
@@ -295,6 +309,11 @@ namespace info {
 		using BaseInfoStatItemType = BaseInfoStatItem<IDTYPE, INTTYPE, STRINGTYPE>;
 		using StatValueType = StatValue<IDTYPE, INTTYPE, STRINGTYPE>;
 		using any = boost::any;
+		//
+	public:
+		using idtype = IDTYPE;
+		using inttype = INTTYPE;
+		using stringtype = STRINGTYPE;
 	private:
 		IDTYPE m_varid;
 		IDTYPE m_indid;
