@@ -9,14 +9,14 @@
 ////////////////////////////////////
 namespace info {
 	////////////////////////////////////
-	template<typename U = unsigned long, typename STRINGTYPE = std::string>
+	template<typename U, typename STRINGTYPE>
 	class IndivCluster : public InterruptObject {
 	public:
 		using IndexType = U;
 		using IndivType = Indiv<U, STRINGTYPE>;
 		using DataMap = std::map<U, InfoValue>;
 		using IndivTypePtr = std::shared_ptr<IndivType>;
-		using SourceType = IIndivSource<U>;
+		using SourceType = IIndivSource<U,STRINGTYPE>;
 		using indivptrs_vector = std::deque<IndivTypePtr>;
 		using IndivClusterType = IndivCluster<U, STRINGTYPE>;
 		using ints_sizet_map = std::map<U, size_t>;

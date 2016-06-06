@@ -9,8 +9,8 @@
 //////////////////////////////////////////
 namespace info {
 	////////////////////////////////////
-	template<typename U = unsigned long, typename INTTYPE = unsigned long,
-		typename STRINGTYPE = std::string, typename WEIGHTYPE = double, typename DISTANCETYPE = long>
+	template<typename U, typename INTTYPE,
+		typename STRINGTYPE, typename WEIGHTYPE, typename DISTANCETYPE>
 		class AnaCompoIndivSourceCreator {
 		public:
 			using DataVectorIndivSourceType = DataVectorIndivSource<U, STRINGTYPE>;

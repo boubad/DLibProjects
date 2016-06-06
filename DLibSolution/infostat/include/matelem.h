@@ -12,7 +12,7 @@
 //////////////////////////////////
 namespace info {
 ///////////////////////////////////////////
-template<typename DISTANCETYPE = long>
+template <typename DISTANCETYPE>
 class MatElemResult {
 public:
 	using sizets_vector = std::vector<size_t>;
@@ -42,8 +42,7 @@ public:
 	}
 };
 /////////////////////////////////////
-template<typename IDTYPE = unsigned long, typename DISTANCETYPE = long,
-		typename STRINGTYPE = std::string>
+template<typename IDTYPE, typename DISTANCETYPE,typename STRINGTYPE>
 class MatElem: public InterruptObject {
 public:
 	using CritItemType = CritItem<IDTYPE, DISTANCETYPE>;

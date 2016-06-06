@@ -9,8 +9,7 @@
 /////////////////////////////////
 namespace info {
 	///////////////////////////////////////////
-	template<typename IDTYPE = unsigned long, typename DISTANCETYPE = long,
-		typename STRINGTYPE = std::string>
+	template<typename IDTYPE, typename DISTANCETYPE, typename STRINGTYPE>
 		class IntraMatElem : boost::noncopyable {
 		public:
 			using sizets_pair = std::pair<size_t, size_t>;
@@ -340,8 +339,7 @@ namespace info {
 			} // initialize
 	};
 	////////////////////////////////////////////
-	template<typename IDTYPE = unsigned long, typename DISTANCETYPE = long,
-		typename STRINGTYPE = std::string>
+	template<typename IDTYPE, typename DISTANCETYPE,typename STRINGTYPE>
 		class IntraMatOrd : boost::noncopyable {
 		public:
 			using MatElemType = IntraMatElem<IDTYPE, DISTANCETYPE, STRINGTYPE>;

@@ -133,7 +133,7 @@ namespace info {
 		}
 	}; // class NamedBaseInfoStatItem<IDTYPE,INTTYPE,STRINGTYPE>;
 	///////////////////////////////////////////
-	template <typename IDTYPE = unsigned long, typename INTTYPE = unsigned long, typename STRINGTYPE = std::string>
+	template <typename IDTYPE, typename INTTYPE, typename STRINGTYPE>
 	class StatDataset : public NamedBaseInfoStatItem<IDTYPE, INTTYPE, STRINGTYPE> {
 		using NamedBaseInfoStatItemType = NamedBaseInfoStatItem<IDTYPE, INTTYPE, STRINGTYPE>;
 		using StatDatasetType = StatDataset<IDTYPE, INTTYPE, STRINGTYPE>;
@@ -202,7 +202,7 @@ namespace info {
 		}
 	}; // class DatasetChild
 	//////////////////////////////////////////////
-	template <typename IDTYPE = unsigned long, typename INTTYPE = unsigned long, typename STRINGTYPE = std::string, typename WEIGHTYPE = double>
+	template <typename IDTYPE, typename INTTYPE, typename STRINGTYPE, typename WEIGHTYPE>
 	class StatVariable : public DatasetChild<IDTYPE, INTTYPE, STRINGTYPE, WEIGHTYPE> {
 		using DatasetChildType = DatasetChild<IDTYPE, INTTYPE, STRINGTYPE, WEIGHTYPE>;
 		using StatDatasetType = StatDataset<IDTYPE, INTTYPE, STRINGTYPE>;
@@ -277,7 +277,7 @@ namespace info {
 
 	}; // class StatVariable
 	/////////////////////////////////////////////
-	template <typename IDTYPE = unsigned long, typename INTTYPE = unsigned long, typename STRINGTYPE = std::string, typename WEIGHTYPE = double>
+	template <typename IDTYPE, typename INTTYPE, typename STRINGTYPE, typename WEIGHTYPE>
 	class StatIndiv : public DatasetChild<IDTYPE, INTTYPE, STRINGTYPE, WEIGHTYPE> {
 		using DatasetChildType = DatasetChild<IDTYPE, INTTYPE, STRINGTYPE, WEIGHTYPE>;
 		using StatDatasetType = StatDataset<IDTYPE, INTTYPE, STRINGTYPE>;
@@ -304,7 +304,7 @@ namespace info {
 		virtual ~StatIndiv() {}
 	}; // class StatIndiv
 	/////////////////////////////////////
-	template <typename IDTYPE = unsigned long, typename INTTYPE = unsigned int, typename STRINGTYPE = std::string>
+	template <typename IDTYPE, typename INTTYPE, typename STRINGTYPE>
 	class StatValue :public BaseInfoStatItem<IDTYPE, INTTYPE, STRINGTYPE> {
 		using BaseInfoStatItemType = BaseInfoStatItem<IDTYPE, INTTYPE, STRINGTYPE>;
 		using StatValueType = StatValue<IDTYPE, INTTYPE, STRINGTYPE>;

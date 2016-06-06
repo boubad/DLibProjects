@@ -6,7 +6,7 @@
 ////////////////////////////////////////////////
 namespace info {
 	/////////////////////////////
-	template<typename U = unsigned long, typename STRINGTYPE = std::string>
+	template<typename U, typename STRINGTYPE>
 	class DataVectorIndivSource : public IIndivSource<U, STRINGTYPE>, private boost::noncopyable {
 		using mutex_type = std::mutex;
 		using lock_type = std::lock_guard<mutex_type>;

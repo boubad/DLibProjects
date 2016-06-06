@@ -10,7 +10,7 @@ namespace info {
 	enum class DispositionType {invalid,indiv,variable};
 	enum class StageType {started, finished, aborted, current};
 	///////////////////////////////////////////
-	template<typename IDTYPE = unsigned long, typename DISTANCETYPE = long, typename STRINGTYPE = std::string>
+	template<typename IDTYPE, typename DISTANCETYPE, typename STRINGTYPE>
 	class IntraMatElemResult {
 	public:
 		using ints_vector = std::vector<IDTYPE>;
@@ -55,7 +55,7 @@ namespace info {
 	};
 	// class IntraMatElemResult
 	////////////////////////////////////////
-	template<typename IDTYPE = unsigned long, typename DISTANCETYPE = long, typename STRINGTYPE = std::string>
+	template<typename IDTYPE, typename DISTANCETYPE, typename STRINGTYPE>
 	class MatElemResultBackgounder : boost::noncopyable {
 	public:
 		using IntraMatElemResultType = IntraMatElemResult<IDTYPE, DISTANCETYPE, STRINGTYPE>;

@@ -9,8 +9,7 @@
 ////////////////////////////////
 namespace info {
 	////////////////////////////////
-	template<typename IDTYPE = unsigned long, typename INTTYPE = unsigned long,
-		typename STRINGTYPE = std::string, typename WEIGHTYPE = double>
+	template<typename IDTYPE, typename INTTYPE,typename STRINGTYPE, typename WEIGHTYPE>
 		class TestStoreFixture {
 		public:
 			using SQLiteStoreType = SQLiteStore<IDTYPE,INTTYPE,STRINGTYPE,WEIGHTYPE>;
@@ -142,7 +141,8 @@ namespace info {
 				assert(gdata.size() >= (size_t)(nCols * nRows));
 				this->import(p, name, nRows, nCols, gdata, rowNames, colNames);
 			} // fill_mortal_data
-			void import(IStoreType *p, const std::string &name, size_t nRows, size_t nCols,
+			void import(IStoreType *p, const STRINGTYPE &name, 
+				size_t nRows, size_t nCols,
 				const std::vector<int> &data,
 				const std::vector<STRINGTYPE> &rowNames,
 				const std::vector<STRINGTYPE> &colNames) {

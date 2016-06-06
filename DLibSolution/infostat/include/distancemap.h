@@ -7,7 +7,7 @@
 /////////////////////////////
 namespace info {
 	//////////////////////////////////////
-	template<typename U = unsigned long, typename W = long>
+	template<typename U, typename W>
 	class DistanceMap {
 	public:
 		using ints_set = std::set<U>;

@@ -12,7 +12,7 @@ namespace info {
 	};
 	// enum class TransformationType
 	/////////////////////////////
-	template<typename U = unsigned long, typename STRINGTYPE = std::string>
+	template<typename U, typename STRINGTYPE>
 	class StatInfo {
 	public:
 		using IntType = U;
@@ -311,15 +311,15 @@ namespace info {
 	};
 	// class StatInfo<U>
 	/////////////////////////////////
-	template<typename U = unsigned long, typename STRINGTYPE = std::string>
+	template<typename U, typename STRINGTYPE>
 	class StatSummator : boost::noncopyable {
 		using mutex_type = std::mutex;
 		using lock_type = std::lock_guard<mutex_type>;
 	public:
 		using StatInfoType = StatInfo<U, STRINGTYPE>;
 		using entries_map = std::map<U, StatInfoType>;
-		using StatSummatorType = StatSummator<U>;
-		using IndivType = Indiv<U>;
+		using StatSummatorType = StatSummator<U,STRINGTYPE>;
+		using IndivType = Indiv<U,STRINGTYPE>;
 		using IndivTypePtr = std::shared_ptr<IndivType>;
 		using somme_pair = std::pair<size_t, double>;
 		using correl_map = std::map<U, somme_pair>;
@@ -470,13 +470,13 @@ namespace info {
 				}
 			} // p
 		}	// add
-		template<typename XU>
-		void add(const Indiv<XU> &oInd) {
+		template<typename XU,typename XS>
+		void add(const Indiv<XU,XS> &oInd) {
 			this->add(oInd.center());
 		}	// ass
-		template<typename XU>
-		void add(const std::shared_ptr<Indiv<XU> > &oPtr) {
-			const Indiv<XU> *p = oPtr.get();
+		template<typename XU,typename XS>
+		void add(const std::shared_ptr<Indiv<XU,XS> > &oPtr) {
+			const Indiv<XU,XS> *p = oPtr.get();
 			if (p != nullptr) {
 				this->add(p->center());
 			}
@@ -505,7 +505,8 @@ namespace info {
 			});
 			return (!dest.empty());
 		}	// transform
-		bool transform(IndivType &oInd, const TransformationType mode =
+		template <typename XU,typename XS>
+		bool transform(Indiv<XU,XS> &oInd, const TransformationType mode =
 			TransformationType::noTransf)  {
 			std::map<U, InfoValue> dest;
 			if (!this->transform(oInd.center(), dest, mode)) {
@@ -514,12 +515,13 @@ namespace info {
 			oInd.center(dest);
 			return (!oInd.empty());
 		}	// transform
-		IndivTypePtr transform(const IndivTypePtr &oSrc,
+		template <typename XU, typename XS>
+		IndivTypePtr transform(const std::shared_ptr<Indiv<XU,XS>> &oSrc,
 			const TransformationType mode = TransformationType::noTransf)  {
 			IndivTypePtr oRet;
-			IndivType *pInd = oSrc.get();
+			Indiv<XU, XS> *pInd = oSrc.get();
 			if (pInd != nullptr) {
-				oRet = std::make_shared<IndivType>(*pInd);
+				oRet = std::make_shared<IndivType>(pInd->id(),pInd->center(),pInd->sigle());
 				IndivType *pRet = oRet.get();
 				if (pRet != nullptr) {
 					if (this->transform(*pRet, mode)) {

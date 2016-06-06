@@ -29,7 +29,6 @@ namespace info {
 		} // take
 	};
 	////////////////////////////////////
-	/////////////////////////////////
 	template <typename T>
 	class DispatchQueue {
 		std::mutex qlock;

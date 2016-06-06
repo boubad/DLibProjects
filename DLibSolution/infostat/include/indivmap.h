@@ -8,7 +8,7 @@
 ////////////////////////////////////
 namespace info {
 	//////////////////////////////////////
-	template<typename U = unsigned long, typename STRINGTYPE = std::string, typename W = long>
+	template<typename U, typename STRINGTYPE, typename W>
 	class IndivMap {
 	public:
 		using IndexType = U;

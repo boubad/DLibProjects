@@ -16,7 +16,7 @@ using IDTYPE = unsigned long;
 using INTTYPE = unsigned long;
 using STRINGTYPE = std::string;
 using WEIGHTYPE = double;
-using DISTANCETYPE = long;
+using DISTANCETYPE = unsigned long;
 using STRINGSTREAM = std::stringstream;
 //////////////////////////////////
 template<typename T>

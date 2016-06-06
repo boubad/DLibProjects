@@ -8,7 +8,7 @@
 ////////////////////////////////////
 namespace info {
 	//////////////////////////////////
-	template<typename U = unsigned long, typename STRINGTYPE = std::string>
+	template<typename U, typename STRINGTYPE>
 	class Indiv : public InterruptObject {
 	public:
 		using IndexType = U;
@@ -40,9 +40,15 @@ namespace info {
 				}
 			}// p
 		}
+		/*
 		Indiv(IndivType &other) :
 			InterruptObject(other), m_index(other.m_index), m_sigle(other.m_sigle), m_center(
 				other.m_center) {
+		}
+		*/
+		template <typename XU, typename XS>
+		Indiv(const Indiv<XU, XS> &other) : this(other.m_index, other.m_center) {
+
 		}
 		IndivType & operator=(const IndivType &other) {
 			if (this != &other) {
@@ -163,7 +169,7 @@ namespace info {
 	};
 	// class Indiv<U,T>
 	//////////////////////////////////////
-	template<typename U = unsigned long, typename STRINGTYPE = std::string>
+	template<typename U, typename STRINGTYPE>
 	class IIndivSource {
 	public:
 		using IndexType = U;

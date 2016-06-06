@@ -9,12 +9,12 @@
 /////////////////////////////////////////
 namespace info {
 	/////////////////////////////////
-	template <typename IDTYPE = unsigned long, typename INTTYPE = unsigned long, typename STRINGTYPE = std::string, typename WEIGHTYPE = double>
+	template <typename IDTYPE, typename INTTYPE, typename STRINGTYPE, typename WEIGHTYPE>
 	class SQLiteStore : public IStatStore<IDTYPE, INTTYPE, STRINGTYPE, WEIGHTYPE>, private boost::noncopyable {
-		using IDTYPE_BASE = SQLiteStatHelper::IDTYPE;
-		using INTTYPE_BASE = SQLiteStatHelper::INTTYPE;
-		using STRINGTYPE_BASE = SQLiteStatHelper::STRINGTYPE;
-		using WEIGHTYPE_BASE = SQLiteStatHelper::WEIGHTYPE;
+		using IDTYPE_BASE = unsigned long;
+		using INTTYPE_BASE = unsigned long;
+		using STRINGTYPE_BASE = std::string;
+		using WEIGHTYPE_BASE = double;
 		//
 		using strings_vector_base = std::vector<STRINGTYPE_BASE>;
 		using ints_vector_base = std::vector<IDTYPE_BASE>;
@@ -43,7 +43,12 @@ namespace info {
 	private:
 		std::unique_ptr<SQLiteStatHelper> m_helper;
 	public:
-		SQLiteStore(const STRINGTYPE &sDatabaseName = SQLiteStatHelper::DEFAULT_DATABASE_NAME) {
+		SQLiteStore() {
+			this->m_helper.reset(new SQLiteStatHelper());
+			assert(this->m_helper.get() != nullptr);
+			assert(this->m_helper->is_valid());
+		}
+		SQLiteStore(const STRINGTYPE &sDatabaseName) {
 			this->m_helper.reset(new SQLiteStatHelper(sDatabaseName));
 			assert(this->m_helper.get() != nullptr);
 			assert(this->m_helper->is_valid());
@@ -101,7 +106,8 @@ namespace info {
 				dest.dataset_id((IDTYPE)src.dataset_id());
 				dest.weight((WEIGHTYPE)src.weight());
 				STRINGTYPE s;
-				info_convert_string(src.status(), s);
+				std::string sx = src.status();
+				info_convert_string(sx, s);
 				dest.status(s);
 				info_convert_string(src.sigle(), s);
 				dest.sigle(s);

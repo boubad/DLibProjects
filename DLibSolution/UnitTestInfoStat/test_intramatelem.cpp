@@ -35,7 +35,7 @@ namespace UnitTestInfoStat
 	////////////////////////////////
 	using IntraMatElemType = IntraMatElem<IDTYPE, DISTANCETYPE, STRINGTYPE>;
 	using RescritType = std::atomic<DISTANCETYPE>;
-	using IntraMatElemResultType = IntraMatElemResult<IDTYPE, DISTANCETYPE>;
+	using IntraMatElemResultType = IntraMatElemResult<IDTYPE, DISTANCETYPE,STRINGTYPE>;
 	using IntraMatElemResultPtr = std::shared_ptr<IntraMatElemResultType>;
 	using queue_type = SharedQueue<IntraMatElemResultPtr>;
 	////////////////////////
