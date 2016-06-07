@@ -249,16 +249,10 @@ namespace info {
 			if (oInds.size() >= this->m_nrows) {
 				this->m_rowindexes = oInds;
 			}
-			if (this->m_pcontext != nullptr) {
-				this->draw(this->m_pcontext);
-			}
 		}
 		void col_indexes(const sizets_vector &oInds) {
 			if (oInds.size() >= this->m_ncols) {
 				this->m_colindexes = oInds;
-			}
-			if (this->m_pcontext != nullptr) {
-				this->draw(this->m_pcontext);
 			}
 		}
 	};// class DrawItems<STRINGTYPE>
@@ -313,6 +307,9 @@ namespace info {
 				}// j
 			}// i
 		}// resize
+		void draw(DrawContext *pContext, int xpos = 0, int ypos = 0) {
+			this->m_items.draw(pContext, xpos, ypos);
+		}// draw
 	protected:
 		virtual void process_result(IntraMatElemResultPtr oRes) {
 			IntraMatElemResultType *p = oRes.get();
