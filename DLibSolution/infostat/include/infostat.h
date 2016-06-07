@@ -8,7 +8,7 @@
 namespace info {
 	//////////////////////////////////
 	enum class TransformationType {
-		noTransf, recode, recode1000, recode10000, normalize
+		noTransf, recode, recode100, recode256, recode1000, recode10000, normalize
 	};
 	// enum class TransformationType
 	/////////////////////////////
@@ -263,6 +263,33 @@ namespace info {
 					} // min
 				}
 												 break;
+				case TransformationType::recode100: {
+					if (this->min < this->max) {
+						if ((x >= this->min) && (x <= this->max)) {
+							double dd = ((x - this->min) / (this->max - this->min))
+								* 100.0 + 0.5;
+							int nx = (int)dd;
+							dest = InfoValue(nx);
+							bRet = true;
+						}
+					} // min
+				}
+													 break;
+				case TransformationType::recode256: {
+					if (this->min < this->max) {
+						if ((x >= this->min) && (x <= this->max)) {
+							double dd = ((x - this->min) / (this->max - this->min))
+								* 256.0 + 0.5;
+							int nx = (int)dd;
+							if (nx > 255) {
+								nx = 255;
+							}
+							dest = InfoValue(nx);
+							bRet = true;
+						}
+					} // min
+				}
+													 break;
 				case TransformationType::recode1000: {
 					if (this->min < this->max) {
 						if ((x >= this->min) && (x <= this->max)) {
