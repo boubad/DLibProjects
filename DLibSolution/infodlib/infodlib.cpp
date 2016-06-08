@@ -8,36 +8,50 @@
 #include <string>
 /////////////////////////
 #include <intramat.h>
-#include <matresult.h>
-#include <transformed_storeindivsource.h>
+#include <datavector_indivprovider.h>
 #include <base_drawitem.h>
-////////////////////////////
-#include <mytestfixture.h>
-#include <mytestvariablefixture.h>
-//////////////////////////
+//////////////////////////////
+#include <infotestdata.h>
+//////////////////////////////
 #include <global_defs.h>
 /////////////////////////////
 using namespace std;
 using namespace dlib;
 using namespace info;
-///////////////////////////////////
-using MyFixture = MyTestFixture<IDTYPE, INTTYPE, STRINGTYPE, WEIGHTYPE>;
-using TranformedStoreIndivSourceType = TranformedStoreIndivSource<IDTYPE, INTTYPE, STRINGTYPE, WEIGHTYPE>;
-/////////////////////////////
-class DLibDrawContext : public info::DrawContext<STRINGTYPE> {
-	using DrawItem = BaseDrawItem<STRINGTYPE>;
-	canvas &m_canvas;
+//////////////////////////////
+using DrawItemsType = DrawItems<STRINGTYPE, FLOATTYPE>;
+using ints_vector = std::vector<IDTYPE>;
+using doubles_vector = std::vector<double>;
+using strings_vector = std::vector<STRINGTYPE>;
+using ints_doubles_map = std::map<IDTYPE, double>;
+////////////////////////////////////////
+using IntraMatElemType = IntraMatElem<IDTYPE, DISTANCETYPE, STRINGTYPE>;
+using SourceType = IIndivSource<IDTYPE, STRINGTYPE>;
+using RescritType = std::atomic<DISTANCETYPE>;
+using IntraMatElemResultType = IntraMatElemResult<IDTYPE, DISTANCETYPE, STRINGTYPE>;
+using IntraMatElemResultPtr = std::shared_ptr<IntraMatElemResultType>;
+using queue_type = SharedQueue<IntraMatElemResultPtr>;
+////////////////////////
+using MatOrdType = IntraMatOrd<IDTYPE, DISTANCETYPE, STRINGTYPE>;
+using backgrounder = MatElemResultBackgounder<IDTYPE, DISTANCETYPE, STRINGTYPE>;
+using ConnectionType = boost::signals2::connection;
+////////////////////////////////////
+class DLibDrawContext : public info::DrawContext<STRINGTYPE, FLOATTYPE> {
+	using DrawItem = BaseDrawItem<STRINGTYPE, FLOATTYPE>;
+	const canvas &m_canvas;
 public:
-	DLibDrawContext(canvas &m) :m_canvas(m) {
+	DLibDrawContext(const canvas &m, const DrawContextParams *params) :info::DrawContext<STRINGTYPE, FLOATTYPE>(params), m_canvas(m) {
 	}
 	virtual ~DLibDrawContext() {}
 public:
-	virtual void draw(DrawItem *pItem, long x0, long y0) {
+	virtual void draw(DrawItem *pItem, coord_type x0 = 0, coord_type y0 = 0) const {
 		if (pItem == nullptr) {
 			return;
 		}
-		unsigned long w = 0, h = 0;
-		pItem->get_width_height(w, h);
+		const DrawContextParams *pParams = this->draw_params();
+		assert(pParams != nullptr);
+		dist_type w = pParams->dx;
+		dist_type  h = pParams->dy;
 		if ((w <= 0) || (h <= 0)) {
 			return;
 		}
@@ -46,30 +60,61 @@ public:
 		if (area.is_empty() == true) {
 			return;
 		}
-		unsigned long hx = pItem->value();
-		if ((hx < 0) || (hx > h)) {
-			return;
-		}
 		MatCellType aType = pItem->type();
 		switch (aType)
 		{
+		case MatCellType::summaryIndCell:
+		{
+			double v = (double)pItem->value();
+			if ((v >= 0.0) && (v <= 1.0)) {
+				dist_type hx = (h < w) ? h : w;
+				double rf = hx * std::sqrt(v);
+				int r = (int)rf;
+				point center(x0 + (w / 2), y0 + (h / 2));
+				rgb_pixel color(pParams->sumindcolor.red, pParams->sumindcolor.green, pParams->sumindcolor.blue);
+				draw_solid_circle(m_canvas, center, r, color);
+			}
+		}
+		break;
+		case MatCellType::summaryVarCell:
+		{
+			double v = (double)pItem->value();
+			if ((v >= 0.0) && (v <= 1.0)) {
+				dist_type hx = (h < w) ? h : w;
+				double rf = hx * std::sqrt(v);
+				int r = (int)rf;
+				point center(x0 + (w / 2), y0 + (h / 2));
+				rgb_pixel color(pParams->sumvarcolor.red, pParams->sumvarcolor.green, pParams->sumvarcolor.blue);
+				draw_solid_circle(m_canvas, center, r, color);
+			}
+		}
+		break;
 		case MatCellType::plainCell:
 		{
-			double f = ((double)hx / (double)h)*256.0;
-			int n = (int)f;
-			if (n > 255) {
-				n = 255;
+			double v = (double)pItem->value();
+			if ((v >= 0.0) && (v <= 1.0)) {
+				double f = 256.0 * v;
+				int n = (int)f;
+				if (n > 255) {
+					n = 255;
+				}
+				rectangle rr(x0, y0, x0 + w, y0 + h);
+				rgb_pixel color((unsigned char)n, (unsigned char)n, (unsigned char)n);
+				fill_rect(m_canvas, rr, color);
 			}
-			rectangle rr(x0, y0, x0 + w, y0 + h);
-			rgb_pixel color((unsigned char)n, (unsigned char)n, (unsigned char)n);
-			fill_rect(m_canvas, rr, color);
 		}
 		break;
 		case MatCellType::histogCell:
 		{
-			rectangle rr(x0, y0 + h - hx, x0 + w, y0 + h);
-			rgb_pixel color(this->m_downcolor.red, this->m_downcolor.green, this->m_downcolor.blue);
-			fill_rect(m_canvas, rr, color);
+			double v = (double)pItem->value();
+			if ((v >= 0.0) && (v <= 1.0)) {
+				double f = h * v;
+				int hx = (int)f;
+				rectangle rr(x0, y0 + h - hx, x0 + w, y0 + h);
+				unsigned char c = pParams->downcolor.red;
+				rgb_pixel color(c, c, c);
+				fill_rect(m_canvas, rr, color);
+			}
 		}
 		break;
 		default:
@@ -77,6 +122,193 @@ public:
 		}
 	}// draw
 };// class DLibDrawContext
+/////////////////////////////////////
+class matrice_win : public drawable_window
+{
+	std::atomic<bool> m_donevar;
+	std::atomic<bool> m_doneind;
+	std::atomic<bool> m_cancel;
+	size_t m_nrows;
+	size_t m_ncols;
+	DrawContextParams oDrawContextParams;
+	std::unique_ptr<DrawItemsType> m_items;
+	std::unique_ptr<MatOrdType> m_matord;
+	backgrounder m_backgrounder;
+	ConnectionType m_conn;
+	STRINGTYPE m_sigle;
+	std::unique_ptr<std::thread> m_runnable;
+public:
+	matrice_win() :m_donevar(false), m_doneind(false), m_cancel(false), m_nrows(0), m_ncols(0)
+	{
+		InfoTestData::get_test_name(this->m_sigle);
+		size_t nRows = 0, nCols = 0;
+		std::vector<double> data;
+		std::vector<std::string> rowNames, colNames;
+		this->init_data(this->m_sigle, nRows, nCols, data, rowNames, colNames);
+		DrawItemsType *pItems = this->m_items.get();
+		this->m_conn = this->m_backgrounder.connect([this, pItems](IntraMatElemResultPtr oRes) {
+			pItems->set_result(oRes);
+			this->my_draw();
+		});
+		this->m_runnable.reset(new std::thread([this, nRows, nCols, data, rowNames, colNames]() {
+			this->run_matrice(nRows, nCols, data, rowNames, colNames);
+		}));
+		show();
+	}
+
+	~matrice_win() {
+		this->m_cancel.store(true);
+		std::thread *p = this->m_runnable.get();
+		if (p != nullptr) {
+			p->join();
+		}
+		close_window();
+	}
+protected:
+	virtual void on_window_resized() {
+		unsigned long ww = 0, hh = 0;
+		this->get_size(ww, hh);
+		if ((ww > 0) && (hh > 0)) {
+			unsigned long w = ww / (this->m_ncols + 2);
+			unsigned long h = hh / (this->m_nrows + 2);
+			if (w < 8) {
+				w = 8;
+			}
+			if (h < 8) {
+				h = 8;
+			}
+			oDrawContextParams.dx = w;
+			oDrawContextParams.dy = h;
+			my_draw();
+		}
+	}
+private:
+	void my_draw(void) {
+		unsigned long ww = 0, hh = 0;
+		this->get_size(ww, hh);
+		rectangle r(0, 0, ww, hh);
+		this->invalidate_rectangle(r);
+	}
+	virtual void paint(const canvas& c)
+	{
+		DrawItemsType *p = this->m_items.get();
+		if (p != nullptr) {
+			unsigned long ww = 0, hh = 0;
+			this->get_size(ww, hh);
+			rectangle r(0, 0, ww, hh);
+			fill_rect(c, r, rgb_pixel(255, 255, 255));
+			DLibDrawContext oContext(c, &oDrawContextParams);
+			p->draw(&oContext);
+		}// p
+	}// draw
+	void run_matrice(size_t nRows, size_t nCols, const std::vector<double> &gdata,
+		const std::vector<std::string> &rowNames, const std::vector<std::string> &colNames) {
+		ints_vector indIds(nRows), varIds(nCols);
+		std::vector<double> varData(nCols * nRows);
+		ints_doubles_map weights;
+		for (size_t i = 0; i < nRows; ++i) {
+			indIds[i] = (IDTYPE)(i + 1);
+			for (size_t j = 0; j < nCols; ++j) {
+				varData[j * nRows + i] = gdata[i * nCols + j];
+			}// j
+		}// i
+		for (size_t j = 0; j < nCols; ++j) {
+			varIds[j] = (IDTYPE)(j + 1);
+		}
+		//
+		DataVectorIndivSource<IDTYPE, STRINGTYPE> oInd(nRows, nCols, gdata, indIds, varIds, rowNames, weights);
+		DataVectorIndivSource<IDTYPE, STRINGTYPE> oVar(nCols, nRows, varData, varIds, indIds, colNames, weights);
+		//
+		this->m_matord.reset(new MatOrdType(&m_backgrounder, &(this->m_cancel)));
+		DrawItemsType *pItems = this->m_items.get();
+		this->oDrawContextParams.bIndsSum = false;
+		this->oDrawContextParams.bVarsSum = false;
+		this->m_conn = this->m_backgrounder.connect([this, pItems](IntraMatElemResultPtr oRes) {
+			IntraMatElemResultType *p = oRes.get();
+			if (p != nullptr) {
+				if (p->stage == StageType::finished) {
+					if (p->disposition == DispositionType::indiv) {
+						this->m_doneind.store(true);
+					}
+					else if (p->disposition == DispositionType::variable) {
+						this->m_donevar.store(true);
+					}
+					if (this->m_donevar.load() && this->m_doneind.load()) {
+						DrawContextParams &ctx = this->oDrawContextParams;
+						ctx.downcolor = ctx.donecolor;
+						ctx.bIndsSum = true;
+						ctx.bVarsSum = true;
+						this->my_draw();
+					}
+				}// finished
+				pItems->set_result(oRes);
+				this->my_draw();
+			}
+		});
+		MatOrdType *pMat = this->m_matord.get();
+		assert(pMat != nullptr);
+		oInd.recode(1000);
+		oVar.recode(1000);
+		pMat->arrange(&oInd, &oVar);
+	}// run_matrice
+	void init_data(const STRINGTYPE &sigle, size_t &nRows, size_t &nCols, std::vector<double> &gdata,
+		std::vector<std::string> &rowNames, std::vector<std::string> &colNames) {
+		//
+		nRows = 0;
+		nCols = 0;
+		std::vector<int> data;
+		std::vector<double> varsSum, indsSum;
+		InfoTestData::get_data(sigle, nRows, nCols, data, rowNames, colNames);
+		this->m_nrows = nRows;
+		this->m_ncols = nCols;
+		varsSum.resize(nCols);
+		indsSum.resize(nRows);
+		gdata.resize(nCols * nRows);
+		for (size_t i = 0; i < nCols; ++i) {
+			double s1 = 0;
+			double s2 = 0;
+			double fmin = 0, fmax = 0;
+			for (size_t j = 0; j < nRows; ++j) {
+				double x = data[j * nCols + i];
+				s1 += x;
+				s2 += x * x;
+				if (j == 0) {
+					fmin = x;
+					fmax = x;
+				}
+				else if (x < fmin) {
+					fmin = x;
+				}
+				else if (x > fmax) {
+					fmax = x;
+				}
+			}// j
+			s1 /= nRows;
+			s2 /= nRows;
+			s2 = std::sqrt(s2 - (s1 * s1));
+			varsSum[i] = s2 / s1;
+			double delta = fmax - fmin;
+			assert(delta > 0.0);
+			for (size_t j = 0; j < nRows; ++j) {
+				size_t pos = j * nCols + i;
+				gdata[pos] = (data[pos] - fmin) / delta;
+			}
+		}// i
+		for (size_t i = 0; i < nRows; ++i) {
+			indsSum[i] = data[i * nCols];
+		}
+		DrawItemsType *p = new DrawItemsType();
+		assert(p != nullptr);
+		MatCellType aType(MatCellType::histogCell);
+		//MatCellType aType(MatCellType::plainCell);
+		bool bRet = p->initialize(aType, nRows, nCols, data, rowNames, colNames, indsSum, varsSum);
+		assert(bRet);
+		this->m_items.reset(p);
+		set_title(sigle);
+		this->set_size(600, 600);
+	}// init_data
+
+};
 //////////////////////////
 //  ----------------------------------------------------------------------------
 
@@ -263,7 +495,7 @@ private:
 int main()
 {
 	// create our window
-	win my_window;
+	matrice_win my_window;
 
 
 	// wait until the user closes this window before we let the program 

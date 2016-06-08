@@ -23,19 +23,18 @@ namespace info {
 		public:
 			TestStoreFixture() {
 				(void)this->get_sql_store();
+				(void)this->get_memory_store();
 			} // init
 			virtual ~TestStoreFixture() {
 			}
 			IStoreType *get_store(bool bMemory = true) {
-				/*
 				if (bMemory) {
 					return (this->get_memory_store());
 				}
 				else {
 					return (this->get_sql_store());
 				}
-				*/
-				return (this->get_sql_store());
+				//return (this->get_sql_store());
 			}
 			IStoreType *get_memory_store(void) {
 				IStoreType *p = this->m_man.get();

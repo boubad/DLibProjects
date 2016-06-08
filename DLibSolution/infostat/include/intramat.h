@@ -27,6 +27,7 @@ namespace info {
 			using IndivMapType = IndivMap<IDTYPE, STRINGTYPE, DISTANCETYPE>;
 			using queue_type = MatElemResultBackgounder<IDTYPE, DISTANCETYPE, STRINGTYPE>;
 		private:
+			std::atomic<bool> *m_pcancel;
 			DispositionType m_disp;
 			queue_type *m_pqueue;
 			DISTANCETYPE m_crit;
@@ -36,7 +37,7 @@ namespace info {
 			std::unique_ptr<DistanceMapType> m_odist;
 		public:
 			IntraMatElem(DispositionType disp = DispositionType::invalid,
-				queue_type *pq = nullptr) :m_disp(disp), m_pqueue(pq), m_crit(0), m_pdist(nullptr) {
+				queue_type *pq = nullptr, std::atomic<bool> *pCancel = nullptr ) : m_pcancel(pCancel),m_disp(disp), m_pqueue(pq), m_crit(0), m_pdist(nullptr) {
 			}
 			virtual ~IntraMatElem() {
 			}
@@ -67,6 +68,9 @@ namespace info {
 				DISTANCETYPE oCrit(this->m_crit);
 				this->notify(StageType::started);
 				do {
+					if ((this->m_pcancel != nullptr) && this->m_pcancel->load()) {
+						break;
+					}
 					if (!this->one_iteration(oCrit)) {
 						break;
 					}
@@ -122,6 +126,9 @@ namespace info {
 				//
 				pairs_list q;
 				bool bRet = this->find_best_try(q, oCrit);
+				if ((this->m_pcancel != nullptr) && this->m_pcancel->load()) {
+					return (false);
+				}
 				if (!bRet) {
 					return (false);
 				}
@@ -149,14 +156,16 @@ namespace info {
 				DISTANCETYPE oldCrit(oCrit);
 				tasks_vector tasks;
 				DistanceMapType *pDist = this->m_pdist;
+				std::atomic<bool> *pCancel = this->m_pcancel;
 				while(!q.empty()) {
 					sizets_pair pp = q.front();
 					size_t j1 = pp.first;
 					size_t j2 = pp.second;
 					q.pop_front();
 					if (j1 != j2) {
-						task_type t([j1, j2, pDist,oldIndexes]()->IntraMatElemResultPtr {
+						task_type t([j1, j2, pDist,oldIndexes,pCancel]()->IntraMatElemResultPtr {
 							IntraMatElemType xMat;
+							xMat.m_pcancel = pCancel;
 							xMat.m_pdist = pDist;
 							xMat.m_indexes = oldIndexes;
 							xMat.permute_items(j1, j2);
@@ -188,6 +197,9 @@ namespace info {
 			} //one_iteration
 #else
 			bool one_iteration(DISTANCETYPE &oCrit) {
+				if ((this->m_pcancel != nullptr) && this->m_pcancel->load()) {
+					return (false);
+				}
 				//
 				pairs_list q;
 				bool bRet = this->find_best_try(q, oCrit);
@@ -243,9 +255,17 @@ namespace info {
 				const size_t n = this->m_pdist->size();
 				DISTANCETYPE oldCrit = oCrit;
 				for (size_t i = 0; i < n; ++i) {
+					if ((this->m_pcancel != nullptr) && this->m_pcancel->load()) {
+						qq.clear();
+						return (false);
+					}
 					for (size_t j = 0; j < i; ++j) {
 						sizets_vector temp(indexes);
 						if (temp.size() < n) {
+							return (false);
+						}
+						if ((this->m_pcancel != nullptr) && this->m_pcancel->load()) {
+							qq.clear();
 							return (false);
 						}
 						const size_t tt = temp[i];
@@ -355,14 +375,24 @@ namespace info {
 			using IndivTypePtr = typename MatElemType::IndivTypePtr;
 			using MatOrdType = IntraMatOrd<IDTYPE, DISTANCETYPE, STRINGTYPE>;
 			using queue_type = MatElemResultBackgounder<IDTYPE, DISTANCETYPE, STRINGTYPE>;
+			using IndivMapType = IndivMap<IDTYPE, STRINGTYPE, DISTANCETYPE>;
 		private:
+			std::atomic<bool> *m_pcancel;
 			queue_type *m_pqueue;
 			std::unique_ptr<MatElemType> m_vars;
 			std::unique_ptr<MatElemType> m_inds;
 			STRINGTYPE m_sigle;
 		protected:
 			bool prep_vars(SourceType *pProvider, queue_type *pq) {
-				this->m_vars.reset(new MatElemType(DispositionType::variable));
+				this->m_vars.reset(new MatElemType(DispositionType::variable, pq, this->m_pcancel));
+				MatElemType *pMat = this->m_vars.get();
+				assert(pMat != nullptr);
+				pMat->sigle(this->m_sigle);
+				pMat->arrange(pProvider, pq);
+				return (true);
+			} // prep_vars
+			bool prep_vars(IndivMapType *pProvider, queue_type *pq) {
+				this->m_vars.reset(new MatElemType(DispositionType::variable,pq,this->m_pcancel));
 				MatElemType *pMat = this->m_vars.get();
 				assert(pMat != nullptr);
 				pMat->sigle(this->m_sigle);
@@ -370,7 +400,15 @@ namespace info {
 				return (true);
 			} // prep_vars
 			bool prep_inds(SourceType *pProvider, queue_type *pq) {
-				this->m_inds.reset(new MatElemType(DispositionType::indiv));
+				this->m_inds.reset(new MatElemType(DispositionType::indiv,pq, this->m_pcancel));
+				MatElemType *pMat = this->m_inds.get();
+				assert(pMat != nullptr);
+				pMat->sigle(this->m_sigle);
+				pMat->arrange(pProvider, pq);
+				return (true);
+			} // prep_inds
+			bool prep_inds(IndivMapType *pProvider, queue_type *pq) {
+				this->m_inds.reset(new MatElemType(DispositionType::indiv,pq, this->m_pcancel));
 				MatElemType *pMat = this->m_inds.get();
 				assert(pMat != nullptr);
 				pMat->sigle(this->m_sigle);
@@ -378,9 +416,14 @@ namespace info {
 				return (true);
 			} // prep_inds
 		public:
-			IntraMatOrd(queue_type *pq = nullptr) : m_pqueue(pq) {
+			IntraMatOrd(queue_type *pq = nullptr,std::atomic<bool> *pCancel = nullptr) : m_pcancel(pCancel),m_pqueue(pq) {
 			} // MatOrd
-			IntraMatOrd(SourceType *pIndsSource, SourceType *pVarsSource, queue_type *pRes = nullptr) : m_pqueue(pq) {
+			IntraMatOrd(SourceType *pIndsSource, SourceType *pVarsSource, 
+				queue_type *pRes = nullptr, std::atomic<bool> *pCancel = nullptr): m_pcancel(pCancel),m_pqueue(pq) {
+				this->arrange(pIndsSource, pVarsSource, pRes);
+			} // MatOrd
+			IntraMatOrd(IndivMapType *pIndsSource, IndivMapType *pVarsSource, 
+				queue_type *pRes = nullptr, std::atomic<bool> *pCancel = nullptr) : m_pcancel(false),m_pqueue(pq) {
 				this->arrange(pIndsSource, pVarsSource, pRes);
 			} // MatOrd
 			virtual ~IntraMatOrd() {
@@ -418,6 +461,30 @@ namespace info {
 				bool bRet = fInd.get() && fVar.get();
 #endif // _MSC_VER
 
+			} // arrange
+			void arrange(IndivMapType *pIndsSource, IndivMapType *pVarsSource, queue_type *pRes = nullptr) {
+				assert(pIndsSource != nullptr);
+				assert(pVarsSource != nullptr);
+				queue_type *pq = this->m_pqueue;
+				if (pRes != nullptr) {
+					pq = pRes;
+				}
+#if defined(_MSC_VER)
+				concurrency::parallel_invoke([this, pIndsSource, pq]() {
+					(void)this->prep_inds(pIndsSource, pq);
+				},
+					[this, pVarsSource, pq]() {
+					(void)this->prep_vars(pVarsSource, pq);
+				});
+#else
+				std::future<bool> fInd = std::async([&]()->bool {
+					return this->prep_inds(pIndsSource, pq);
+				});
+				std::future<bool> fVar = std::async([&]()->bool {
+					return this->prep_vars(pVarsSource, pq);
+				});
+				bool bRet = fInd.get() && fVar.get();
+#endif // _MSC_VER
 			} // arrange
 	};
 	////////////////////////////////////
