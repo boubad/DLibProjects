@@ -11,21 +11,30 @@ namespace info {
 		unsigned char green;
 		unsigned char blue;
 		InfoColor() :red(0), green(0), blue(0) {}
+		InfoColor(unsigned char r, unsigned char g, unsigned char b) :
+			red(r), green(g), blue(b) {}
+		InfoColor(unsigned char c) :red(c), green(c), blue(c) {}
+
 	};// struct InfoColor
 	/////////////////////////////////////////
 	enum class MatCellType { noCell, varCell, indCell, summaryCell, histogCell, plainCell };
 	////////////////////////////////////
 	template <typename STRINGTYPE>
-	class BaseDrawItem<STRINGTYPE>;
+	class BaseDrawItem;
 	/////////////////////////////////////////
 	template <typename STRINGTYPE>
 	class DrawContext {
 		using DrawItem = BaseDrawItem<STRINGTYPE>;
+	protected:
+		InfoColor m_upcolor;
+		InfoColor m_downcolor;
+		InfoColor m_sumcolor;
+		InfoColor m_textcolor;
 	public:
-		DrawContext() {}
+		DrawContext() :m_upcolor(255), m_downcolor(0), m_sumcolor(255, 0, 0), m_textcolor(0) {}
 		virtual ~DrawContext() {}
 	public:
-		virtual void draw(DrawItem *pItem, int x0, int y0) {
+		virtual void draw(DrawItem *pItem, long x0, long y0) {
 			// do nothing here
 		}
 	private:
@@ -37,16 +46,16 @@ namespace info {
 	public:
 		using BaseDrawItemType = BaseDrawItem<STRINGTYPE>;
 	private:
-		int	m_width;
-		int m_height;
-		int m_val;
-		int m_ipos;
-		int m_jpos;
+		unsigned long m_width;
+		unsigned long m_height;
+		unsigned long m_val;
+		size_t m_ipos;
+		size_t m_jpos;
 		MatCellType m_type;
 		STRINGTYPE m_text;
 	public:
 		BaseDrawItem() :m_width(0), m_width(0), m_val(0), m_ipos(-1), m_jpos(-1), m_type(MatCellType::noCell) {}
-		BaseDrawItem(MatCellType t, int ipos, int jpos, int width, int height, int val) :m_width(width), m_height(height),
+		BaseDrawItem(MatCellType t, size_t ipos, size_t jpos, unsigned long width, unsigned long height, unsigned long val) :m_width(width), m_height(height),
 			m_val(val), m_ipos(ipos), m_jpos(jpos), m_type(t) {
 
 		}
@@ -66,7 +75,7 @@ namespace info {
 		}
 		virtual ~BaseDrawItem() {}
 	public:
-		virtual void draw(DrawContext<STRINGTYPE> *pContext, int xpos = 0, int ypos = 0) {
+		virtual void draw(DrawContext<STRINGTYPE> *pContext, long xpos = 0, long ypos = 0) {
 			if (pContext != nullptr) {
 				pContext->draw(this, xpos, ypos);
 			}
@@ -78,16 +87,16 @@ namespace info {
 		void type(MatCellType t) {
 			this->m_type = t;
 		}
-		void get_indexes(int &ipos, int &jpos) const {
+		void get_indexes(size_t &ipos, size_t &jpos) const {
 			ipos = this->m_ipos;
 			jpos = this->m_jpos;
 		}
-		void set indexes(int ipos, int jpos) {
+		void set_indexes(size_t ipos, size_t jpos) {
 			this->m_ipos = ipos;
 			this->m_jpos = jpos;
 		}
 		bool has_rect(void) const {
-			return ((this->m_width > 0) && (this->m_height > 0);
+			return ((this->m_width > 0) && (this->m_height > 0));
 		}
 		const STRINGTYPE &text(void) const {
 			return (this->m_text);
@@ -95,25 +104,25 @@ namespace info {
 		void text(const STRINGTYPE &s) {
 			this->m_text = s;
 		}
-		int value(void) const {
+		unsigned long value(void) const {
 			return (this->m_val);
 		}
-		void value(int n) {
+		void value(unsigned long n) {
 			this->m_val = n;
 		}
-		int width(void) const {
+		unsigned long width(void) const {
 			return (this->m_width);
 		}
-		void width(int w) {
+		void width(unsigned long w) {
 			this->m_width = w;
 		}
-		int height(void) const {
+		unsigned long height(void) const {
 			return (this->m_width);
 		}
-		void height(int h) {
+		void height(unsigned long h) {
 			this->m_height = h;
 		}
-		void get_width_height(int &w, int &h) const {
+		void get_width_height(unsigned long &w, unsigned long &h) const {
 			w = this->m_width;
 			h = this->m_height;
 		}
@@ -131,20 +140,25 @@ namespace info {
 	private:
 		size_t m_nrows;
 		size_t m_ncols;
-		ContextType *m_pcontext;
-		int m_x0;
-		int m_y0;
-		int m_deltax;
-		int m_dx;
-		int m_deltay;
-		int m_dy;
+		long m_x0;
+		long m_y0;
+		unsigned long m_deltax;
+		unsigned long m_dx;
+		unsigned long m_deltay;
+		unsigned long m_dy;
 		items_vector m_items;
 		sizets_vector m_colindexes;
 		sizets_vector m_rowindexes;
 		//
 	public:
-		DrawItems(ContextType *pContext = nullptr,
-			int w = 29, int h = 29, int dx = 3, int dy = 3) :m_nrows(0), m_ncols(0), m_pcontext(pContext), m_x0(0), m_y0(0), m_deltax(dx), m_dx(w), m_deltay(dy), m_dy(h) {}
+		template <typename T>
+		DrawItems(size_t nRows, size_t nCols,
+			const std::vector<T> &data,
+			unsigned long w = 29, unsigned long h = 29,
+			unsigned long dx = 3, unsigned long dy = 3) :m_nrows(0), m_ncols(0),
+			m_x0(0), m_y0(0), m_deltax(dx), m_dx(w), m_deltay(dy), m_dy(h) {
+			this->initialize(nRows, nCols, data, w, h, dx, dy);
+		}
 		virtual ~DrawItems() {
 			items_vector &vv = this->m_items;
 			for (auto it = vv.begin(); it != vv.end(); ++it) {
@@ -154,51 +168,56 @@ namespace info {
 			vv.clear();
 		}
 	public:
-		PDrawItemType create_item(MatCellType t, size_t iRow, size_t iCol) {
-			PDrawItemType pRet(nullptr);
-			if ((iRow >= this->m_nrows) || (iCol >= this->m_ncols)) {
-				return (pRet);
+		template <typename T>
+		void initialize(size_t nRows, size_t nCols,
+			const std::vector<T> &data,
+			unsigned long w, unsigned long h, unsigned long dx, unsigned long dy) {
+			assert(nRows > 0);
+			assert(nCols > 0);
+			assert(data.size() >= (size_t)(nCols * nRows));
+			assert(w > 0);
+			assert(h > 0);
+			assert(dx >= 0);
+			assert(dy >= 0);
+			T vMin = std::min_element(data.begin(), data.end());
+			T vMax = std::max_element(data.begin(), data.end());
+			assert(vMin < vMax);
+			double delta = (double)h / ((double)vMax - (double)vMin);
+			this->set_parameters(w, h, dx, dy);
+			this->resize(nRows, nCols);
+			for (size_t i = 0; i < nRows; ++i) {
+				for (size_t j = 0; j < nCols; ++j) {
+					double v = (double)data[i * nCols + j];
+					double f = ((v - (double)vMin) * delta + 0.5);
+					unsigned long ival = (unsigned long)f;
+					PDrawItemType *p = this->create_item(MatCellType::histogCell, i, j, ival);
+				}// j
+			}// i
+		}// resize
+		void row_indexes(const sizets_vector &oInds) {
+			if (oInds.size() >= this->m_nrows) {
+				this->m_rowindexes = oInds;
 			}
-			items_vector &vv = this->m_items;
-			size_t pos = (size_t)(iRow * this->m_ncols + iCol);
-			if (pos >= vv.size()) {
-				return (pRet);
-			}
-			pRet = vv[pos];
-			if (pRet != nullptr) {
-				pRet->type(t);
-			}
-			else {
-				pRet = new BaseDrawItemType();
-				assert(pRet != nullptr);
-				pRet->type(t);
-				pRet->width(this->m_dx);
-				pRet->height(this->m_dy);
-				pRet->get_indexes((int)iRow, (int)iCol);
-				vv[pos] = pRet;
-			}
-			return (pRet);
-		}// create_item
-		void set_parameters(int w, int h, int dx, int dy) {
-			this->m_dx = w;
-			this->m_dy = h;
-			this->m_deltax = dx;
-			this->m_deltay = dy;
 		}
-		virtual void draw(DrawContext *pContext, int xpos = 0, int ypos = 0) {
+		void col_indexes(const sizets_vector &oInds) {
+			if (oInds.size() >= this->m_ncols) {
+				this->m_colindexes = oInds;
+			}
+		}
+		virtual void draw(DrawContext *pContext, long xpos = 0, long ypos = 0) {
 			const size_t nRows = this->m_nrows;
 			const size_t nCols = this->m_ncols;
-			int y = ypos + this->m_y0;
-			int x0 = xpos + this->m_x0;
-			int ddx = this->m_deltax + this->m_dx;
-			int ddy = this->m_deltay + this->m_dy;
+			long y = ypos + this->m_y0;
+			long x0 = xpos + this->m_x0;
+			const unsigned long ddx = this->m_deltax + this->m_dx;
+			const unsigned long ddy = this->m_deltay + this->m_dy;
 			const sizets_vector &rowIndexes = this->m_rowindexes;
 			const sizets_vector &colIndexes = this->m_colindexes;
 			const items_vector &vv = this->m_items;
 			const size_t nTotal = vv.size();
 			for (size_t i = 0; i < nRows; ++i) {
 				size_t ii = rowIndexes[i];
-				int x = x0;
+				long x = x0;
 				for (size_t j = 0; j < nCols; ++j) {
 					size_t jj = colIndexes[j];
 					size_t pos = ii * nCols + jj;
@@ -213,18 +232,46 @@ namespace info {
 				y += ddy;
 			}// i
 		}// draw
-		void clear(void) {
+		void draw(const sizets_vector &rowIndexes, const sizets_vector &colIndexes,
+			DrawContext *pContext, long xpos = 0, long ypos = 0) {
+			this->row_indexes(rowIndexes);
+			this->col_indexes(colIndexes);
+			this->draw(pContext, xpos, ypos);
+		}// draw
+	protected:
+		PDrawItemType create_item(MatCellType t, size_t iRow, size_t iCol, unsigned long ival) {
+			PDrawItemType pRet(nullptr);
+			const size_t nCols = this->m_ncols;
+			if ((iRow >= this->m_nrows) || (iCol >= nCols)) {
+				return (pRet);
+			}
 			items_vector &vv = this->m_items;
-			for (auto it = vv.begin(); it != vv.end(); ++it) {
-				PDrawItemType p = *it;
-				delete p;
+			size_t pos = (size_t)((iRow * nCols) + iCol);
+			if (pos >= vv.size()) {
+				return (pRet);
 			}
-			vv.clear();
-		}// clear
-		void resize(size_t nRows, size_t nCols, ContextType *pContext = nullptr) {
-			if (pContext != nullptr) {
-				this->m_pcontext = pContext;
+			pRet = vv[pos];
+			if (pRet != nullptr) {
+				pRet->type(t);
 			}
+			else {
+				pRet = new BaseDrawItemType();
+				assert(pRet != nullptr);
+				pRet->type(t);
+				pRet->width(this->m_dx);
+				pRet->height(this->m_dy);
+				pRet->set_indexes(iRow, iCol);
+				vv[pos] = pRet;
+			}
+			return (pRet);
+		}// create_item
+		void set_parameters(unsigned long w, unsigned long h, unsigned long dx, unsigned long dy) {
+			this->m_dx = w;
+			this->m_dy = h;
+			this->m_deltax = dx;
+			this->m_deltay = dy;
+		}
+		void resize(size_t nRows, size_t nCols) {
 			items_vector &vv = this->m_items;
 			for (auto it = vv.begin(); it != vv.end(); ++it) {
 				PDrawItemType p = *it;
@@ -245,22 +292,6 @@ namespace info {
 				(this->m_colindexes)[i] = i;
 			}
 		}// resize
-		void row_indexes(const sizets_vector &oInds) {
-			if (oInds.size() >= this->m_nrows) {
-				this->m_rowindexes = oInds;
-			}
-			if (this->m_pcontext != nullptr) {
-				this->draw(this->m_pcontext);
-			}
-		}
-		void col_indexes(const sizets_vector &oInds) {
-			if (oInds.size() >= this->m_ncols) {
-				this->m_colindexes = oInds;
-			}
-			if (this->m_pcontext != nullptr) {
-				this->draw(this->m_pcontext);
-			}
-		}
 	};// class DrawItems<STRINGTYPE>
 	///////////////////////////////////////
 	template<typename IDTYPE, typename DISTANCETYPE, typename STRINGTYPE>
@@ -296,7 +327,7 @@ namespace info {
 			T vMin = std::min_element(data.begin(), data.end());
 			T vMax = std::max_element(data.begin(), data.end());
 			assert(vMin < vMax);
-			double delta = (double) h / ((double)vMax - (double)vMin);
+			double delta = (double)h / ((double)vMax - (double)vMin);
 			if (pContext != nullptr) {
 				this->m_pcontext = oContext;
 			}

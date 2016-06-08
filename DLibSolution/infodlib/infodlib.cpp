@@ -6,11 +6,78 @@
 #include <dlib/gui_widgets.h>
 #include <sstream>
 #include <string>
-
-
+/////////////////////////
+#include <intramat.h>
+#include <matresult.h>
+#include <transformed_storeindivsource.h>
+#include <base_drawitem.h>
+////////////////////////////
+#include <mytestfixture.h>
+#include <mytestvariablefixture.h>
+//////////////////////////
+#include <global_defs.h>
+/////////////////////////////
 using namespace std;
 using namespace dlib;
-
+using namespace info;
+///////////////////////////////////
+using MyFixture = MyTestFixture<IDTYPE, INTTYPE, STRINGTYPE, WEIGHTYPE>;
+using TranformedStoreIndivSourceType = TranformedStoreIndivSource<IDTYPE, INTTYPE, STRINGTYPE, WEIGHTYPE>;
+/////////////////////////////
+class DLibDrawContext : public info::DrawContext<STRINGTYPE> {
+	using DrawItem = BaseDrawItem<STRINGTYPE>;
+	canvas &m_canvas;
+public:
+	DLibDrawContext(canvas &m) :m_canvas(m) {
+	}
+	virtual ~DLibDrawContext() {}
+public:
+	virtual void draw(DrawItem *pItem, long x0, long y0) {
+		if (pItem == nullptr) {
+			return;
+		}
+		unsigned long w = 0, h = 0;
+		pItem->get_width_height(w, h);
+		if ((w <= 0) || (h <= 0)) {
+			return;
+		}
+		rectangle r(x0, y0, x0 + w, y0 + h);
+		rectangle area = m_canvas.intersect(r);
+		if (area.is_empty() == true) {
+			return;
+		}
+		unsigned long hx = pItem->value();
+		if ((hx < 0) || (hx > h)) {
+			return;
+		}
+		MatCellType aType = pItem->type();
+		switch (aType)
+		{
+		case MatCellType::plainCell:
+		{
+			double f = ((double)hx / (double)h)*256.0;
+			int n = (int)f;
+			if (n > 255) {
+				n = 255;
+			}
+			rectangle rr(x0, y0, x0 + w, y0 + h);
+			rgb_pixel color((unsigned char)n, (unsigned char)n, (unsigned char)n);
+			fill_rect(m_canvas, rr, color);
+		}
+		break;
+		case MatCellType::histogCell:
+		{
+			rectangle rr(x0, y0 + h - hx, x0 + w, y0 + h);
+			rgb_pixel color(this->m_downcolor.red, this->m_downcolor.green, this->m_downcolor.blue);
+			fill_rect(m_canvas, rr, color);
+		}
+		break;
+		default:
+			break;
+		}
+	}// draw
+};// class DLibDrawContext
+//////////////////////////
 //  ----------------------------------------------------------------------------
 
 class color_box : public draggable
