@@ -25,7 +25,7 @@ namespace info {
 			using IntraMatElemResultType = IntraMatElemResult<IDTYPE, DISTANCETYPE, STRINGTYPE>;
 			using IntraMatElemResultPtr = std::shared_ptr<IntraMatElemResultType>;
 			using IndivMapType = IndivMap<IDTYPE, STRINGTYPE, DISTANCETYPE>;
-			using queue_type = MatElemResultBackgounder<IDTYPE, DISTANCETYPE, STRINGTYPE>;
+			using queue_type = MatElemResultClient<IDTYPE, DISTANCETYPE, STRINGTYPE>;
 		private:
 			std::atomic<bool> *m_pcancel;
 			DispositionType m_disp;
@@ -35,6 +35,10 @@ namespace info {
 			STRINGTYPE m_sigle;
 			sizets_vector m_indexes;
 			std::unique_ptr<DistanceMapType> m_odist;
+		private:
+			bool check_cancelled(void) {
+				return ((this->m_pcancel != nullptr) && this->m_pcancel->load());
+			}// check_interr
 		public:
 			IntraMatElem(DispositionType disp = DispositionType::invalid,
 				queue_type *pq = nullptr, std::atomic<bool> *pCancel = nullptr ) : m_pcancel(pCancel),m_disp(disp), m_pqueue(pq), m_crit(0), m_pdist(nullptr) {
@@ -68,15 +72,20 @@ namespace info {
 				DISTANCETYPE oCrit(this->m_crit);
 				this->notify(StageType::started);
 				do {
-					if ((this->m_pcancel != nullptr) && this->m_pcancel->load()) {
+					if (this->check_cancelled()) {
 						break;
 					}
 					if (!this->one_iteration(oCrit)) {
 						break;
 					}
+					if (this->check_cancelled()) {
+						break;
+					}
 					this->notify(StageType::current);
 				} while (true);
-				this->notify(StageType::finished);
+				if (!this->check_cancelled()) {
+					this->notify(StageType::finished);
+				}
 			}// arrange
 			void arrange(SourceType *pProvider,
 				queue_type *pSubscriber = nullptr) {
@@ -126,7 +135,7 @@ namespace info {
 				//
 				pairs_list q;
 				bool bRet = this->find_best_try(q, oCrit);
-				if ((this->m_pcancel != nullptr) && this->m_pcancel->load()) {
+				if (this->check_cancelled()) {
 					return (false);
 				}
 				if (!bRet) {
@@ -197,7 +206,7 @@ namespace info {
 			} //one_iteration
 #else
 			bool one_iteration(DISTANCETYPE &oCrit) {
-				if ((this->m_pcancel != nullptr) && this->m_pcancel->load()) {
+				if (this->check_cancelled()) {
 					return (false);
 				}
 				//
@@ -255,7 +264,7 @@ namespace info {
 				const size_t n = this->m_pdist->size();
 				DISTANCETYPE oldCrit = oCrit;
 				for (size_t i = 0; i < n; ++i) {
-					if ((this->m_pcancel != nullptr) && this->m_pcancel->load()) {
+					if (this->check_cancelled()) {
 						qq.clear();
 						return (false);
 					}
@@ -264,7 +273,7 @@ namespace info {
 						if (temp.size() < n) {
 							return (false);
 						}
-						if ((this->m_pcancel != nullptr) && this->m_pcancel->load()) {
+						if (this->check_cancelled()) {
 							qq.clear();
 							return (false);
 						}
@@ -272,6 +281,10 @@ namespace info {
 						temp[i] = temp[j];
 						temp[j] = tt;
 						DISTANCETYPE c = this->criteria(temp);
+						if (this->check_cancelled()) {
+							qq.clear();
+							return (false);
+						}
 						if (c <= oldCrit) {
 							auto it =
 								std::find_if(qq.begin(), qq.end(),
@@ -319,6 +332,9 @@ namespace info {
 				}
 				const size_t nx = (size_t)(n - 1);
 				for (size_t i = 0; i < nx; ++i) {
+					if (this->check_cancelled()) {
+						return (dRet);
+					}
 					const size_t i1 = indexes[i];
 					const size_t i2 = indexes[i + 1];
 					dRet = (DISTANCETYPE)(dRet + this->distance(i1, i2));
@@ -374,7 +390,7 @@ namespace info {
 			using IndivType = typename MatElemType::IndivType;
 			using IndivTypePtr = typename MatElemType::IndivTypePtr;
 			using MatOrdType = IntraMatOrd<IDTYPE, DISTANCETYPE, STRINGTYPE>;
-			using queue_type = MatElemResultBackgounder<IDTYPE, DISTANCETYPE, STRINGTYPE>;
+			using queue_type = MatElemResultClient<IDTYPE, DISTANCETYPE, STRINGTYPE>;
 			using IndivMapType = IndivMap<IDTYPE, STRINGTYPE, DISTANCETYPE>;
 		private:
 			std::atomic<bool> *m_pcancel;

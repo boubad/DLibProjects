@@ -56,26 +56,50 @@ namespace info {
 		}// clear
 	};
 	// class IntraMatElemResult
+	////////////////////////////////////////////
+	template<typename IDTYPE, typename DISTANCETYPE, typename STRINGTYPE>
+	class MatElemResultClient : boost::noncopyable {
+	public:
+		using MatElemResultType = IntraMatElemResult<IDTYPE, DISTANCETYPE, STRINGTYPE>;
+		using MatElemResultPtr = std::shared_ptr<MatElemResultType>;
+	public:
+		MatElemResultClient() {
+		}
+		virtual ~MatElemResultClient() {
+		}
+	protected:
+		virtual void process_result(MatElemResultPtr /*oRes*/) {
+			// no nothing in base class
+		}//process_result
+	public:
+		virtual void put(MatElemResultPtr oRes) {
+			this->process_result(oRes);
+		}// put
+	public:
+		void operator()(MatElemResultPtr oRes) {
+			this->process_result(oRes);
+		}
+	}; // class IntraMatElemBackgrounder<IDTYPE,DISTANCETYPE,STRINGTYPE>
 	////////////////////////////////////////
 	template<typename IDTYPE, typename DISTANCETYPE, typename STRINGTYPE>
-	class MatElemResultBackgounder : boost::noncopyable {
+	class MatElemResultBackgounder : MatElemResultClient<IDTYPE,DISTANCETYPE,STRINGTYPE> {
 	public:
-		using IntraMatElemResultType = IntraMatElemResult<IDTYPE, DISTANCETYPE, STRINGTYPE>;
-		using IntraMatElemResultPtr = std::shared_ptr<IntraMatElemResultType>;
-		using SignalType = typename boost::signals2::signal<void(IntraMatElemResultPtr)>;
+		using MatElemResultType = IntraMatElemResult<IDTYPE, DISTANCETYPE, STRINGTYPE>;
+		using MatElemResultPtr = std::shared_ptr<MatElemResultType>;
+		using SignalType = typename boost::signals2::signal<void(MatElemResultPtr)>;
 		using SlotType = typename SignalType::slot_type;
 		using ConnectionType = boost::signals2::connection;
 	private:
 		bool m_hasconnect;
 		std::atomic<bool> done;
-		SharedQueue<IntraMatElemResultPtr> dispatchQueue;
+		SharedQueue<MatElemResultPtr> dispatchQueue;
 		std::unique_ptr<std::thread> runnable;
 		SignalType m_signal;
 	public:
 		MatElemResultBackgounder() :m_hasconnect(false), done(false) {
 			this->runnable.reset(new std::thread([this]() {
 				while (!this->done.load()) {
-					IntraMatElemResultPtr o = this->dispatchQueue.take();
+					MatElemResultPtr o = this->dispatchQueue.take();
 					if (o.get() == nullptr) {
 						this->done.store(true);
 						break;
@@ -93,16 +117,12 @@ namespace info {
 			this->dispatchQueue.put(o);
 			this->runnable->join();
 		}
-	protected:
-		virtual void process_result(IntraMatElemResultPtr /*oRes*/) {
-			// no nothing in base class
-		}//process_result
 	public:
 		ConnectionType connect(const SlotType &subscriber) {
 			this->m_hasconnect = true;
 			return m_signal.connect(subscriber);
 		}//connect
-		void put(IntraMatElemResultPtr oRes) {
+		virtual void put(MatElemResultPtr oRes) {
 			this->dispatchQueue.put(oRes);
 		}// put
 	}; // class IntraMatElemBackgrounder<IDTYPE,DISTANCETYPE,STRINGTYPE>

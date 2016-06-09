@@ -141,6 +141,9 @@
     <ClInclude Include="include\base_drawitem.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\infodlib\dlib_matrice.h">
+      <Filter>include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\infovalue.cpp">
