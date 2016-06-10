@@ -19,6 +19,9 @@
     <Filter Include="src">
       <UniqueIdentifier>{be98e89e-a9d3-44f0-877f-9e6e9a38b3af}</UniqueIdentifier>
     </Filter>
+    <Filter Include="include\infodlib">
+      <UniqueIdentifier>{4111e4e3-2dd4-436e-b7ad-c715a1819f04}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
@@ -142,7 +145,7 @@
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\infodlib\dlib_matrice.h">
-      <Filter>include</Filter>
+      <Filter>include\infodlib</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
