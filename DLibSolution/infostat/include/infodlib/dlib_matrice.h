@@ -109,62 +109,37 @@ namespace info {
 		using SourceType = typename MatElemType::SourceType;
 		using MatOrdType = IntraMatOrd<IDTYPE, DISTANCETYPE, STRINGTYPE>;
 		using queue_type = MatElemResultClient<IDTYPE, DISTANCETYPE, STRINGTYPE>;
-		using SignalType = typename boost::signals2::signal<void(IntraMatElemResultPtr)>;
-		using SlotType = typename SignalType::slot_type;
-		using ConnectionType = boost::signals2::connection;
 	private:
 		queue_type *m_pdest;
-		bool m_hasconnect;
 		std::atomic<bool> m_cancel;
 		SourceType *m_pIndSource;
 		SourceType *m_pVarSource;
 		std::unique_ptr<MatOrdType> m_matord;
-		SignalType m_signal;
-		MatElemResultBackgounder<IDTYPE,DISTANCETYPE,STRINGTYPE> m_backgrounder;
-		ConnectionType m_conn;
 	private:
-		void info_notify(MatElemResultPtr oRes) {
-			if (this->m_pdest != nullptr) {
-				this->m_pdest->put(oRes);
-			}
-			if (this->m_hasconnect) {
-				this->m_signal(oRes);
-			}
-		}// info_notify
 		virtual void thread() {
 			if ((this->m_pIndSource != nullptr) && (this->m_pVarSource != nullptr)) {
 				MatOrdType *pMat = m_matord.get();
 				if (pMat != nullptr) {
 					this->m_cancel.store(false);
-					pMat->arrange(this->m_pIndSource, this->m_pVarSource);
+					pMat->arrange(this->m_pIndSource, this->m_pVarSource, this->m_pdest);
 				}// pMat
 			}// soucres
 		}// thread
 	public:
-		MatOrdAgent(queue_type *pDest = nullptr) :m_pdest(pDest),m_hasconnect(false), m_cancel(false), m_pIndSource(nullptr), m_pVarSource(nullptr) {
-			m_conn = m_backgrounder.connect([this](MatElemResultPtr oRes) {
-				this->info_notify(oRes);
-			});
-			m_matord.reset(new MatOrdType(&m_backgrounder, &m_cancel));
+		MatOrdAgent(queue_type *pDest = nullptr) :m_pdest(pDest), m_cancel(false), m_pIndSource(nullptr), m_pVarSource(nullptr) {
+			m_matord.reset(new MatOrdType(m_pdest, &m_cancel));
 			MatOrdType *pMat = m_matord.get();
 			assert(pMat != nullptr);
 		}
 		MatOrdAgent(SourceType *pInd, SourceType *pVar, queue_type *pDest = nullptr) : m_pdest(pDest),
-			m_hasconnect(false), m_cancel(false), m_pIndSource(pInd), m_pVarSource(pVar) {
-			m_conn = m_backgrounder.connect([this](MatElemResultPtr oRes) {
-				this->info_notify(oRes);
-			});
-			m_matord.reset(new MatOrdType(&m_backgrounder, &m_cancel));
+			m_cancel(false), m_pIndSource(pInd), m_pVarSource(pVar) {
+			m_matord.reset(new MatOrdType(m_pdest, &m_cancel));
 			MatOrdType *pMat = m_matord.get();
 			assert(pMat != nullptr);
 			this->start();
 		}
 		virtual ~MatOrdAgent() {}
 	public:
-		ConnectionType connect(const SlotType &subscriber) {
-			this->m_hasconnect = true;
-			return m_signal.connect(subscriber);
-		}//connect
 		bool arrange(SourceType *pInd, SourceType *pVar, queue_type *pDest = nullptr) {
 			assert(pInd != nullptr);
 			assert(pVar != nullptr);
@@ -188,7 +163,7 @@ namespace info {
 	};// class MatOrdAgent<IDTYPE,DISTANCETYPE,STRINGTYPE>
 	//////////////////////////////////////////////
 	template<typename IDTYPE, typename DISTANCETYPE, typename STRINGTYPE, typename FLOATTYPE, typename DATATYPE>
-	class MatriceDisplayWindow : public dlib::zoomable_region {
+	class MatriceDisplayWindow : public dlib::scrollable_region {
 		using MatElemType = IntraMatElem<IDTYPE, DISTANCETYPE, STRINGTYPE>;
 		using MatElemResultType = typename MatElemType::IntraMatElemResultType;
 		using MatElemResultPtr = typename MatElemType::IntraMatElemResultPtr;
@@ -196,12 +171,14 @@ namespace info {
 		using MatriceDataType = MatriceData<IDTYPE, STRINGTYPE, DATATYPE>;
 		using ContextType = DLibDrawContext<STRINGTYPE, FLOATTYPE>;
 		using DrawItemsType = DrawItems<STRINGTYPE, FLOATTYPE>;
-		using ConnectionType = boost::signals2::connection;
-
+		using MatElemFunctionType = std::function<void(MatElemResultPtr)>;
+		using queue_type = MatElemResultClient<IDTYPE, DISTANCETYPE, STRINGTYPE>;
 	protected:
 		virtual void on_window_resized() {
 			unsigned long ww = 0, hh = 0;
-			this->get_size(ww, hh);
+			const dlib::rectangle &rx = this->total_rect();
+			ww = rx.width();
+			hh = rx.height();
 			if ((ww > 0) && (hh > 0)) {
 				MatriceDataType *pMat = this->m_pMatData;
 				if (pMat != nullptr) {
@@ -221,25 +198,31 @@ namespace info {
 				}// pMat
 			}
 		}
-	private:
-		void my_draw(void) {
-			unsigned long ww = 0, hh = 0;
-			this->get_size(ww, hh);
-			dlib::rectangle r(0, 0, ww, hh);
-			this->invalidate_rectangle(r);
-		}
 		virtual void draw(const dlib::canvas& c)
 		{
+			dlib::scrollable_region::draw(c);
 			DrawItemsType *p = this->m_items.get();
 			if (p != nullptr) {
 				unsigned long ww = 0, hh = 0;
-				this->get_size(ww, hh);
+				const dlib::rectangle &rx = this->total_rect();
+				ww = rx.width();
+				hh = rx.height();
 				dlib::rectangle r(0, 0, ww, hh);
-			dlib:fill_rect(c, r, rgb_pixel(255, 255, 255));
+				dlib::fill_rect(c, r, rgb_pixel(255, 255, 255));
 				ContextType oContext(c, &oDrawContextParams);
 				p->draw(&oContext);
 			}// p
 		}// draw
+	private:
+		void my_draw(void) {
+			unsigned long ww = 0, hh = 0;
+			const dlib::rectangle &rx = this->total_rect();
+			ww = rx.width();
+			hh = rx.height();
+			dlib::rectangle r(0, 0, ww, hh);
+		//	this->invalidate_rectangle(r);
+		}
+
 		void init_data(void) {
 			MatriceDataType *pMat = this->m_pMatData;
 			if (pMat == nullptr) {
@@ -284,9 +267,7 @@ namespace info {
 				return;
 			}
 			//
-			this->m_matord.reset(new MatOrdAgentType());
-			MatOrdAgentType *pMat = this->m_matord.get();
-			this->m_conn = pMat->connect([this](MatElemResultPtr oRes) {
+			queue_type *pf =  new queue_type([this](MatElemResultPtr oRes) {
 				MatElemResultType *p = oRes.get();
 				if (p != nullptr) {
 					if (p->stage == StageType::finished) {
@@ -307,32 +288,42 @@ namespace info {
 					DrawItemsType *pItems = this->m_items.get();
 					pItems->set_result(oRes);
 					this->my_draw();
+					(this->m_dest)(oRes);
 				}
 			});
+			this->m_callback.reset(pf);
+			//
+			this->m_matord.reset(new MatOrdAgentType(pf));
+			MatOrdAgentType *pMat = this->m_matord.get();
 			DrawContextParams &ctx = this->oDrawContextParams;
-			ctx.downcolor = InfoColor(0,0,0);
+			ctx.downcolor = InfoColor(0, 0, 0);
 			ctx.bIndsSum = false;
 			ctx.bVarsSum = false;
 			pMat->arrange(pData->indiv_provider(), pData->variable_provider());
 		}// run_matrice
 	public:
-		MatriceDisplayWindow(dlib::drawable_window& w, unsigned long events = 0) : dlib::zoomable_region(w, events),
+		MatriceDisplayWindow(dlib::drawable_window& w, unsigned long events = 0) : dlib::scrollable_region(w, events),
+			m_dest([](MatElemResultPtr oRes) {}),
 			m_donevar(false), m_doneind(false), m_pMatData(nullptr) {
 		}//MatriceDisplayWindow
 		~MatriceDisplayWindow() {}
+		void set_callback(MatElemFunctionType f) {
+			this->m_dest = f;
+		}
 		void arrange(MatriceDataType *pData) {
 			this->m_pMatData = pData;
 			this->init_data();
 			this->run_matrice();
 		}
 	private:
+		MatElemFunctionType m_dest;
+		std::unique_ptr<queue_type> m_callback;
 		std::atomic<bool> m_donevar;
 		std::atomic<bool> m_doneind;
 		MatriceDataType *m_pMatData;
 		DrawContextParams oDrawContextParams;
 		std::unique_ptr<MatOrdAgentType> m_matord;
 		std::unique_ptr<DrawItemsType> m_items;
-		ConnectionType m_conn;
 	};// class MatriceDisplayWindow
 	////////////////////////////////////////
 }// namespace info

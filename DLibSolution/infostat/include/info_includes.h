@@ -23,6 +23,7 @@
 #include <sstream>
 #include <atomic>
 #include <tuple>
+#include <functional>
 #include <cstdlib>
 #include <ctime>
 #include <chrono>

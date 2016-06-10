@@ -32,168 +32,87 @@ using queue_type = SharedQueue<IntraMatElemResultPtr>;
 ////////////////////////
 using MatOrdType = IntraMatOrd<IDTYPE, DISTANCETYPE, STRINGTYPE>;
 using backgrounder = MatElemResultBackgounder<IDTYPE, DISTANCETYPE, STRINGTYPE>;
-using ConnectionType = boost::signals2::connection;
 ////////////////////////////////
 using MatriceDataType = MatriceData<IDTYPE, STRINGTYPE, DATATYPE>;
+using MatriceWindowType = MatriceDisplayWindow<IDTYPE, DISTANCETYPE, STRINGTYPE, FLOATTYPE, DATATYPE>;
 //////////////////////////////////////////
 class matrice_win : public drawable_window
 {
-	std::atomic<bool> m_donevar;
-	std::atomic<bool> m_doneind;
-	std::atomic<bool> m_cancel;
-	std::unique_ptr<MatriceDataType> m_data;
-	DrawContextParams oDrawContextParams;
-	std::unique_ptr<DrawItemsType> m_items;
-	std::unique_ptr<MatOrdType> m_matord;
-	backgrounder m_backgrounder;
-	ConnectionType m_conn;
-	STRINGTYPE m_sigle;
-	std::unique_ptr<std::thread> m_runnable;
+	MatriceWindowType mat_win;
+	label lblVar;
+	label lblInd;
+	label lblStatus;
+	MatriceDataType m_data;
+protected:
+	void process_result(IntraMatElemResultPtr oRes) {
+		STRINGSTREAM os;
+		label *pLabel = nullptr;
+		IntraMatElemResultType *p = oRes.get();
+		if (p != nullptr) {
+			StageType stage = p->stage;
+			if (stage == StageType::started) {
+				os << "STARTED...\t";
+			}
+			else if (stage == StageType::finished) {
+				os << "FINISHED!!!\t";
+			}
+			STRINGTYPE sx = p->sigle;
+			if (!sx.empty()) {
+				os << sx << "\t";
+			}
+			if (p->disposition == DispositionType::indiv) {
+				os << "INDS\t";
+				pLabel = &(lblInd);
+			}
+			else if (p->disposition == DispositionType::variable) {
+				os << "VARS\t";
+				pLabel = &(lblVar);
+			}
+			DISTANCETYPE crit = p->first;
+			os << "Crit: " << crit << std::endl;
+		}// p
+		STRINGTYPE ss = os.str();
+		if (pLabel != nullptr) {
+			pLabel->set_text(ss);
+		}
+	}// process_result
+	void my_redim(void) {
+		unsigned long h = 0, w = 0;
+		this->get_size(w, h);
+		long x2 = w / 2;
+		x2 += 5;
+		lblVar.set_pos(5, 5);
+		lblInd.set_pos(x2, 5);
+		unsigned long hh = (5 + lblVar.height() + 5);
+		unsigned long hy =  h - hh;
+		if (hy > 0) {
+			this->mat_win.set_pos(0, hh);
+			this->mat_win.set_size(w, hy);
+		}
+		
+	}// my_redim
+	virtual void on_window_resized() {
+		this->my_redim();
+	}
 public:
-	matrice_win() :m_donevar(false), m_doneind(false), m_cancel(false)
+	matrice_win() :mat_win(*this),lblVar(*this),lblInd(*this),lblStatus(*this)
 	{
-		STRINGTYPE name;
+		lblVar.set_pos(5, 5);
 		size_t nRows = 0, nCols = 0;
-		strings_vector rowNames, colNames;
+		STRINGTYPE name;
+		std::vector<STRINGTYPE> rowNames, colNames;
 		std::vector<DATATYPE> data;
-		InfoTestData::get_test_name(name);
-		InfoTestData::get_data(name, nRows, nCols, data, rowNames, colNames);
-		this->m_data.reset(new MatriceDataType(name, nRows, nCols, data, rowNames, colNames));
-
-		this->init_data();
-		this->m_conn = this->m_backgrounder.connect([this](IntraMatElemResultPtr oRes) {
-			DrawItemsType *pItems = this->m_items.get();
-			pItems->set_result(oRes);
-			this->my_draw();
+		InfoTestData::get_test_data(name, nRows, nCols, data, rowNames, colNames);
+		this->m_data.initialize(name, nRows, nCols, data, rowNames, colNames);
+		this->mat_win.set_callback([this](IntraMatElemResultPtr oRes) {
+			this->process_result(oRes);
 		});
-		this->m_runnable.reset(new std::thread([this]() {
-			this->run_matrice();
-		}));
+		this->mat_win.arrange(&this->m_data);
+		this->mat_win.show();
 		show();
 	}
-
 	~matrice_win() {
-		this->m_cancel.store(true);
-		std::thread *p = this->m_runnable.get();
-		if (p != nullptr) {
-			p->join();
-		}
-		close_window();
 	}
-protected:
-	virtual void on_window_resized() {
-		unsigned long ww = 0, hh = 0;
-		this->get_size(ww, hh);
-		if ((ww > 0) && (hh > 0)) {
-			MatriceDataType *pMat = this->m_data.get();
-			assert(pMat != nullptr);
-			//
-			size_t nRows = pMat->rows_count();
-			size_t nCols = pMat->cols_count();
-			unsigned long w = ww / (nCols + 2);
-			unsigned long h = hh / (nRows + 2);
-			if (w < 8) {
-				w = 8;
-			}
-			if (h < 8) {
-				h = 8;
-			}
-			oDrawContextParams.dx = w;
-			oDrawContextParams.dy = h;
-			my_draw();
-		}
-	}
-private:
-	void my_draw(void) {
-		unsigned long ww = 0, hh = 0;
-		this->get_size(ww, hh);
-		rectangle r(0, 0, ww, hh);
-		this->invalidate_rectangle(r);
-	}
-	virtual void paint(const canvas& c)
-	{
-		DrawItemsType *p = this->m_items.get();
-		if (p != nullptr) {
-			unsigned long ww = 0, hh = 0;
-			this->get_size(ww, hh);
-			rectangle r(0, 0, ww, hh);
-			fill_rect(c, r, rgb_pixel(255, 255, 255));
-			DLibDrawContext oContext(c, &oDrawContextParams);
-			p->draw(&oContext);
-		}// p
-	}// draw
-	void run_matrice(void) {
-		MatriceDataType *pData = this->m_data.get();
-		assert(pData != nullptr);
-		//
-		this->m_matord.reset(new MatOrdType(&m_backgrounder, &(this->m_cancel)));
-		this->oDrawContextParams.bIndsSum = false;
-		this->oDrawContextParams.bVarsSum = false;
-		this->m_conn = this->m_backgrounder.connect([this](IntraMatElemResultPtr oRes) {
-			IntraMatElemResultType *p = oRes.get();
-			if (p != nullptr) {
-				if (p->stage == StageType::finished) {
-					if (p->disposition == DispositionType::indiv) {
-						this->m_doneind.store(true);
-					}
-					else if (p->disposition == DispositionType::variable) {
-						this->m_donevar.store(true);
-					}
-					if (this->m_donevar.load() && this->m_doneind.load()) {
-						DrawContextParams &ctx = this->oDrawContextParams;
-						ctx.downcolor = ctx.donecolor;
-						ctx.bIndsSum = true;
-						ctx.bVarsSum = true;
-						this->my_draw();
-					}
-				}// finished
-				DrawItemsType *pItems = this->m_items.get();
-				pItems->set_result(oRes);
-				this->my_draw();
-			}
-		});
-		MatOrdType *pMat = this->m_matord.get();
-		pMat->arrange(pData->indiv_provider(), pData->variable_provider());
-	}// run_matrice
-	void init_data(void) {
-		MatriceDataType *pMat = this->m_data.get();
-		assert(pMat != nullptr);
-		//
-		size_t nRows = pMat->rows_count();
-		size_t nCols = pMat->cols_count();
-		const std::vector<DATATYPE> & data = pMat->data();
-		std::vector<double> varsSum, indsSum;
-		varsSum.resize(nCols);
-		indsSum.resize(nRows);
-		for (size_t i = 0; i < nCols; ++i) {
-			double s1 = 0;
-			double s2 = 0;
-			for (size_t j = 0; j < nRows; ++j) {
-				double x = data[j * nCols + i];
-				s1 += x;
-				s2 += x * x;
-			}// j
-			s1 /= nRows;
-			s2 /= nRows;
-			s2 = std::sqrt(s2 - (s1 * s1));
-			varsSum[i] = s2 / s1;
-		}// i
-		for (size_t i = 0; i < nRows; ++i) {
-			indsSum[i] = data[i * nCols];
-		}
-		DrawItemsType *p = new DrawItemsType();
-		assert(p != nullptr);
-		//MatCellType aType(MatCellType::histogCell);
-		MatCellType aType(MatCellType::plainCell);
-		const strings_vector &rowNames = pMat->rows_names();
-		const strings_vector &colNames = pMat->cols_names();
-		bool bRet = p->initialize(aType, nRows, nCols, data, rowNames, colNames, indsSum, varsSum);
-		assert(bRet);
-		this->m_items.reset(p);
-		STRINGTYPE s = pMat->name();
-		set_title(s);
-		this->set_size(600, 600);
-	}// init_data
 
 };
 //////////////////////////

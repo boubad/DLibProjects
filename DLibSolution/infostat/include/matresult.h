@@ -5,8 +5,6 @@
 #include "info_includes.h"
 #include "activeobject.h"
 //////////////////////////////////////
-#include <boost/signals2/signal.hpp>
-//////////////////////////////////
 namespace info {
 	///////////////////////////////////////////
 	enum class DispositionType { invalid, indiv, variable };
@@ -62,41 +60,47 @@ namespace info {
 	public:
 		using MatElemResultType = IntraMatElemResult<IDTYPE, DISTANCETYPE, STRINGTYPE>;
 		using MatElemResultPtr = std::shared_ptr<MatElemResultType>;
+		using MatElemFunctionType = std::function<void(MatElemResultPtr)>;
+		using MatElemResultClientType = MatElemResultClient<IDTYPE, DISTANCETYPE, STRINGTYPE>;
+	private:
+		MatElemFunctionType m_f;
 	public:
-		MatElemResultClient() {
+		MatElemResultClient() :m_f([](MatElemResultPtr o) {}) {
+		}
+		MatElemResultClient(MatElemFunctionType f) :m_f(f) {
 		}
 		virtual ~MatElemResultClient() {
 		}
+		void set_function(MatElemFunctionType f) {
+			this->m_f = f;
+		}
+		void operator()(MatElemResultPtr oRes) {
+			this->process_result(oRes);
+		}
 	protected:
-		virtual void process_result(MatElemResultPtr /*oRes*/) {
-			// no nothing in base class
+		virtual void process_result(MatElemResultPtr oRes) {
+			MatElemFunctionType &f = this->m_f;
+			f(oRes);
 		}//process_result
 	public:
 		virtual void put(MatElemResultPtr oRes) {
 			this->process_result(oRes);
 		}// put
-	public:
-		void operator()(MatElemResultPtr oRes) {
-			this->process_result(oRes);
-		}
 	}; // class IntraMatElemBackgrounder<IDTYPE,DISTANCETYPE,STRINGTYPE>
 	////////////////////////////////////////
 	template<typename IDTYPE, typename DISTANCETYPE, typename STRINGTYPE>
-	class MatElemResultBackgounder : MatElemResultClient<IDTYPE,DISTANCETYPE,STRINGTYPE> {
+	class MatElemResultBackgounder : public MatElemResultClient<IDTYPE, DISTANCETYPE, STRINGTYPE> {
 	public:
 		using MatElemResultType = IntraMatElemResult<IDTYPE, DISTANCETYPE, STRINGTYPE>;
 		using MatElemResultPtr = std::shared_ptr<MatElemResultType>;
-		using SignalType = typename boost::signals2::signal<void(MatElemResultPtr)>;
-		using SlotType = typename SignalType::slot_type;
-		using ConnectionType = boost::signals2::connection;
+		using MatElemFunctionType = std::function<void(MatElemResultPtr)>;
+		using BaseType = MatElemResultClient<IDTYPE, DISTANCETYPE, STRINGTYPE>;
 	private:
-		bool m_hasconnect;
 		std::atomic<bool> done;
 		SharedQueue<MatElemResultPtr> dispatchQueue;
 		std::unique_ptr<std::thread> runnable;
-		SignalType m_signal;
-	public:
-		MatElemResultBackgounder() :m_hasconnect(false), done(false) {
+		//
+		void init(void) {
 			this->runnable.reset(new std::thread([this]() {
 				while (!this->done.load()) {
 					MatElemResultPtr o = this->dispatchQueue.take();
@@ -105,23 +109,23 @@ namespace info {
 						break;
 					}
 					this->process_result(o);
-					if (this->m_hasconnect) {
-						this->m_signal(o);
-					}
 				} // while
 			}));
+		}// init
+	public:
+		MatElemResultBackgounder() : done(false) {
+			this->init();
+		}
+		MatElemResultBackgounder(MatElemFunctionType f) : BaseType(f), done(false) {
+			this->init();
 		}
 		virtual ~MatElemResultBackgounder() {
-			IntraMatElemResultPtr o;
+			MatElemResultPtr o;
 			this->done.store(true);
 			this->dispatchQueue.put(o);
 			this->runnable->join();
 		}
 	public:
-		ConnectionType connect(const SlotType &subscriber) {
-			this->m_hasconnect = true;
-			return m_signal.connect(subscriber);
-		}//connect
 		virtual void put(MatElemResultPtr oRes) {
 			this->dispatchQueue.put(oRes);
 		}// put

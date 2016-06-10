@@ -20,7 +20,7 @@
       <UniqueIdentifier>{be98e89e-a9d3-44f0-877f-9e6e9a38b3af}</UniqueIdentifier>
     </Filter>
     <Filter Include="include\infodlib">
-      <UniqueIdentifier>{4111e4e3-2dd4-436e-b7ad-c715a1819f04}</UniqueIdentifier>
+      <UniqueIdentifier>{9c9c8fc2-092d-4d72-ac15-33eea987a5da}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
