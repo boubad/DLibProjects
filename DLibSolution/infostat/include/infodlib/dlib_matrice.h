@@ -163,7 +163,7 @@ namespace info {
 	};// class MatOrdAgent<IDTYPE,DISTANCETYPE,STRINGTYPE>
 	//////////////////////////////////////////////
 	template<typename IDTYPE, typename DISTANCETYPE, typename STRINGTYPE, typename FLOATTYPE, typename DATATYPE>
-	class MatriceDisplayWindow : public dlib::scrollable_region {
+	class MatriceDisplayWindow : public dlib::button {
 		using MatElemType = IntraMatElem<IDTYPE, DISTANCETYPE, STRINGTYPE>;
 		using MatElemResultType = typename MatElemType::IntraMatElemResultType;
 		using MatElemResultPtr = typename MatElemType::IntraMatElemResultPtr;
@@ -174,39 +174,14 @@ namespace info {
 		using MatElemFunctionType = std::function<void(MatElemResultPtr)>;
 		using queue_type = MatElemResultClient<IDTYPE, DISTANCETYPE, STRINGTYPE>;
 	protected:
-		virtual void on_window_resized() {
-			unsigned long ww = 0, hh = 0;
-			const dlib::rectangle &rx = this->total_rect();
-			ww = rx.width();
-			hh = rx.height();
-			if ((ww > 0) && (hh > 0)) {
-				MatriceDataType *pMat = this->m_pMatData;
-				if (pMat != nullptr) {
-					size_t nRows = pMat->rows_count();
-					size_t nCols = pMat->cols_count();
-					unsigned long w = ww / (nCols + 2);
-					unsigned long h = hh / (nRows + 2);
-					if (w < 8) {
-						w = 8;
-					}
-					if (h < 8) {
-						h = 8;
-					}
-					oDrawContextParams.dx = w;
-					oDrawContextParams.dy = h;
-					my_draw();
-				}// pMat
-			}
-		}
-		virtual void draw(const dlib::canvas& c)
+		
+		virtual void draw(const dlib::canvas& c) const
 		{
-			dlib::scrollable_region::draw(c);
 			DrawItemsType *p = this->m_items.get();
 			if (p != nullptr) {
 				unsigned long ww = 0, hh = 0;
-				const dlib::rectangle &rx = this->total_rect();
-				ww = rx.width();
-				hh = rx.height();
+				ww = this->width();
+				hh = this->height();
 				dlib::rectangle r(0, 0, ww, hh);
 				dlib::fill_rect(c, r, rgb_pixel(255, 255, 255));
 				ContextType oContext(c, &oDrawContextParams);
@@ -214,13 +189,15 @@ namespace info {
 			}// p
 		}// draw
 	private:
-		void my_draw(void) {
+		void my_draw(void)  {
+			this->show();
+			/*
 			unsigned long ww = 0, hh = 0;
-			const dlib::rectangle &rx = this->total_rect();
-			ww = rx.width();
-			hh = rx.height();
+			base_window& pp = this->parent_window();
+			pp.get_size(ww, hh);
 			dlib::rectangle r(0, 0, ww, hh);
-		//	this->invalidate_rectangle(r);
+			pp.invalidate_rectangle(r);
+			*/
 		}
 
 		void init_data(void) {
@@ -302,9 +279,10 @@ namespace info {
 			pMat->arrange(pData->indiv_provider(), pData->variable_provider());
 		}// run_matrice
 	public:
-		MatriceDisplayWindow(dlib::drawable_window& w, unsigned long events = 0) : dlib::scrollable_region(w, events),
+		MatriceDisplayWindow(dlib::drawable_window& w) : dlib::button(w),
 			m_dest([](MatElemResultPtr oRes) {}),
 			m_donevar(false), m_doneind(false), m_pMatData(nullptr) {
+			this->show();
 		}//MatriceDisplayWindow
 		~MatriceDisplayWindow() {}
 		void set_callback(MatElemFunctionType f) {
@@ -314,6 +292,30 @@ namespace info {
 			this->m_pMatData = pData;
 			this->init_data();
 			this->run_matrice();
+			this->show();
+		}
+		void window_resized() {
+			unsigned long ww = 0, hh = 0;
+			ww = this->width();
+			hh = this->height();
+			if ((ww > 0) && (hh > 0)) {
+				MatriceDataType *pMat = this->m_pMatData;
+				if (pMat != nullptr) {
+					size_t nRows = pMat->rows_count();
+					size_t nCols = pMat->cols_count();
+					unsigned long w = ww / (nCols + 2);
+					unsigned long h = hh / (nRows + 2);
+					if (w < 8) {
+						w = 8;
+					}
+					if (h < 8) {
+						h = 8;
+					}
+					oDrawContextParams.dx = w;
+					oDrawContextParams.dy = h;
+					my_draw();
+				}// pMat
+			}
 		}
 	private:
 		MatElemFunctionType m_dest;

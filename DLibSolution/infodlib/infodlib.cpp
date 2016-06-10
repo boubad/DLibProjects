@@ -88,6 +88,7 @@ protected:
 		if (hy > 0) {
 			this->mat_win.set_pos(0, hh);
 			this->mat_win.set_size(w, hy);
+			this->mat_win.window_resized();
 		}
 		
 	}// my_redim

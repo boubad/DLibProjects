@@ -38,7 +38,7 @@ namespace info {
 		InfoColor donecolor;
 		//
 		DrawContextParams() : bIndsNames(true), bIndsSum(true), bVarsNames(true), bVarsSum(true),
-			x0(0), y0(0), deltax(0), dx(32), deltay(0), dy(0), upcolor(255), downcolor(0),
+			x0(0), y0(0), deltax(0), dx(32), deltay(0), dy(32), upcolor(255), downcolor(0),
 			sumindcolor(0, 255, 0), sumvarcolor(255, 0, 0), textcolor(0),donecolor(127) {}
 	};// struct DrawContextParams
 	/////////////////////////////////////////
