@@ -161,6 +161,7 @@
     <ClInclude Include="include\indivcluster.h" />
     <ClInclude Include="include\indivmap.h" />
     <ClInclude Include="include\indivsummator.h" />
+    <ClInclude Include="include\infodlib\dlib_backgrounder.h" />
     <ClInclude Include="include\infodlib\dlib_matrice.h" />
     <ClInclude Include="include\infostat.h" />
     <ClInclude Include="include\infovalue.h" />

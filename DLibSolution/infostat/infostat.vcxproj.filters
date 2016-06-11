@@ -147,6 +147,9 @@
     <ClInclude Include="include\infodlib\dlib_matrice.h">
       <Filter>include\infodlib</Filter>
     </ClInclude>
+    <ClInclude Include="include\infodlib\dlib_backgrounder.h">
+      <Filter>include\infodlib</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\infovalue.cpp">

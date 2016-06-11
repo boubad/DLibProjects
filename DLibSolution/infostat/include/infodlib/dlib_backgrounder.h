@@ -1,0 +1,8 @@
+#pragma once
+#ifndef __DLIB_BACKGROUNDER_H__
+#define  __DLIB_BACKGROUNDER_H__
+/////////////////////////////////////
+
+////////////////////////////////////////
+#endif // !__DLIB_BACKGROUNDER_H__
+

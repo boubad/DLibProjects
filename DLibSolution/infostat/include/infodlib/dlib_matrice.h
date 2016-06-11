@@ -170,12 +170,59 @@ namespace info {
 		using MatOrdAgentType = MatOrdAgent<IDTYPE, DISTANCETYPE, STRINGTYPE>;
 		using MatriceDataType = MatriceData<IDTYPE, STRINGTYPE, DATATYPE>;
 		using ContextType = DLibDrawContext<STRINGTYPE, FLOATTYPE>;
-		using DrawItemsType = DrawItems<STRINGTYPE, FLOATTYPE>;
+		using DrawItemsType = DrawItems<IDTYPE, DISTANCETYPE, STRINGTYPE, FLOATTYPE>;
 		using MatElemFunctionType = std::function<void(MatElemResultPtr)>;
 		using queue_type = MatElemResultClient<IDTYPE, DISTANCETYPE, STRINGTYPE>;
 		using strings_vector = std::vector<STRINGTYPE>;
+	private:
+		MatElemFunctionType m_dest;
+		std::unique_ptr<queue_type> m_callback;
+		std::atomic<bool> m_donevar;
+		std::atomic<bool> m_doneind;
+		MatriceDataType *m_pMatData;
+		DrawContextParams oDrawContextParams;
+		std::unique_ptr<MatOrdAgentType> m_matord;
+		std::unique_ptr<DrawItemsType> m_items;
+	public:
+		MatriceDisplayWindow(dlib::drawable_window& w) : dlib::button(w),
+			m_dest([](MatElemResultPtr oRes) {}),
+			m_donevar(false), m_doneind(false), m_pMatData(nullptr) {
+			this->window_resized();
+			this->show();
+		}//MatriceDisplayWindow
+		~MatriceDisplayWindow() {}
+		const DrawContextParams *get_context_params(void) const {
+			return (&(this->oDrawContextParams));
+		}
+		DrawContextParams *get_context_params(void)  {
+			return (&(this->oDrawContextParams));
+		}
+		void set_callback(MatElemFunctionType f) {
+			this->m_dest = f;
+		}
+		void arrange(MatriceDataType *pData, MatCellType aType = MatCellType::plainCell) {
+			this->m_pMatData = pData;
+			this->init_data(aType);
+			this->run_matrice();
+			this->show();
+		}
+		void window_resized() {
+			unsigned long ww = 0, hh = 0;
+			ww = this->width();
+			hh = this->height();
+			oDrawContextParams.width = ww;
+			oDrawContextParams.height = hh;
+			size_t nCols = 0;
+			size_t nRows = 0;
+			if (this->m_pMatData != nullptr) {
+				nCols = m_pMatData->cols_count();
+				nRows = m_pMatData->rows_count();
+			}
+			oDrawContextParams.dx = ww / (nCols + 3);
+			oDrawContextParams.dy = hh / (nRows + 3);
+			my_draw();
+		}
 	protected:
-		
 		virtual void draw(const dlib::canvas& c) const
 		{
 			DrawItemsType *p = this->m_items.get();
@@ -190,18 +237,10 @@ namespace info {
 			}// p
 		}// draw
 	private:
-		void my_draw(void)  {
+		void my_draw(void) {
 			this->show();
-			/*
-			unsigned long ww = 0, hh = 0;
-			base_window& pp = this->parent_window();
-			pp.get_size(ww, hh);
-			dlib::rectangle r(0, 0, ww, hh);
-			pp.invalidate_rectangle(r);
-			*/
 		}
-
-		void init_data(void) {
+		void init_data(MatCellType aType = MatCellType::plainCell) {
 			MatriceDataType *pMat = this->m_pMatData;
 			if (pMat == nullptr) {
 				return;
@@ -231,8 +270,6 @@ namespace info {
 			}
 			DrawItemsType *p = new DrawItemsType();
 			assert(p != nullptr);
-			//MatCellType aType(MatCellType::histogCell);
-			MatCellType aType(MatCellType::plainCell);
 			const strings_vector &rowNames = pMat->rows_names();
 			const strings_vector &colNames = pMat->cols_names();
 			bool bRet = p->initialize(aType, nRows, nCols, data, rowNames, colNames, indsSum, varsSum);
@@ -245,7 +282,7 @@ namespace info {
 				return;
 			}
 			//
-			queue_type *pf =  new queue_type([this](MatElemResultPtr oRes) {
+			queue_type *pf = new queue_type([this](MatElemResultPtr oRes) {
 				MatElemResultType *p = oRes.get();
 				if (p != nullptr) {
 					if (p->stage == StageType::finished) {
@@ -260,10 +297,10 @@ namespace info {
 							ctx.downcolor = ctx.donecolor;
 							ctx.bIndsSum = true;
 							ctx.bVarsSum = true;
-							this->my_draw();
 						}
 					}// finished
 					DrawItemsType *pItems = this->m_items.get();
+					assert(pItems != nullptr);
 					pItems->set_result(oRes);
 					this->my_draw();
 					(this->m_dest)(oRes);
@@ -271,6 +308,7 @@ namespace info {
 			});
 			this->m_callback.reset(pf);
 			//
+			
 			this->m_matord.reset(new MatOrdAgentType(pf));
 			MatOrdAgentType *pMat = this->m_matord.get();
 			DrawContextParams &ctx = this->oDrawContextParams;
@@ -279,54 +317,6 @@ namespace info {
 			ctx.bVarsSum = false;
 			pMat->arrange(pData->indiv_provider(), pData->variable_provider());
 		}// run_matrice
-	public:
-		MatriceDisplayWindow(dlib::drawable_window& w) : dlib::button(w),
-			m_dest([](MatElemResultPtr oRes) {}),
-			m_donevar(false), m_doneind(false), m_pMatData(nullptr) {
-			this->show();
-		}//MatriceDisplayWindow
-		~MatriceDisplayWindow() {}
-		void set_callback(MatElemFunctionType f) {
-			this->m_dest = f;
-		}
-		void arrange(MatriceDataType *pData) {
-			this->m_pMatData = pData;
-			this->init_data();
-			this->run_matrice();
-			this->show();
-		}
-		void window_resized() {
-			unsigned long ww = 0, hh = 0;
-			ww = this->width();
-			hh = this->height();
-			if ((ww > 0) && (hh > 0)) {
-				MatriceDataType *pMat = this->m_pMatData;
-				if (pMat != nullptr) {
-					size_t nRows = pMat->rows_count();
-					size_t nCols = pMat->cols_count();
-					unsigned long w = ww / (nCols + 2);
-					unsigned long h = hh / (nRows + 2);
-					if (w < 8) {
-						w = 8;
-					}
-					if (h < 8) {
-						h = 8;
-					}
-					oDrawContextParams.dx = w;
-					oDrawContextParams.dy = h;
-					my_draw();
-				}// pMat
-			}
-		}
-	private:
-		MatElemFunctionType m_dest;
-		std::unique_ptr<queue_type> m_callback;
-		std::atomic<bool> m_donevar;
-		std::atomic<bool> m_doneind;
-		MatriceDataType *m_pMatData;
-		DrawContextParams oDrawContextParams;
-		std::unique_ptr<MatOrdAgentType> m_matord;
-		std::unique_ptr<DrawItemsType> m_items;
 	};// class MatriceDisplayWindow
 	////////////////////////////////////////
 }// namespace info

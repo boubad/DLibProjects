@@ -56,30 +56,12 @@ namespace UnitTestInfoStat
 		virtual ~MatElemLogger() {}
 	protected:
 		virtual void process_result(IntraMatElemResultPtr oRes) {
+			STRINGTYPE ss;
 			STRINGSTREAM os;
 			IntraMatElemResultType *p = oRes.get();
 			if (p != nullptr) {
-				StageType stage = p->stage;
-				if (stage == StageType::started) {
-					os << "STARTED...\t";
-				}
-				else if (stage == StageType::finished) {
-					os << "FINISHED!!!\t";
-				}
-				STRINGTYPE sx = p->sigle;
-				if (!sx.empty()) {
-					os << sx << "\t";
-				}
-				if (p->disposition == DispositionType::indiv) {
-					os << "INDS\t";
-				}
-				else if (p->disposition == DispositionType::variable) {
-					os << "VARS\t";
-				}
-				DISTANCETYPE crit = p->first;
-				os << "Crit: " << crit << std::endl;
+				p->to_string(ss);
 			}// p
-			STRINGTYPE ss = os.str();
 			Logger::WriteMessage(ss.c_str());
 		}// process_result
 	};// class MatElemLogger
