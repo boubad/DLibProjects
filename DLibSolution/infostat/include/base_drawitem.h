@@ -133,7 +133,7 @@ namespace info {
 	class DrawItems : public BaseDrawItem<STRINGTYPE, FLOATTYPE>, private boost::noncopyable {
 	public:
 		using DrawItemType = BaseDrawItem<STRINGTYPE, FLOATTYPE>;
-		using PDrawItemType = BaseDrawItemType *;
+		using PDrawItemType = DrawItemType *;
 		using items_vector = std::vector<PDrawItemType>;
 		using DrawItemsType = DrawItems<STRINGTYPE, FLOATTYPE>;
 		using sizets_vector = std::vector<size_t>;
@@ -292,7 +292,7 @@ namespace info {
 			const sizets_vector &rowIndexes = this->m_rowindexes;
 			const sizets_vector &colIndexes = this->m_colindexes;
 			const items_vector &vv = this->m_items;
-			const size_t nTotal = vv.size();
+			//const size_t nTotal = vv.size();
 			bool bVarsNames = pParams->bVarsNames;
 			bool bVarsSum = pParams->bVarsSum;
 			bool bIndsNames = pParams->bIndsNames;
@@ -362,7 +362,7 @@ namespace info {
 		void draw(DispositionType disp, const sizets_vector &oInd,
 			const DrawContext<STRINGTYPE, FLOATTYPE> *pContext, coord_type xpos = 0, coord_type ypos = 0) {
 			if (disp == DispositionType::indiv) {
-				this->row_indexes(oInds);
+				this->row_indexes(oInd);
 				this->draw(pContext, xpos, ypos);
 			}
 			else if (disp == DispositionType::variable) {

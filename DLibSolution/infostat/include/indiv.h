@@ -40,15 +40,9 @@ namespace info {
 				}
 			}// p
 		}
-		/*
 		Indiv(IndivType &other) :
 			InterruptObject(other), m_index(other.m_index), m_sigle(other.m_sigle), m_center(
 				other.m_center) {
-		}
-		*/
-		template <typename XU, typename XS>
-		Indiv(const Indiv<XU, XS> &other) : this(other.m_index, other.m_center) {
-
 		}
 		IndivType & operator=(const IndivType &other) {
 			if (this != &other) {
@@ -138,7 +132,7 @@ namespace info {
 			return (info_global_compute_distance(this->m_center, oPoint, weights, res));
 		}	// distance
 		template<typename XU, typename XSTRING, typename U3, typename W>
-		bool distance(const Indiv<XU, XSTRING> &other, const std::map<U3, double> &weightsW, W &res) const {
+		bool distance(const Indiv<XU, XSTRING> &other, const std::map<U3, double> &weights, W &res) const {
 			return (info_global_compute_distance(this->m_center, other.m_center, weights, res));
 		}	// distance
 		template<typename XU, typename XSTRING, typename U3, typename W>

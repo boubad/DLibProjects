@@ -355,12 +355,12 @@ namespace info {
 		IntraMatOrd(queue_type *pq = nullptr, std::atomic<bool> *pCancel = nullptr) : m_pcancel(pCancel), m_pqueue(pq) {
 		} // MatOrd
 		IntraMatOrd(SourceType *pIndsSource, SourceType *pVarsSource,
-			queue_type *pRes = nullptr, std::atomic<bool> *pCancel = nullptr) : m_pcancel(pCancel), m_pqueue(pq) {
-			this->arrange(pIndsSource, pVarsSource, pRes);
+			queue_type *pq = nullptr, std::atomic<bool> *pCancel = nullptr) : m_pcancel(pCancel), m_pqueue(pq) {
+			this->arrange(pIndsSource, pVarsSource, pq);
 		} // MatOrd
 		IntraMatOrd(IndivMapType *pIndsSource, IndivMapType *pVarsSource,
-			queue_type *pRes = nullptr, std::atomic<bool> *pCancel = nullptr) : m_pcancel(false), m_pqueue(pq) {
-			this->arrange(pIndsSource, pVarsSource, pRes);
+			queue_type *pq = nullptr, std::atomic<bool> *pCancel = nullptr) : m_pcancel(false), m_pqueue(pq) {
+			this->arrange(pIndsSource, pVarsSource, pq);
 		} // MatOrd
 		virtual ~IntraMatOrd() {
 		}

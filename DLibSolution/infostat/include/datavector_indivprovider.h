@@ -219,7 +219,7 @@ namespace info {
 				fsum += f;
 			}// i
 			for (auto &&p : weights) {
-				U key = p.first;
+				//U key = p.first;
 				double f = p.second;
 				p.second = f / fsum;
 			}// p

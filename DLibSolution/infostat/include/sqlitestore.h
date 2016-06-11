@@ -266,7 +266,7 @@ namespace info {
 		virtual bool find_all_datasets_count(size_t &nCount) {
 			return (this->m_helper->find_all_datasets_count(nCount));
 		}
-		virtual bool find_all_datasets(datasets_vector &oList, size_t skip = 0, size_t count = DATATRANSFER_CHUNK_SIZE) {
+		virtual bool find_all_datasets(datasets_vector &oList, size_t skip = 0, size_t count = StoreType::DATATRANSFER_CHUNK_SIZE) {
 			datasets_vector_base dest;
 			if (!this->m_helper->find_all_datasets(dest, skip, count)) {
 				return (false);
@@ -274,7 +274,7 @@ namespace info {
 			convert_datasets(dest, oList);
 			return (true);
 		}
-		virtual bool find_all_datasets_ids(ints_vector &oList, size_t skip = 0, size_t count = DATATRANSFER_CHUNK_SIZE) {
+		virtual bool find_all_datasets_ids(ints_vector &oList, size_t skip = 0, size_t count = StoreType::DATATRANSFER_CHUNK_SIZE) {
 			ints_vector_base dest;
 			if (!this->m_helper->find_all_datasets_ids(dest, skip, count)) {
 				return (false);
@@ -328,7 +328,7 @@ namespace info {
 			return (true);
 		}
 		virtual bool find_dataset_variables_ids(const DatasetType &oSet, ints_vector &oList,
-			size_t skip = 0, size_t count = DATATRANSFER_CHUNK_SIZE) {
+			size_t skip = 0, size_t count = StoreType::DATATRANSFER_CHUNK_SIZE) {
 			DatasetType_base dest;
 			convert_dataset(oSet, dest, true);
 			ints_vector_base temp;
@@ -339,7 +339,7 @@ namespace info {
 			return (true);
 		}
 		virtual bool find_dataset_variables(const DatasetType &oSet, variables_vector &oList,
-			size_t skip = 0, size_t count = DATATRANSFER_CHUNK_SIZE) {
+			size_t skip = 0, size_t count = StoreType::DATATRANSFER_CHUNK_SIZE) {
 			DatasetType_base dest;
 			convert_dataset(oSet, dest, true);
 			variables_vector_base temp;
@@ -385,7 +385,7 @@ namespace info {
 			return (true);
 		}
 		virtual bool find_dataset_indivs_ids(const DatasetType &oSet, ints_vector &oList,
-			size_t skip = 0, size_t count = DATATRANSFER_CHUNK_SIZE) {
+			size_t skip = 0, size_t count = StoreType::DATATRANSFER_CHUNK_SIZE) {
 			DatasetType_base dest;
 			convert_dataset(oSet, dest);
 			ints_vector_base temp;
@@ -396,7 +396,7 @@ namespace info {
 			return (true);
 		}
 		virtual bool find_dataset_indivs(const DatasetType &oSet, indivs_vector &oList,
-			size_t skip = 0, size_t count = DATATRANSFER_CHUNK_SIZE) {
+			size_t skip = 0, size_t count = StoreType::DATATRANSFER_CHUNK_SIZE) {
 			DatasetType_base dest;
 			convert_dataset(oSet, dest, true);
 			indivs_vector_base temp;
@@ -460,7 +460,7 @@ namespace info {
 			return (true);
 		}
 		virtual bool find_dataset_values(const DatasetType &oSet, values_vector &oList,
-			size_t skip = 0, size_t count = DATATRANSFER_CHUNK_SIZE) {
+			size_t skip = 0, size_t count = StoreType::DATATRANSFER_CHUNK_SIZE) {
 			DatasetType_base dest;
 			convert_dataset(oSet, dest, true);
 			values_vector_base temp;
@@ -471,7 +471,7 @@ namespace info {
 			return (true);
 		}
 		virtual bool find_variable_values(VariableType &oVar, values_vector &oList,
-			size_t skip = 0, size_t count = DATATRANSFER_CHUNK_SIZE) {
+			size_t skip = 0, size_t count = StoreType::DATATRANSFER_CHUNK_SIZE) {
 			VariableType_base dest;
 			convert_variable(oVar, dest, true);
 			values_vector_base temp;
@@ -483,7 +483,7 @@ namespace info {
 			return (true);
 		}
 		virtual bool find_variable_distinct_values(VariableType &oVar, strings_vector &oList,
-			size_t skip = 0, size_t count = DATATRANSFER_CHUNK_SIZE) {
+			size_t skip = 0, size_t count = StoreType::DATATRANSFER_CHUNK_SIZE) {
 			VariableType_base dest;
 			convert_variable(oVar, dest, true);
 			strings_vector_base temp;
@@ -495,7 +495,7 @@ namespace info {
 			return (true);
 		}
 		virtual bool find_indiv_values(IndivType &oInd, values_vector &oList,
-			size_t skip = 0, size_t count = DATATRANSFER_CHUNK_SIZE) {
+			size_t skip = 0, size_t count = StoreType::DATATRANSFER_CHUNK_SIZE) {
 			IndivType_base dest;
 			convert_indiv(oInd, dest, true);
 			values_vector_base temp;

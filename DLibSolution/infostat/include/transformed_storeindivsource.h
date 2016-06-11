@@ -102,7 +102,7 @@ namespace info {
 			virtual void reset(void) {
 				lock_type oLock(this->_xmutex);
 				StoreIndivSourceType::reset();
-				size_t nc = count();
+				size_t nc = this->count();
 				this->m_cache.resize(nc);
 				StatSummatorType &oSum = this->get_summator();
 				ints_vector &oIds = this->m_varids;

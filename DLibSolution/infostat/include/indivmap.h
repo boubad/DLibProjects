@@ -20,10 +20,8 @@ namespace info {
 		using indivs_ints_map = std::map<U, IndivTypePtr>;
 		using ints_set = std::set<U>;
 		using DistanceMapType = DistanceMap<U, double>;
-		using ints_doubles_map = std::map<U, double>;
 		using ints_vector = std::vector<U>;
 		using IndivMapType = IndivMap<U, STRINGTYPE, W>;
-		using SourceType = IIndivSource<U, STRINGTYPE>;
 		using iterator = typename indivs_ints_map::iterator;
 		using const_iterator = typename indivs_ints_map::const_iterator;
 	private:

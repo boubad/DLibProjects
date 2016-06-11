@@ -12,7 +12,7 @@
 //////////////////////////////////
 namespace info {
 ///////////////////////////////////////////
-template <typename DISTANCETYPE>
+template<typename DISTANCETYPE>
 class MatElemResult {
 public:
 	using sizets_vector = std::vector<size_t>;
@@ -42,7 +42,7 @@ public:
 	}
 };
 /////////////////////////////////////
-template<typename IDTYPE, typename DISTANCETYPE,typename STRINGTYPE>
+template<typename IDTYPE, typename DISTANCETYPE, typename STRINGTYPE>
 class MatElem: public InterruptObject {
 public:
 	using CritItemType = CritItem<IDTYPE, DISTANCETYPE>;
@@ -74,27 +74,19 @@ public:
 	MatElem(std::atomic_bool *pCancel = nullptr) :
 			InterruptObject(pCancel), m_crit(0), m_pdist(nullptr) {
 	}
-	MatElem(IndivMapType pIndivMap, std::atomic_bool *pCancel = nullptr) :InterruptObject(pCancel), m_crit(0), m_pdist(pIndivMap->distance_map()) {
+	MatElem(IndivMapType *pIndivMap, std::atomic_bool *pCancel = nullptr) :
+			InterruptObject(pCancel), m_crit(0), m_pdist(
+					pIndivMap->distance_map()) {
 		assert(this->m_pdist != nullptr);
 		pIndivMap->ids(this->m_resids);
 		const size_t n = pIndivMap->size();
 		assert(n > 0);
 		sizets_vector &indexes = this->m_indexes;
 		indexes.resize(n);
-		CritItemType::generate(n, this->m_args);
-		if (pindexes != nullptr) {
-			assert(pindexes->size() >= n);
-			sizets_vector &oids = *pindexes;
-			for (size_t i = 0; i < n; ++i) {
-				indexes[i] = oids[i];
-			} // i
+		for (size_t i = 0; i < n; ++i) {
+			indexes[i] = i;
 		}
-		else {
-			for (size_t i = 0; i < n; ++i) {
-				indexes[i] = i;
-			}
-		}
-		this->m_crit = this->criteria(indexes)
+		this->m_crit = this->criteria(indexes);
 	}
 	MatElem(DistanceMapType *pMap, ints_vector *pids, sizets_vector *pindexes =
 			nullptr, std::atomic_bool *pCancel = nullptr) :
@@ -295,7 +287,7 @@ protected:
 									xMat.one_iteration(pCrit);
 									return (std::make_pair(xMat.m_crit, xMat.m_indexes));
 								};
-						oTasks.push_back(std::async(std::launch::async,tt));
+						oTasks.push_back(std::async(std::launch::async, tt));
 					} // j1/j2
 				} // while
 				if (iFirst != iSecond) {
@@ -468,7 +460,7 @@ protected:
 				} // k
 					return (true);
 				};
-			oTasks.push_back(std::async(std::launch::async,fTask));
+			oTasks.push_back(std::async(std::launch::async, fTask));
 			nStart = nEnd;
 		} // while nStart
 		for (int i = 0; i < iMainEnd; ++i) {

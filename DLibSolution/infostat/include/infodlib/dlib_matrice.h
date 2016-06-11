@@ -173,6 +173,7 @@ namespace info {
 		using DrawItemsType = DrawItems<STRINGTYPE, FLOATTYPE>;
 		using MatElemFunctionType = std::function<void(MatElemResultPtr)>;
 		using queue_type = MatElemResultClient<IDTYPE, DISTANCETYPE, STRINGTYPE>;
+		using strings_vector = std::vector<STRINGTYPE>;
 	protected:
 		
 		virtual void draw(const dlib::canvas& c) const
@@ -183,7 +184,7 @@ namespace info {
 				ww = this->width();
 				hh = this->height();
 				dlib::rectangle r(0, 0, ww, hh);
-				dlib::fill_rect(c, r, rgb_pixel(255, 255, 255));
+				dlib::fill_rect(c, r, dlib::rgb_pixel(255, 255, 255));
 				ContextType oContext(c, &oDrawContextParams);
 				p->draw(&oContext);
 			}// p
