@@ -46,7 +46,7 @@ namespace info {
 		79,10,130,14,203,36,
 		121,102,220,26,273,158
 	};
-	static const size_t TEST_NROWS = 64;
+	static const size_t TEST_NROWS = 32;
 	static const size_t TEST_NCOLS = 10;
 	////////////////////////////////////
 	static const char *st_type = "float";

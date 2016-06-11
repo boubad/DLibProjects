@@ -161,9 +161,124 @@ namespace info {
 			}
 		}// cancel
 	};// class MatOrdAgent<IDTYPE,DISTANCETYPE,STRINGTYPE>
+	////////////////////////////////////////////////
+	template <typename IDTYPE, typename DISTANCETYPE, typename STRINGTYPE>
+	class MatElemCritGraphWindow : public dlib::button {
+	public:
+		using MatElemType = IntraMatElem<IDTYPE, DISTANCETYPE, STRINGTYPE>;
+		using MatElemResultType = typename MatElemType::IntraMatElemResultType;
+		using MatElemResultPtr = typename MatElemType::IntraMatElemResultPtr;
+		using criterias_vector = std::vector<DISTANCETYPE>;
+	private:
+		DrawContextParams *m_params;
+		criterias_vector m_inddata;
+		criterias_vector m_vardata;
+	public:
+		MatElemCritGraphWindow(dlib::drawable_window& w, DrawContextParams *pParams = nullptr) : dlib::button(w), m_params(pParams) {
+			this->window_resized();
+		}
+		virtual ~MatElemCritGraphWindow() {}
+		void set_draw_params(DrawContextParams *p) {
+			this->m_params = p;
+		}
+		void set_result(MatElemResultPtr oRes) {
+			MatElemResultType *p = oRes.get();
+			if (p != nullptr) {
+				DISTANCETYPE c = p->first;
+				if (p->disposition == DispositionType::indiv) {
+					criterias_vector &v = this->m_inddata;
+					if (!v.empty()) {
+						if (v.back() != c) {
+							v.push_back(c);
+							this->my_draw();
+						}
+					}
+					else {
+						v.push_back(c);
+						this->my_draw();
+					}
+				}
+				else if (p->disposition == DispositionType::variable) {
+					criterias_vector &v = this->m_vardata;
+					if (!v.empty()) {
+						if (v.back() != c) {
+							v.push_back(c);
+							this->my_draw();
+						}
+					}
+					else {
+						v.push_back(c);
+						this->my_draw();
+					}
+				}
+			}// p
+		}// process_result
+		void window_resized() {
+			my_draw();
+		}
+	protected:
+		void my_draw(void) {
+			this->show();
+		}
+		virtual void draw(const dlib::canvas& c) const
+		{
+			if (this->m_params == nullptr) {
+				return;
+			}
+			unsigned long ww = 0, hh = 0;
+			ww = this->width();
+			hh = this->height();
+			dlib::rectangle r(0, 0, ww, hh);
+			dlib::fill_rect(c, r, dlib::rgb_pixel(255, 255, 255));
+			const criterias_vector &vv = this->m_inddata;
+			size_t n = vv.size();
+			if (n > 1) {
+				auto p = std::minmax_element(vv.begin(), vv.end());
+				DISTANCETYPE dMin = *(p.first);
+				DISTANCETYPE dMax = *(p.second);
+				if (dMin < dMax) {
+					double fMin = (double)dMin;
+					double deltay = (double)hh / (dMax - fMin);
+					double deltax = (double)ww / (double)(n + 2);
+					for (size_t i = 1; i < n; ++i) {
+						unsigned long x1 = i * deltax;
+						unsigned long y1 = hh - (unsigned long)((vv[i - 1] - fMin) * deltay);
+						unsigned long x2 = x1 + deltax;
+						unsigned long y2 = hh - (unsigned long)((vv[i] - fMin) * deltay);
+						dlib::rgb_pixel color(m_params->sumindcolor.red, m_params->sumindcolor.green, m_params->sumindcolor.blue);
+						dlib::point p1(x1, y1);
+						dlib::point p2(x2, y2);
+						dlib::draw_line(c, p1, p2, color);
+					}// i
+				}// draw
+			}
+			const criterias_vector &vvx = this->m_vardata;
+			n = vvx.size();
+			if (n > 1) {
+				auto p = std::minmax_element(vvx.begin(), vvx.end());
+				DISTANCETYPE dMin = *(p.first);
+				DISTANCETYPE dMax = *(p.second);
+				if (dMin < dMax) {
+					double fMin = (double)dMin;
+					double deltay = (double)hh / (dMax - fMin);
+					double deltax = (double)ww / (double)(n + 2);
+					for (size_t i = 1; i < n; ++i) {
+						unsigned long x1 = i * deltax;
+						unsigned long y1 = hh - (unsigned long)((vvx[i - 1] - fMin) * deltay);
+						unsigned long x2 = x1 + deltax;
+						unsigned long y2 = hh - (unsigned long)((vvx[i] - fMin) * deltay);
+						dlib::rgb_pixel color(m_params->sumvarcolor.red, m_params->sumvarcolor.green, m_params->sumvarcolor.blue);
+						dlib::point p1(x1, y1);
+						dlib::point p2(x2, y2);
+						dlib::draw_line(c, p1, p2, color);
+					}// i
+				}
+			}
+		}// draw
+	};
 	//////////////////////////////////////////////
 	template<typename IDTYPE, typename DISTANCETYPE, typename STRINGTYPE, typename FLOATTYPE, typename DATATYPE>
-	class MatriceDisplayWindow : public dlib::button {
+	class MatriceDisplayWindow : public dlib::button, public  MatElemResultBackgounder<IDTYPE, DISTANCETYPE, STRINGTYPE > {
 		using MatElemType = IntraMatElem<IDTYPE, DISTANCETYPE, STRINGTYPE>;
 		using MatElemResultType = typename MatElemType::IntraMatElemResultType;
 		using MatElemResultPtr = typename MatElemType::IntraMatElemResultPtr;
@@ -174,9 +289,10 @@ namespace info {
 		using MatElemFunctionType = std::function<void(MatElemResultPtr)>;
 		using queue_type = MatElemResultClient<IDTYPE, DISTANCETYPE, STRINGTYPE>;
 		using strings_vector = std::vector<STRINGTYPE>;
+		using MatElemCritGraphWindowType = MatElemCritGraphWindow<IDTYPE, DISTANCETYPE, STRINGTYPE>;
 	private:
+		MatElemCritGraphWindowType *m_pgraph;
 		MatElemFunctionType m_dest;
-		std::unique_ptr<queue_type> m_callback;
 		std::atomic<bool> m_donevar;
 		std::atomic<bool> m_doneind;
 		MatriceDataType *m_pMatData;
@@ -184,17 +300,23 @@ namespace info {
 		std::unique_ptr<MatOrdAgentType> m_matord;
 		std::unique_ptr<DrawItemsType> m_items;
 	public:
-		MatriceDisplayWindow(dlib::drawable_window& w) : dlib::button(w),
+		MatriceDisplayWindow(dlib::drawable_window& w, MatElemCritGraphWindowType *pGraph = nullptr) : dlib::button(w),m_pgraph(pGraph),
 			m_dest([](MatElemResultPtr oRes) {}),
 			m_donevar(false), m_doneind(false), m_pMatData(nullptr) {
 			this->window_resized();
 			this->show();
 		}//MatriceDisplayWindow
 		~MatriceDisplayWindow() {}
+		void set_graph_window(MatElemCritGraphWindowType *pGraph) {
+			this->m_pgraph = pGraph;
+			if (this->m_pgraph != nullptr) {
+				this->m_pgraph->set_draw_params(&oDrawContextParams);
+			}
+		}
 		const DrawContextParams *get_context_params(void) const {
 			return (&(this->oDrawContextParams));
 		}
-		DrawContextParams *get_context_params(void)  {
+		DrawContextParams *get_context_params(void) {
 			return (&(this->oDrawContextParams));
 		}
 		void set_callback(MatElemFunctionType f) {
@@ -223,6 +345,33 @@ namespace info {
 			my_draw();
 		}
 	protected:
+		virtual void process_result(MatElemResultPtr oRes) {
+			MatElemResultType *p = oRes.get();
+			if (p != nullptr) {
+				if (p->stage == StageType::finished) {
+					if (p->disposition == DispositionType::indiv) {
+						this->m_doneind.store(true);
+					}
+					else if (p->disposition == DispositionType::variable) {
+						this->m_donevar.store(true);
+					}
+					if (this->m_donevar.load() && this->m_doneind.load()) {
+						DrawContextParams &ctx = this->oDrawContextParams;
+						ctx.downcolor = ctx.donecolor;
+						ctx.bIndsSum = true;
+						ctx.bVarsSum = true;
+					}
+				}// finished
+				DrawItemsType *pItems = this->m_items.get();
+				assert(pItems != nullptr);
+				pItems->set_result(oRes);
+				this->my_draw();
+				if (this->m_pgraph != nullptr) {
+					this->m_pgraph->set_result(oRes);
+				}
+				(this->m_dest)(oRes);
+			}
+		}//process_result
 		virtual void draw(const dlib::canvas& c) const
 		{
 			DrawItemsType *p = this->m_items.get();
@@ -281,40 +430,15 @@ namespace info {
 			if (pData == nullptr) {
 				return;
 			}
-			//
-			queue_type *pf = new queue_type([this](MatElemResultPtr oRes) {
-				MatElemResultType *p = oRes.get();
-				if (p != nullptr) {
-					if (p->stage == StageType::finished) {
-						if (p->disposition == DispositionType::indiv) {
-							this->m_doneind.store(true);
-						}
-						else if (p->disposition == DispositionType::variable) {
-							this->m_donevar.store(true);
-						}
-						if (this->m_donevar.load() && this->m_doneind.load()) {
-							DrawContextParams &ctx = this->oDrawContextParams;
-							ctx.downcolor = ctx.donecolor;
-							ctx.bIndsSum = true;
-							ctx.bVarsSum = true;
-						}
-					}// finished
-					DrawItemsType *pItems = this->m_items.get();
-					assert(pItems != nullptr);
-					pItems->set_result(oRes);
-					this->my_draw();
-					(this->m_dest)(oRes);
-				}
-			});
-			this->m_callback.reset(pf);
-			//
-			
-			this->m_matord.reset(new MatOrdAgentType(pf));
+			this->m_matord.reset(new MatOrdAgentType(this));
 			MatOrdAgentType *pMat = this->m_matord.get();
 			DrawContextParams &ctx = this->oDrawContextParams;
 			ctx.downcolor = InfoColor(0, 0, 0);
 			ctx.bIndsSum = false;
 			ctx.bVarsSum = false;
+			if (this->m_pgraph != nullptr) {
+				this->m_pgraph->set_draw_params(&ctx);
+			}
 			pMat->arrange(pData->indiv_provider(), pData->variable_provider());
 		}// run_matrice
 	};// class MatriceDisplayWindow

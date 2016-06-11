@@ -35,10 +35,13 @@ using backgrounder = MatElemResultBackgounder<IDTYPE, DISTANCETYPE, STRINGTYPE>;
 ////////////////////////////////
 using MatriceDataType = MatriceData<IDTYPE, STRINGTYPE, DATATYPE>;
 using MatriceWindowType = MatriceDisplayWindow<IDTYPE, DISTANCETYPE, STRINGTYPE, FLOATTYPE, DATATYPE>;
+using MatElemCritGraphWindowType = MatElemCritGraphWindow<IDTYPE, DISTANCETYPE, STRINGTYPE>;
 //////////////////////////////////////////
 class matrice_win : public drawable_window
 {
+	widget_group m_group;
 	MatriceWindowType mat_win;
+	MatElemCritGraphWindowType mat_graph;
 	label lblVar;
 	label lblInd;
 	label lblStatus;
@@ -69,21 +72,41 @@ protected:
 		lblVar.set_pos(5, 5);
 		lblInd.set_pos(x2, 5);
 		unsigned long hh = (5 + lblVar.height() + 5);
-		unsigned long hy =  h - hh;
-		if (hy > 0) {
-			this->mat_win.set_pos(0, hh);
-			this->mat_win.set_size(w, hy);
-			this->mat_win.window_resized();
-		}
-		
+		unsigned long hy = h - hh;
+		unsigned long graph_width = w / 4;
+		unsigned long mat_width = w - (graph_width + 5);
+		mat_win.set_size(mat_width, hy);
+		mat_graph.set_size(graph_width, hy);
+		m_group.fit_to_contents();
+		this->mat_win.window_resized();
+		//this->mat_graph.window_resized();
 	}// my_redim
 	virtual void on_window_resized() {
 		this->my_redim();
 	}
 public:
-	matrice_win(MatCellType aType = MatCellType::plainCell) :mat_win(*this),lblVar(*this),lblInd(*this),lblStatus(*this)
+	matrice_win(MatCellType aType = MatCellType::plainCell) : m_group(*this),
+		mat_win(*this),mat_graph(*this),lblVar(*this),lblInd(*this),lblStatus(*this)
 	{
+		mat_win.set_graph_window(&mat_graph);
+		this->set_size(600, 600);
+		unsigned long h = 0, w = 0;
+		this->get_size(w, h);
+		long x2 = w / 2;
+		x2 += 5;
 		lblVar.set_pos(5, 5);
+		lblInd.set_pos(x2, 5);
+		unsigned long hh = (5 + lblVar.height() + 5);
+		unsigned long hy = h - hh;
+		unsigned long graph_width = w / 4;
+		unsigned long mat_width = w - (graph_width + 5);
+		m_group.set_pos(0, hh);
+		m_group.add(mat_graph, 0, 0);
+		m_group.add(mat_win, graph_width + 5, 0);
+		mat_win.set_size(mat_width, hy);
+		mat_graph.set_size(graph_width, hy);
+		m_group.fit_to_contents();
+		//this->my_redim();
 		size_t nRows = 0, nCols = 0;
 		STRINGTYPE name;
 		std::vector<STRINGTYPE> rowNames, colNames;

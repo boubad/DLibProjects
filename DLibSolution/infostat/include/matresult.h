@@ -146,6 +146,7 @@ namespace info {
 		using MatElemResultPtr = std::shared_ptr<MatElemResultType>;
 		using MatElemFunctionType = std::function<void(MatElemResultPtr)>;
 		using BaseType = MatElemResultClient<IDTYPE, DISTANCETYPE, STRINGTYPE>;
+		using MatElemBackgrounder = MatElemResultBackgounder<IDTYPE, DISTANCETYPE, STRINGTYPE > ;
 	private:
 		std::atomic<bool> done;
 		SharedQueue<MatElemResultPtr> dispatchQueue;
