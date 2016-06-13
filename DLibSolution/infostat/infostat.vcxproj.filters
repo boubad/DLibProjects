@@ -150,6 +150,9 @@
     <ClInclude Include="include\infodlib\dlib_backgrounder.h">
       <Filter>include\infodlib</Filter>
     </ClInclude>
+    <ClInclude Include="include\inforunner.h">
+      <Filter>include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\infovalue.cpp">

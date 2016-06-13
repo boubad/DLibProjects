@@ -26,6 +26,12 @@ public:
 	DispatchQueue() {}
 	virtual ~DispatchQueue() {}
 public:
+	void clear(void) {
+		std::lock_guard<std::mutex> guard(qlock);
+		while (!ops_queue.empty()) {
+			ops_queue.pop();
+		}
+	}// clear
 	void put(T op) {
 		std::lock_guard<std::mutex> guard(qlock);
 		ops_queue.push(op);
@@ -66,6 +72,9 @@ public:
 	void send(Operation msg_) {
 		this->dispatchQueue.put(msg_);
 	} // send
+	void clear(void) {
+		this->dispatchQueue.clear();
+	}
 	  // Factory: safe construction of object before thread start
 	static std::unique_ptr<Active> createActive(void) {
 		std::unique_ptr<Active> aPtr(new Active());
@@ -76,12 +85,17 @@ public:
 // class ActiveObject
 //////////////////////////////////
 class Backgrounder {
+public:
+	using Operation = std::function<void()>;
 private:
 	std::unique_ptr<Active> _active;
 protected:
 	void put(Operation op) {
 		this->_active->send(op);
 	}	 // put
+	void clear() {
+		this->_active->clear();
+	}// clear
 public:
 	Backgrounder() :
 			_active(Active::createActive()) {
