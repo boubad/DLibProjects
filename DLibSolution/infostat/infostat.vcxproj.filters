@@ -153,6 +153,9 @@
     <ClInclude Include="include\inforunner.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\info_matord.h">
+      <Filter>include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\infovalue.cpp">

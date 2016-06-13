@@ -13,10 +13,11 @@
 ////////////////////////////
 #include "stringconvert.h"
 #include "sharedqueue.h"
+#include "inforunner.h"
 /////////////////////////////
 namespace info {
 	///////////////////////////////////////////
-	enum class DispositionType { invalid, indiv, variable };
+	enum class DispositionType { invalid, indiv, variable, undefined };
 	enum class StageType { started, finished, aborted, current };
 	///////////////////////////////////////////
 	template<typename IDTYPE, typename DISTANCETYPE, typename STRINGTYPE>
@@ -35,7 +36,7 @@ namespace info {
 		IntraMatElemResult() : stage(StageType::current), disposition(DispositionType::invalid), first(0) {
 		}
 		IntraMatElemResult(const DISTANCETYPE c, const sizets_vector &v,
-			DispositionType disp = DispositionType::invalid, 
+			DispositionType disp = DispositionType::invalid,
 			StageType st = StageType::current, const STRINGTYPE sSigle = STRINGTYPE()) :
 			stage(st), disposition(disp), first(c), second(v), sigle(sSigle) {
 		}
@@ -107,7 +108,7 @@ namespace info {
 	// class IntraMatElemResult
 	////////////////////////////////////////////
 	template<typename IDTYPE, typename DISTANCETYPE, typename STRINGTYPE>
-	class MatElemResultClient  {
+	class MatElemResultClient {
 	public:
 		using MatElemResultType = IntraMatElemResult<IDTYPE, DISTANCETYPE, STRINGTYPE>;
 		using MatElemResultPtr = std::shared_ptr<MatElemResultType>;
@@ -125,6 +126,9 @@ namespace info {
 		void set_function(MatElemFunctionType f) {
 			this->m_f = f;
 		}
+		MatElemFunctionType get_function(void) {
+			return (this->m_f);
+		}
 		void operator()(MatElemResultPtr oRes) {
 			this->process_result(oRes);
 		}
@@ -138,7 +142,37 @@ namespace info {
 			this->process_result(oRes);
 		}// put
 	}; // class IntraMatElemBackgrounder<IDTYPE,DISTANCETYPE,STRINGTYPE>
-	////////////////////////////////////////
+	////////////////////////////////////////////
+	template<typename IDTYPE, typename DISTANCETYPE, typename STRINGTYPE>
+	class MatElemObject : public CancellableObject, public MatElemResultClient<IDTYPE, DISTANCETYPE, STRINGTYPE> {
+	public:
+		using cancelflag = std::atomic<bool>;
+		using pcancelflag = cancelflag *;
+		using PBackgrounder = Backgrounder *;
+		using MatElemResultType = IntraMatElemResult<IDTYPE, DISTANCETYPE, STRINGTYPE>;
+		using MatElemResultPtr = std::shared_ptr<MatElemResultType>;
+		using MatElemFunctionType = std::function<void(MatElemResultPtr)>;
+		using BaseType = MatElemResultClient<IDTYPE, DISTANCETYPE, STRINGTYPE>;
+		using MatElemBackgrounder = MatElemResultBackgounder<IDTYPE, DISTANCETYPE, STRINGTYPE >;
+	public:
+		MatElemObject(pcancelflag pFlag = nullptr, PBackgrounder pq = nullptr,
+			MatElemFunctionType f = [](MatElemResultPtr o) {}) :CancellableObject(pFlag, pq), BaseType(f) {
+		}
+		virtual ~MatElemObject() {
+		}
+	public:
+		virtual void put(MatElemResultPtr oRes) {
+			if (!this->is_cancelled()) {
+				this->send_result([this, oRes]() {
+					this->process_result(oRes);
+				});
+			else {
+				this->process_result(oRes);
+			}
+			}// not cancelled
+		}// put
+	}; // class MatElemObject<IDTYPE,DISTANCETYPE,STRINGTYPE>
+	///////////////////////////////////////
 	template<typename IDTYPE, typename DISTANCETYPE, typename STRINGTYPE>
 	class MatElemResultBackgounder : public MatElemResultClient<IDTYPE, DISTANCETYPE, STRINGTYPE> {
 	public:
@@ -146,7 +180,7 @@ namespace info {
 		using MatElemResultPtr = std::shared_ptr<MatElemResultType>;
 		using MatElemFunctionType = std::function<void(MatElemResultPtr)>;
 		using BaseType = MatElemResultClient<IDTYPE, DISTANCETYPE, STRINGTYPE>;
-		using MatElemBackgrounder = MatElemResultBackgounder<IDTYPE, DISTANCETYPE, STRINGTYPE > ;
+		using MatElemBackgrounder = MatElemResultBackgounder<IDTYPE, DISTANCETYPE, STRINGTYPE >;
 	private:
 		std::atomic<bool> done;
 		SharedQueue<MatElemResultPtr> dispatchQueue;
