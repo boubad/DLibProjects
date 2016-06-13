@@ -22,8 +22,10 @@ namespace UnitTestInfoStat
 	using MatElemResultPtr = typename MatElemType::IntraMatElemResultPtr;
 	using MatElemFunctionType = std::function<void(MatElemResultPtr)>;
 	using Runner = InfoMatriceRunner<IDTYPE, DISTANCETYPE, STRINGTYPE>;
+	using InfoMatResultType = std::pair<MatElemResultPtr, MatElemResultPtr>;
 	/////////////////////////////////////////
-	MatElemFunctionType infologger = [](MatElemResultPtr oRes) {
+	////////////////////
+	MatElemFunctionType infologger = [&](MatElemResultPtr oRes) {
 		STRINGTYPE ss;
 		STRINGSTREAM os;
 		MatElemResultType *p = oRes.get();
@@ -69,11 +71,21 @@ namespace UnitTestInfoStat
 			Runner oRunner;
 			std::vector<double> weights;
 			std::future<MatElemResultPtr> oFuture = oRunner.arrange_elem(m_nrows, m_ncols, m_gdata, m_rownames, weights, true, oPromise, infologger);
+			std::future<MatElemResultPtr> oFuture2 = oRunner.arrange_elem(m_nrows, m_ncols, m_gdata, m_rownames, weights, true, oPromise, infologger);
 			MatElemResultPtr oRes = oFuture.get();
 			MatElemResultType *p = oRes.get();
 			Assert::IsNotNull(p);
 		}// TestInfoMatArrange
-		
+		TEST_METHOD(TestInfoMatrice)
+		{
+			std::shared_ptr<std::promise<bool>> oPromise(new std::promise<bool>());
+			Assert::IsNotNull(oPromise.get());
+			Runner oRunner;
+			std::vector<double> weights;
+			std::future<bool> oFuture = oRunner.arrange_matrice(m_nrows, m_ncols, m_gdata,m_rownames, m_colnames,true,oPromise, infologger);
+			bool p = oFuture.get();
+			Assert::IsTrue(p);
+		}// TestInfoMatArrange
 	};
 	size_t UnitTestInfoMatrice::m_nrows;
 	size_t UnitTestInfoMatrice::m_ncols;

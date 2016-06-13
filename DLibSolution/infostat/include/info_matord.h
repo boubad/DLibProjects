@@ -372,6 +372,7 @@ namespace info {
 	template<typename IDTYPE, typename DISTANCETYPE, typename STRINGTYPE>
 	class InfoMatrice : public MatElemObject<IDTYPE, DISTANCETYPE, STRINGTYPE> {
 	public:
+		using BaseType = MatElemObject<IDTYPE, DISTANCETYPE, STRINGTYPE>;
 		using cancelflag = std::atomic<bool>;
 		using pcancelflag = cancelflag *;
 		using PBackgrounder = Backgrounder *;
@@ -428,7 +429,7 @@ namespace info {
 			MatElemType *pMat = this->m_inds.get();
 			assert(pMat != nullptr);
 			pMat->sigle(this->m_sigle);
-			pMat->arrange(pProvider, pq);
+			pMat->arrange(pProvider);
 			return (true);
 		} // prep_inds
 		bool prep_inds(IndivMapType *pProvider) {
@@ -444,11 +445,11 @@ namespace info {
 		} // prep_inds
 	public:
 		InfoMatrice(pcancelflag pFlag = nullptr, PBackgrounder pq = nullptr,
-			MatElemFunctionType f = [](MatElemResultPtr o) {}) {
+			MatElemFunctionType f = [](MatElemResultPtr o) {}):BaseType(pFlag, pq, f) {
 		} // MatOrd
 		InfoMatrice(SourceType *pIndsSource, SourceType *pVarsSource,
 			pcancelflag pFlag = nullptr, PBackgrounder pq = nullptr,
-			MatElemFunctionType f = [](MatElemResultPtr o) {}) : m_pcancel(pCancel), m_pqueue(pq) {
+			MatElemFunctionType f = [](MatElemResultPtr o) {}) : BaseType(pFlag, pq, f) {
 			this->arrange(pIndsSource, pVarsSource);
 		} // MatOrd
 		InfoMatrice(IndivMapType *pIndsSource, IndivMapType *pVarsSource,
@@ -510,18 +511,19 @@ namespace info {
 			bool bRet = this->prep_vars(pVarsSource);
 			bRet = bRet && fInd.get();
 		} // arrange
-		template <typename T, typename F>
-		void arrange(size_t nRows, size_t nCols, const std::vector<T> &oData, const strings_vector &indsNames, const strings_vector &colsNames,
+		template <typename T>
+		void arrange(size_t nRows, size_t nCols, const std::vector<T> &oData,
+			const strings_vector &indsNames, const strings_vector &colsNames,
 			bool bComputeWeights = false) {
 			assert(nRows > 0);
 			assert(nCols > 0);
 			assert(oData.size() >= (size_t)(nRows * nCols));
 			assert(indsNames.size() >= nRows);
 			assert(colsNames.size() >= nCols);
-			std::vector<F> oVarsData(nCols * nRows);
+			std::vector<T> oVarsData(nCols * nRows);
 			ints_vector indids(nRows), varids(nCols);
 			ints_doubles_map weights;
-			for (size_t i = 0, i < nRows; ++i) {
+			for (size_t i = 0; i < nRows; ++i) {
 				for (size_t j = 0; j < nCols; ++j) {
 					oVarsData[j * nRows + i] = oData[i * nCols + j];
 				}// j
@@ -536,7 +538,7 @@ namespace info {
 			}// i
 			DataSourceType oIndProvider(nRows, nCols, oData, indids, varids, indsNames, weights,bComputeWeights);
 			oIndProvider.recode(1000);
-			DataSourceType oVarProvider(nCols, nRows, oVarsData, varids, indids, varNames, weights, false);
+			DataSourceType oVarProvider(nCols, nRows, oVarsData, varids, indids, colsNames, weights, false);
 			oVarProvider.recode(1000);
 			this->arrange(&oIndProvider, &oVarProvider);
 		}//arrange
@@ -560,22 +562,27 @@ namespace info {
 		using InfoMatriceType = InfoMatrice<IDTYPE, DISTANCETYPE, STRINGTYPE>;
 		using IndivMapType = IndivMap<IDTYPE, STRINGTYPE, DISTANCETYPE>;
 		using strings_vector = std::vector<STRINGTYPE>;
+		using InfoMatResultType = std::pair<MatElemResultPtr, MatElemResultPtr>;
 	public:
 		InfoMatriceRunner() {}
 		virtual ~InfoMatriceRunner() {}
 	public:
 		//
-		std::future<bool> arrange_matrice(SourceType *pInds, SourceType *pVars,
+		template <typename T>
+		std::future<bool> arrange_matrice(size_t nRows, size_t nCols, const std::vector<T> &oData,
+			const strings_vector &indsNames, const strings_vector &colsNames,
+			bool bComputeWeights,
 			std::shared_ptr<std::promise<bool>> oPromise, MatElemFunctionType ff = [](MatElemResultPtr oRes) {}) {
-			this->send([pInds, pVars, oPromise, ff](pcancelflag pCancel, PBackgrounder pBack) {
+			pcancelflag pCancel = this->get_cancelflag();
+			PBackgrounder pBack = this->get_backgrounder();
+			this->send([pCancel,pBack,nRows,nCols,oData,indsNames,colsNames,bComputeWeights, oPromise, ff](pcancelflag pC, PBackgrounder pb) {
 				std::promise<bool> *pPromise = oPromise.get();
 				assert(pPromise != nullptr);
 				try {
 					std::unique_ptr<InfoMatriceType> oMat(new InfoMatriceType(pCancel, pBack, ff));
 					InfoMatriceType *pMat = oMat.get();
-					pMat->arrange(pInds, pVars);
-					bool oRes = true;
-					pPromise->set_value(oRes);
+					pMat->arrange(nRows,nCols, oData,indsNames, colsNames,bComputeWeights);
+					pPromise->set_value(true);
 				}
 				catch (...) {
 					try {
@@ -584,20 +591,23 @@ namespace info {
 					catch (...) {}
 				}
 			});
-			pPromise = oPromise.get();
+			std::promise<bool> *pPromise = oPromise.get();
 			assert(pPromise != nullptr);
 			return (pPromise->get_future());
 		}// arrange_matrice
-		std::future<bool> arrange_matrice(DistanceMapType *pInds, DistanceMapType *pVars,
-			std::shared_ptr<std::promise<bool>> oPromise, MatElemFunctionType ff = [](MatElemResultPtr oRes) {}) {
+		//
+		std::future<InfoMatResultType> arrange_matrice(SourceType *pInds, SourceType *pVars,
+			std::shared_ptr<std::promise<InfoMatResultType>> oPromise, MatElemFunctionType ff = [](MatElemResultPtr oRes) {}) {
 			this->send([pInds, pVars, oPromise, ff](pcancelflag pCancel, PBackgrounder pBack) {
-				std::promise<bool> *pPromise = oPromise.get();
+				std::promise<InfoMatResultType> *pPromise = oPromise.get();
 				assert(pPromise != nullptr);
 				try {
 					std::unique_ptr<InfoMatriceType> oMat(new InfoMatriceType(pCancel, pBack, ff));
 					InfoMatriceType *pMat = oMat.get();
 					pMat->arrange(pInds, pVars);
-					bool oRes = true;
+					MatElemResultPtr oInd = pMat->get_inds_result();
+					MatElemResultPtr oVar = pMat->get_vars_result();
+					InfoMatResultType oRes = std::make_pair(oInd, oVar);
 					pPromise->set_value(oRes);
 				}
 				catch (...) {
@@ -607,20 +617,22 @@ namespace info {
 					catch (...) {}
 				}
 			});
-			pPromise = oPromise.get();
+			std::promise<InfoMatResultType> *pPromise = oPromise.get();
 			assert(pPromise != nullptr);
 			return (pPromise->get_future());
 		}// arrange_matrice
-		std::future<bool> arrange_matrice(IndivMapType *pInds, IndivMapType *pVars,
-			std::shared_ptr<std::promise<bool>> oPromise, MatElemFunctionType ff = [](MatElemResultPtr oRes) {}) {
+		std::future<InfoMatResultType> arrange_matrice(DistanceMapType *pInds, DistanceMapType *pVars,
+			std::shared_ptr<std::promise<InfoMatResultType>> oPromise, MatElemFunctionType ff = [](MatElemResultPtr oRes) {}) {
 			this->send([pInds, pVars, oPromise, ff](pcancelflag pCancel, PBackgrounder pBack) {
-				std::promise<bool> *pPromise = oPromise.get();
+				std::promise<InfoMatResultType> *pPromise = oPromise.get();
 				assert(pPromise != nullptr);
 				try {
 					std::unique_ptr<InfoMatriceType> oMat(new InfoMatriceType(pCancel, pBack, ff));
 					InfoMatriceType *pMat = oMat.get();
 					pMat->arrange(pInds, pVars);
-					bool oRes = true;
+					MatElemResultPtr oInd = pMat->get_inds_result();
+					MatElemResultPtr oVar = pMat->get_vars_result();
+					InfoMatResultType oRes = std::make_pair(oInd, oVar);
 					pPromise->set_value(oRes);
 				}
 				catch (...) {
@@ -630,7 +642,32 @@ namespace info {
 					catch (...) {}
 				}
 			});
-			pPromise = oPromise.get();
+			std::promise<InfoMatResultType> *pPromise = oPromise.get();
+			assert(pPromise != nullptr);
+			return (pPromise->get_future());
+		}// arrange_matrice
+		std::future<InfoMatResultType> arrange_matrice(IndivMapType *pInds, IndivMapType *pVars,
+			std::shared_ptr<std::promise<InfoMatResultType>> oPromise, MatElemFunctionType ff = [](MatElemResultPtr oRes) {}) {
+			this->send([pInds, pVars, oPromise, ff](pcancelflag pCancel, PBackgrounder pBack) {
+				std::promise<InfoMatResultType> *pPromise = oPromise.get();
+				assert(pPromise != nullptr);
+				try {
+					std::unique_ptr<InfoMatriceType> oMat(new InfoMatriceType(pCancel, pBack, ff));
+					InfoMatriceType *pMat = oMat.get();
+					pMat->arrange(pInds, pVars);
+					MatElemResultPtr oInd = pMat->get_inds_result();
+					MatElemResultPtr oVar = pMat->get_vars_result();
+					InfoMatResultType oRes = std::make_pair(oInd, oVar);
+					pPromise->set_value(oRes);
+				}
+				catch (...) {
+					try {
+						pPromise->set_exception(std::current_exception());
+					}
+					catch (...) {}
+				}
+			});
+			std::promise<InfoMatResultType> *pPromise = oPromise.get();
 			assert(pPromise != nullptr);
 			return (pPromise->get_future());
 		}// arrange_matrice
