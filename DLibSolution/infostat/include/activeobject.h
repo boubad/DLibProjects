@@ -66,9 +66,14 @@ private:
 public:
 	~Active() {
 		// Schedule a No-Op runnable to flush the dispatch queue
+		this->done.store(true);
 		dispatchQueue.put([this]() {this->done.store(true);});
 		runnable.join();
 	} // run
+	void stop(void) {
+		dispatchQueue.put([this]() {this->done.store(true); });
+		runnable.join();
+	}
 	void send(Operation msg_) {
 		this->dispatchQueue.put(msg_);
 	} // send
@@ -101,6 +106,7 @@ public:
 			_active(Active::createActive()) {
 	}
 	virtual ~Backgrounder() {
+		this->_active.reset();
 	}
 	void send(Operation op) {
 		this->_active->send(op);

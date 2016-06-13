@@ -82,9 +82,11 @@ namespace info {
 	public:
 		virtual ~CancellableActive() {
 			this->m_cancel.store(true);
+			this->done.store(true);
 			dispatchQueue.put([this](pcancelflag /*pCancel*/, PBackgrounder /*pq*/) {
 				this->done.store(true);
 			});
+			this->m_backgrounder.reset();
 			runnable.join();
 		} // run
 		pcancelflag get_cancelflag(void) {
@@ -142,6 +144,7 @@ namespace info {
 		}
 		virtual ~InfoRunner() {
 			this->_active->cancel();
+			this->_active.reset();
 		}
 		PBackgrounder get_backgrounder(void) {
 			return (this->_active->get_backgrounder());
