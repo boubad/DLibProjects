@@ -73,7 +73,7 @@ namespace UnitTestInfoStat
 			MatElemResultType *p = oRes.get();
 			Assert::IsNotNull(p);
 		}// TestInfoMatArrange
-
+		
 	};
 	size_t UnitTestInfoMatrice::m_nrows;
 	size_t UnitTestInfoMatrice::m_ncols;
