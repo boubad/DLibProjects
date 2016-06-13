@@ -153,7 +153,6 @@ namespace info {
 		using MatElemResultPtr = std::shared_ptr<MatElemResultType>;
 		using MatElemFunctionType = std::function<void(MatElemResultPtr)>;
 		using BaseType = MatElemResultClient<IDTYPE, DISTANCETYPE, STRINGTYPE>;
-		using MatElemBackgrounder = MatElemResultBackgounder<IDTYPE, DISTANCETYPE, STRINGTYPE >;
 	public:
 		MatElemObject(pcancelflag pFlag = nullptr, PBackgrounder pq = nullptr,
 			MatElemFunctionType f = [](MatElemResultPtr o) {}) :CancellableObject(pFlag, pq), BaseType(f) {
@@ -162,14 +161,17 @@ namespace info {
 		}
 	public:
 		virtual void put(MatElemResultPtr oRes) {
-			if (!this->is_cancelled()) {
+			if (this->is_cancelled()) {
+				return;
+			}
+			if (this->get_backgrounder() != nullptr) {
 				this->send_result([this, oRes]() {
 					this->process_result(oRes);
 				});
+			}
 			else {
 				this->process_result(oRes);
 			}
-			}// not cancelled
 		}// put
 	}; // class MatElemObject<IDTYPE,DISTANCETYPE,STRINGTYPE>
 	///////////////////////////////////////

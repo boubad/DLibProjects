@@ -179,6 +179,7 @@
     </ClCompile>
     <ClCompile Include="test_clusterize.cpp" />
     <ClCompile Include="test_indivprovider.cpp" />
+    <ClCompile Include="test_infomatrice.cpp" />
     <ClCompile Include="test_intramatelem.cpp" />
     <ClCompile Include="unittest_infovalue.cpp" />
   </ItemGroup>

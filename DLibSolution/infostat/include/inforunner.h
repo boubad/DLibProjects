@@ -36,7 +36,7 @@ namespace info {
 			return (this->m_pcancel);
 		}
 		PBackgrounder get_backgrounder(void) {
-			return (this->get_backgrounder);
+			return (this->m_pq);
 		}
 		void send_result(Operation_result rf) {
 			PBackgrounder pq = this->m_pq;

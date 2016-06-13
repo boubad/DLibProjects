@@ -43,9 +43,9 @@ namespace info {
 		std::unique_ptr<DistanceMapType> m_odist;
 	public:
 		MatElem(DispositionType disp = DispositionType::invalid, pcancelflag pFlag = nullptr, PBackgrounder pq = nullptr,
-			MatElemFunctionType f = [](MatElemResultPtr o) {}) : BaseType(pcancelFlag, pq, f), m_disp(disp), m_crit(0), m_pdist(nullptr) {
+			MatElemFunctionType f = [](MatElemResultPtr o) {}) : BaseType(pFlag, pq, f), m_disp(disp), m_crit(0), m_pdist(nullptr) {
 		}
-		virtual ~IntraMatElem() {
+		virtual ~MatElem() {
 		}
 	public:
 		void sigle(const STRINGTYPE &s) {
@@ -79,7 +79,7 @@ namespace info {
 				if (!this->one_iteration(oCrit)) {
 					break;
 				}
-				if (this->check_cancelled()) {
+				if (this->is_cancelled()) {
 					break;
 				}
 				this->notify(StageType::current);
@@ -109,7 +109,7 @@ namespace info {
 		}// arrange
 		template <typename T, typename F>
 		void arrange(size_t nRows, size_t nCols, const std::vector<T> &oData, const strings_vector &names,
-			const std::vector<F> &weights) {
+			const std::vector<F> &weights,bool bComputeWeights = false) {
 			assert(nRows > 0);
 			assert(nCols > 0);
 			assert(oData.size() >= (size_t)(nRows * nCols));
@@ -124,13 +124,18 @@ namespace info {
 				IDTYPE key = (IDTYPE)(i + 1);
 				varids[i] = key;
 			}// i
-			const size_t nx = weights.size();
-			double somme = 0.0;
 			bool bOk = true;
-			if (nx < nCols) {
+			double somme = 0.0;
+			if (weights.size() < nCols) {
 				bOk = false;
+				double vf = 1.0 / nCols;
+				for (size_t i = 0; i < nCols; ++i) {
+					IDTYPE key = (IDTYPE)(i + 1);
+					ww[key] = vf;
+					somme += vf;
+				}// i
 			}
-			if (bOk) {
+			else {
 				for (size_t i = 0; i < nCols; ++i) {
 					double c = (double)weights[i];
 					if (c < 0.0) {
@@ -141,15 +146,39 @@ namespace info {
 					ww[key] = c;
 					somme += c;
 				}// i
-			}// ok
+			}
+			if (bComputeWeights) {
+				bOk = true;
+				for (size_t i = 0; i < nCols; ++i) {
+					double s1 = 0.0;
+					double s2 = 0.0;
+					for (size_t j = 0; j < nRows; ++j) {
+						double x = (double)oData[j * nCols + i];
+						s1 += x;
+						s2 += x * x;
+					}// j
+					s1 /= nRows;
+					s2 = (s2 / nRows) - (s1 * s1);
+					if (s2 <= 0.0) {
+						bOk = false;
+						break;
+					}
+					IDTYPE key = (IDTYPE)(i + 1);
+					double ff = 1.0 / s2;
+					ww[key] = ff;
+					somme += ff;
+				}// i
+			}// bComputeWeights
 			if (bOk && (somme <= 0.0)) {
 				bOk = false;
 			}
 			if (!bOk) {
 				double vf = 1.0 / nCols;
+				somme = 0.0;
 				for (size_t i = 0; i < nCols; ++i) {
 					IDTYPE key = (IDTYPE)(i + 1);
 					oWeights[key] = vf;
+					somme += vf;
 				}// i
 			}
 			else {
@@ -159,13 +188,14 @@ namespace info {
 				}// it
 			}
 			DataSourceType oProvider(nRows, nCols, oData, indids, varids, names, oWeights);
+			oProvider.recode(1000);
 			this->arrange(&oProvider);
 		}// arrange
 	protected:
 		void notify(StageType stage = StageType::current) {
 			if (!this->is_cancelled()) {
 				IntraMatElemResultPtr res = this->getResult(stage);
-				this->put(oRes);
+				this->put(res);
 			}
 		}//notify
 		bool one_iteration(DISTANCETYPE &oCrit) {
@@ -211,7 +241,7 @@ namespace info {
 					size_t j2 = pp.second;
 					q.pop_front();
 					if (j1 != j2) {
-						IntraMatElemType xMat;
+						MatElemType xMat;
 						xMat.m_pdist = this->m_pdist;
 						xMat.m_indexes = oldIndexes;
 						xMat.permute_items(j1, j2);
@@ -359,6 +389,10 @@ namespace info {
 		using IndivTypePtr = typename MatElemType::IndivTypePtr;
 		using InfoMatriceType = InfoMatrice<IDTYPE, DISTANCETYPE, STRINGTYPE>;
 		using IndivMapType = IndivMap<IDTYPE, STRINGTYPE, DISTANCETYPE>;
+		//
+		using ints_doubles_map = std::map<IDTYPE, double>;
+		using strings_vector = std::vector<STRINGTYPE>;
+		using DataSourceType = DataVectorIndivSource<IDTYPE, STRINGTYPE>;
 	private:
 		std::unique_ptr<MatElemType> m_vars;
 		std::unique_ptr<MatElemType> m_inds;
@@ -476,6 +510,36 @@ namespace info {
 			bool bRet = this->prep_vars(pVarsSource);
 			bRet = bRet && fInd.get();
 		} // arrange
+		template <typename T, typename F>
+		void arrange(size_t nRows, size_t nCols, const std::vector<T> &oData, const strings_vector &indsNames, const strings_vector &colsNames,
+			bool bComputeWeights = false) {
+			assert(nRows > 0);
+			assert(nCols > 0);
+			assert(oData.size() >= (size_t)(nRows * nCols));
+			assert(indsNames.size() >= nRows);
+			assert(colsNames.size() >= nCols);
+			std::vector<F> oVarsData(nCols * nRows);
+			ints_vector indids(nRows), varids(nCols);
+			ints_doubles_map weights;
+			for (size_t i = 0, i < nRows; ++i) {
+				for (size_t j = 0; j < nCols; ++j) {
+					oVarsData[j * nRows + i] = oData[i * nCols + j];
+				}// j
+			}// i
+			for (size_t i = 0; i < nRows; ++i) {
+				IDTYPE key = (IDTYPE)(i + 1);
+				indids[i] = key;
+			}// i
+			for (size_t i = 0; i < nCols; ++i) {
+				IDTYPE key = (IDTYPE)(i + 1);
+				varids[i] = key;
+			}// i
+			DataSourceType oIndProvider(nRows, nCols, oData, indids, varids, indsNames, weights,bComputeWeights);
+			oIndProvider.recode(1000);
+			DataSourceType oVarProvider(nCols, nRows, oVarsData, varids, indids, varNames, weights, false);
+			oVarProvider.recode(1000);
+			this->arrange(&oIndProvider, &oVarProvider);
+		}//arrange
 	};
 	////////////////////////////////////
 	template<typename IDTYPE, typename DISTANCETYPE, typename STRINGTYPE>
@@ -495,6 +559,7 @@ namespace info {
 		using DistanceMapType = DistanceMap<IDTYPE, DISTANCETYPE>;
 		using InfoMatriceType = InfoMatrice<IDTYPE, DISTANCETYPE, STRINGTYPE>;
 		using IndivMapType = IndivMap<IDTYPE, STRINGTYPE, DISTANCETYPE>;
+		using strings_vector = std::vector<STRINGTYPE>;
 	public:
 		InfoMatriceRunner() {}
 		virtual ~InfoMatriceRunner() {}
@@ -628,6 +693,33 @@ namespace info {
 					std::unique_ptr<MatElemType> oMat(new MatElemType(DispositionType::undefined, pCancel, pBack, ff));
 					MatElemType *pMat = oMat.get();
 					pMat->arrange(pProvider);
+					MatElemResultPtr oRes = pMat->getResult(StageType::finished);
+					pPromise->set_value(oRes);
+				}
+				catch (...) {
+					try {
+						pPromise->set_exception(std::current_exception());
+					}
+					catch (...) {}
+				}
+			});
+			pPromise = oPromise.get();
+			assert(pPromise != nullptr);
+			return (pPromise->get_future());
+		}// arrange_elem
+		//
+		template <typename T, typename F>
+		std::future<MatElemResultPtr> arrange_elem(size_t nRows, size_t nCols, const std::vector<T> &oData, const strings_vector &names,
+			const std::vector<F> &weights, bool bComputeWeights,
+			std::shared_ptr<std::promise<MatElemResultPtr>> oPromise, MatElemFunctionType ff = [](MatElemResultPtr oRes) {}) {
+			std::promise<MatElemResultPtr> *pPromise = oPromise.get();
+			this->send([nRows,nCols,oData,names,weights,bComputeWeights, oPromise, ff](pcancelflag pCancel, PBackgrounder pBack) {
+				std::promise<MatElemResultPtr> *pPromise = oPromise.get();
+				assert(pPromise != nullptr);
+				try {
+					std::unique_ptr<MatElemType> oMat(new MatElemType(DispositionType::undefined, pCancel, pBack, ff));
+					MatElemType *pMat = oMat.get();
+					pMat->arrange(nRows,nCols,oData,names,weights,bComputeWeights);
 					MatElemResultPtr oRes = pMat->getResult(StageType::finished);
 					pPromise->set_value(oRes);
 				}
