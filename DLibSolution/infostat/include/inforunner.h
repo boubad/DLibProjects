@@ -2,6 +2,7 @@
 #ifndef __INFORUNNER_H__
 #define __INFORUNNER_H__
 ////////////////////////////////
+#include <cassert>
 #include "activeobject.h"
 ///////////////////////////////////
 namespace info {
@@ -12,9 +13,11 @@ namespace info {
 		using pcancelflag = cancelflag *;
 		using PBackgrounder = Backgrounder *;
 		using Operation_result = std::function<void()>;
+		
 	private:
 		pcancelflag m_pcancel;
 		PBackgrounder m_pq;
+
 	public:
 		CancellableObject(pcancelflag pFlag = nullptr, PBackgrounder pq = nullptr) :
 			m_pcancel(pFlag), m_pq(pq) {
@@ -24,7 +27,7 @@ namespace info {
 		}
 		CancellableObject & operator=(const CancellableObject &other) {
 			if (this != &other) {
-				this->m_pcancel = this->m_pcancel;
+				this->m_pcancel = other.m_pcancel;
 				this->m_pq = other.m_pq;
 			}
 			return (*this);
@@ -50,6 +53,8 @@ namespace info {
 	};// class CancellableObject
 	///////////////////////////////////////
 	class CancellableActive {
+		using mutex_type = std::mutex;
+		using lock_type = std::lock_guard<mutex_type>;
 	public:
 		using cancelflag = std::atomic<bool>;
 		using pcancelflag = cancelflag *;
@@ -60,35 +65,61 @@ namespace info {
 		std::atomic<bool> done;
 		std::atomic<bool> m_cancel;
 		std::unique_ptr<Backgrounder> m_backgrounder;
-		DispatchQueue<Operation> dispatchQueue;
+		std::unique_ptr<DispatchQueue<Operation> > m_dispatchQueue;
 		std::thread runnable;
 	private:
-		CancellableActive() : done(false), m_cancel(false), m_backgrounder(new Backgrounder()) {
+		CancellableActive() : done(false), m_cancel(false) {
+			this->m_backgrounder.reset(new Backgrounder());
+			this->m_dispatchQueue.reset(new DispatchQueue<Operation>([](pcancelflag f, PBackgrounder g) {}));
+			this->runnable = std::thread([this]() {
+				this->run();
+			});
 		} // Active
 		CancellableActive(const CancellableActive&) = delete;
 		CancellableActive& operator=(const Active&) = delete;
-		void run() {
-			pcancelflag pCancel = &(this->m_cancel);
-			PBackgrounder pq = this->m_backgrounder.get();
-			std::atomic<bool> &oDone = this->done;
-			DispatchQueue<Operation> &q = this->dispatchQueue;
-			while (!oDone.load()) {
-				Operation op = q.take();
-				if (!pCancel->load()) {
-					op(pCancel, pq);
-				}
-			} // while
-		} // run
 	public:
-		virtual ~CancellableActive() {
-			this->m_cancel.store(true);
-			this->done.store(true);
-			dispatchQueue.put([this](pcancelflag /*pCancel*/, PBackgrounder /*pq*/) {
-				this->done.store(true);
-			});
-			this->m_backgrounder.reset();
-			runnable.join();
+		void run() {
+			DispatchQueue<Operation> *pQueue = this->m_dispatchQueue.get();
+			if (pQueue != nullptr)  {
+				PBackgrounder pq = this->m_backgrounder.get();
+				pcancelflag pCancel = &(this->m_cancel);
+				std::atomic<bool> &oDone = this->done;
+				while (!oDone.load()) {
+					if (pQueue->is_aborting()) {
+						break;
+					}
+					Operation op = pQueue->take();
+					if (!pCancel->load()) {
+						op(pCancel, pq);
+					}
+				} // while
+			}// pQueue
 		} // run
+		virtual ~CancellableActive() {
+			this->stop();
+		} // run
+		void stop(void) {
+			PBackgrounder pBack = this->m_backgrounder.get();
+			if (pBack != nullptr) {
+				pBack->stop();
+			}
+			DispatchQueue<Operation> *p = this->m_dispatchQueue.get();
+			if (p != nullptr) {
+				p->abort();
+			}
+			if (this->runnable.joinable()) {
+				this->done.store(true);
+				DispatchQueue<Operation> *p = this->m_dispatchQueue.get();
+				if (p != nullptr) {
+					p->put([this](pcancelflag f,PBackgrounder g) {
+						this->done.store(true);
+					});
+				}
+				this->runnable.join();
+			}
+			this->m_dispatchQueue.reset();
+			this->m_backgrounder.reset();
+		}// stop
 		pcancelflag get_cancelflag(void) {
 			return (&(this->m_cancel));
 		}
@@ -105,22 +136,20 @@ namespace info {
 			this->m_cancel.store(true);
 		}
 		void send(Operation msg_) {
-			this->dispatchQueue.put(msg_);
+			DispatchQueue<Operation> *p = this->m_dispatchQueue.get();
+			if (p != nullptr) {
+				p->put(msg_);
+			}
 		} // send
 		void send_result(Operation_result rf) {
-			PBackgrounder pq = this->m_backgrounder.get();
+			PBackgrounder pq = this->get_backgrounder();
 			if (pq != nullptr) {
 				pq->send(rf);
 			}
 		}
-		void clear(void) {
-			this->dispatchQueue.clear();
-		}
 		// Factory: safe construction of object before thread start
 		static CancellableActive *createActive(void) {
 			CancellableActive *p = new CancellableActive();
-			assert(p != nullptr);
-			p->runnable = std::thread(&CancellableActive::run, p);
 			return p;
 		}	 // create
 	};
@@ -135,35 +164,41 @@ namespace info {
 	private:
 		std::unique_ptr<CancellableActive> _active;
 	protected:
-		void clear() {
-			this->_active->clear();
-		}// clear
+		CancellableActive *get_active(void) {
+			CancellableActive *p = this->_active.get();
+			if (p == nullptr) {
+				this->_active.reset(CancellableActive::createActive());
+				p = this->_active.get();
+			}
+			return (p);
+		}
 	public:
-		InfoRunner() {
-			this->_active.reset(CancellableActive::createActive());
-		}
+		InfoRunner() {}
 		virtual ~InfoRunner() {
-			this->_active->cancel();
-			this->_active.reset();
+			this->stop();
 		}
+		void stop(void) {
+			CancellableActive *p = this->_active.get();
+			if (p != nullptr) {
+				p->stop();
+				this->_active.reset();
+			}
+		}// stop
 		PBackgrounder get_backgrounder(void) {
-			return (this->_active->get_backgrounder());
+			CancellableActive *p = this->get_active();
+			assert(p != nullptr);
+			return (p->get_backgrounder());
 		}
 		pcancelflag get_cancelflag(void) {
-			return (this->_active->get_cancelflag());
+			CancellableActive *p = this->get_active();
+			assert(p != nullptr);
+			return (p->get_cancelflag());
 		}
 		void send(Operation op) {
-			this->_active->send(op);
+			CancellableActive *p = this->get_active();
+			assert(p != nullptr);
+			p->send(op);
 		}	 // send
-		bool is_cancelled(void) {
-			return (this->_active->is_cancelled());
-		}
-		void reset_cancel(void) {
-			this->_active->reset_cancel();
-		}
-		void cancel(void) {
-			this->_active->cancel();
-		}
 	};// class InfoRunner
 	////////////////////////////////////
 }// namespace info

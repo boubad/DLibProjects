@@ -12,8 +12,8 @@
 #include <atomic>
 ////////////////////////////
 #include "stringconvert.h"
-#include "sharedqueue.h"
 #include "inforunner.h"
+#include "sharedqueue.h"
 /////////////////////////////
 namespace info {
 	///////////////////////////////////////////
@@ -114,12 +114,13 @@ namespace info {
 		using MatElemResultPtr = std::shared_ptr<MatElemResultType>;
 		using MatElemFunctionType = std::function<void(MatElemResultPtr)>;
 		using MatElemResultClientType = MatElemResultClient<IDTYPE, DISTANCETYPE, STRINGTYPE>;
+		using mutex_type = std::mutex;
+		using lock_type = std::lock_guard<mutex_type>;
 	private:
 		MatElemFunctionType m_f;
+		mutex_type _mutex;
 	public:
-		MatElemResultClient() :m_f([](MatElemResultPtr o) {}) {
-		}
-		MatElemResultClient(MatElemFunctionType f) :m_f(f) {
+		MatElemResultClient(MatElemFunctionType f = [](MatElemResultPtr o) {}) :m_f(f) {
 		}
 		virtual ~MatElemResultClient() {
 		}
@@ -133,15 +134,15 @@ namespace info {
 			this->process_result(oRes);
 		}
 	protected:
-		virtual void process_result(MatElemResultPtr oRes) {
-			MatElemFunctionType &f = this->m_f;
-			f(oRes);
+		void process_result(MatElemResultPtr oRes) {
+			lock_type oLock(this->_mutex);
+			(this->m_f)(oRes);
 		}//process_result
 	public:
 		virtual void put(MatElemResultPtr oRes) {
 			this->process_result(oRes);
 		}// put
-	}; // class IntraMatElemBackgrounder<IDTYPE,DISTANCETYPE,STRINGTYPE>
+	}; // class MatElemResultClient<IDTYPE,DISTANCETYPE,STRINGTYPE>
 	////////////////////////////////////////////
 	template<typename IDTYPE, typename DISTANCETYPE, typename STRINGTYPE>
 	class MatElemObject : public CancellableObject, public MatElemResultClient<IDTYPE, DISTANCETYPE, STRINGTYPE> {
@@ -164,14 +165,9 @@ namespace info {
 			if (this->is_cancelled()) {
 				return;
 			}
-			if (this->get_backgrounder() != nullptr) {
-				this->send_result([this, oRes]() {
-					this->process_result(oRes);
-				});
-			}
-			else {
+			this->send_result([this, oRes]() {
 				this->process_result(oRes);
-			}
+			});
 		}// put
 	}; // class MatElemObject<IDTYPE,DISTANCETYPE,STRINGTYPE>
 	///////////////////////////////////////

@@ -71,7 +71,6 @@ namespace UnitTestInfoStat
 			Runner oRunner;
 			std::vector<double> weights;
 			std::future<MatElemResultPtr> oFuture = oRunner.arrange_elem(m_nrows, m_ncols, m_gdata, m_rownames, weights, true, oPromise, infologger);
-			std::future<MatElemResultPtr> oFuture2 = oRunner.arrange_elem(m_nrows, m_ncols, m_gdata, m_rownames, weights, true, oPromise, infologger);
 			MatElemResultPtr oRes = oFuture.get();
 			MatElemResultType *p = oRes.get();
 			Assert::IsNotNull(p);

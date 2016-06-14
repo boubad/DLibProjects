@@ -454,7 +454,7 @@ namespace info {
 		} // MatOrd
 		InfoMatrice(IndivMapType *pIndsSource, IndivMapType *pVarsSource,
 			pcancelflag pFlag = nullptr, PBackgrounder pq = nullptr,
-			MatElemFunctionType f = [](MatElemResultPtr o) {}) {
+			MatElemFunctionType f = [](MatElemResultPtr o) {}) : BaseType(pFlag, pq, f) {
 			this->arrange(pIndsSource, pVarsSource);
 		} // MatOrd
 		virtual ~InfoMatrice() {
@@ -598,7 +598,9 @@ namespace info {
 		//
 		std::future<InfoMatResultType> arrange_matrice(SourceType *pInds, SourceType *pVars,
 			std::shared_ptr<std::promise<InfoMatResultType>> oPromise, MatElemFunctionType ff = [](MatElemResultPtr oRes) {}) {
-			this->send([pInds, pVars, oPromise, ff](pcancelflag pCancel, PBackgrounder pBack) {
+			pcancelflag pCancel = this->get_cancelflag();
+			PBackgrounder pBack = this->get_backgrounder();
+			this->send([pInds, pVars, oPromise, ff](pcancelflag pC, PBackgrounder pB) {
 				std::promise<InfoMatResultType> *pPromise = oPromise.get();
 				assert(pPromise != nullptr);
 				try {
@@ -623,7 +625,9 @@ namespace info {
 		}// arrange_matrice
 		std::future<InfoMatResultType> arrange_matrice(DistanceMapType *pInds, DistanceMapType *pVars,
 			std::shared_ptr<std::promise<InfoMatResultType>> oPromise, MatElemFunctionType ff = [](MatElemResultPtr oRes) {}) {
-			this->send([pInds, pVars, oPromise, ff](pcancelflag pCancel, PBackgrounder pBack) {
+			pcancelflag pCancel = this->get_cancelflag();
+			PBackgrounder pBack = this->get_backgrounder();
+			this->send([pCancel,pBack,pInds, pVars, oPromise, ff](pcancelflag pC, PBackgrounder pB) {
 				std::promise<InfoMatResultType> *pPromise = oPromise.get();
 				assert(pPromise != nullptr);
 				try {
@@ -648,7 +652,9 @@ namespace info {
 		}// arrange_matrice
 		std::future<InfoMatResultType> arrange_matrice(IndivMapType *pInds, IndivMapType *pVars,
 			std::shared_ptr<std::promise<InfoMatResultType>> oPromise, MatElemFunctionType ff = [](MatElemResultPtr oRes) {}) {
-			this->send([pInds, pVars, oPromise, ff](pcancelflag pCancel, PBackgrounder pBack) {
+			pcancelflag pCancel = this->get_cancelflag();
+			PBackgrounder pBack = this->get_backgrounder();
+			this->send([pCancel,pBlack,pInds, pVars, oPromise, ff](pcancelflag pC, PBackgrounder pB) {
 				std::promise<InfoMatResultType> *pPromise = oPromise.get();
 				assert(pPromise != nullptr);
 				try {
@@ -675,7 +681,9 @@ namespace info {
 		std::future<MatElemResultPtr> arrange_elem(IndivMapType *pMap,
 			std::shared_ptr<std::promise<MatElemResultPtr>> oPromise, MatElemFunctionType ff = [](MatElemResultPtr oRes) {}) {
 			std::promise<MatElemResultPtr> *pPromise = oPromise.get();
-			this->send([pMap, oPromise, ff](pcancelflag pCancel, PBackgrounder pBack) {
+			pcancelflag pCancel = this->get_cancelflag();
+			PBackgrounder pBack = this->get_backgrounder();
+			this->send([pCancel,pBack,pMap, oPromise, ff](pcancelflag pC, PBackgrounder pB) {
 				std::promise<MatElemResultPtr> *pPromise = oPromise.get();
 				assert(pPromise != nullptr);
 				try {
@@ -699,7 +707,9 @@ namespace info {
 		std::future<MatElemResultPtr> arrange_elem(DistanceMapType *pMap,
 			std::shared_ptr<std::promise<MatElemResultPtr>> oPromise, MatElemFunctionType ff = [](MatElemResultPtr oRes) {}) {
 			std::promise<MatElemResultPtr> *pPromise = oPromise.get();
-			this->send([pMap, oPromise, ff](pcancelflag pCancel, PBackgrounder pBack) {
+			pcancelflag pCancel = this->get_cancelflag();
+			PBackgrounder pBack = this->get_backgrounder();
+			this->send([pCancel,pBack,pMap, oPromise, ff](pcancelflag pC, PBackgrounder pB) {
 				std::promise<MatElemResultPtr> *pPromise = oPromise.get();
 				assert(pPromise != nullptr);
 				try {
@@ -723,7 +733,9 @@ namespace info {
 		std::future<MatElemResultPtr> arrange_elem(SourceType *pProvider,
 			std::shared_ptr<std::promise<MatElemResultPtr>> oPromise, MatElemFunctionType ff = [](MatElemResultPtr oRes) {}) {
 			std::promise<MatElemResultPtr> *pPromise = oPromise.get();
-			this->send([pProvider, oPromise, ff](pcancelflag pCancel, PBackgrounder pBack) {
+			pcancelflag pCancel = this->get_cancelflag();
+			PBackgrounder pBack = this->get_backgrounder();
+			this->send([pCancel,pBack,pProvider, oPromise, ff](pcancelflag pC, PBackgrounder pB) {
 				std::promise<MatElemResultPtr> *pPromise = oPromise.get();
 				assert(pPromise != nullptr);
 				try {
@@ -750,7 +762,9 @@ namespace info {
 			const std::vector<F> &weights, bool bComputeWeights,
 			std::shared_ptr<std::promise<MatElemResultPtr>> oPromise, MatElemFunctionType ff = [](MatElemResultPtr oRes) {}) {
 			std::promise<MatElemResultPtr> *pPromise = oPromise.get();
-			this->send([nRows,nCols,oData,names,weights,bComputeWeights, oPromise, ff](pcancelflag pCancel, PBackgrounder pBack) {
+			pcancelflag pCancel = this->get_cancelflag();
+			PBackgrounder pBack = this->get_backgrounder();
+			this->send([pCancel,pBack,nRows,nCols,oData,names,weights,bComputeWeights, oPromise, ff](pcancelflag pC, PBackgrounder pB) {
 				std::promise<MatElemResultPtr> *pPromise = oPromise.get();
 				assert(pPromise != nullptr);
 				try {
