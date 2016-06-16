@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
-VisualStudioVersion = 14.0.25123.0
+VisualStudioVersion = 14.0.25402.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "infosqlite", "infosqlite\infosqlite.vcxproj", "{78F185EB-E61C-4CD9-83D2-B2E7741C2F8F}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -36,6 +36,10 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "infodlib", "infodlib\infodl
 		{A192791E-09F0-43F8-B6B8-17D5FD1174FD} = {A192791E-09F0-43F8-B6B8-17D5FD1174FD}
 		{78F185EB-E61C-4CD9-83D2-B2E7741C2F8F} = {78F185EB-E61C-4CD9-83D2-B2E7741C2F8F}
 	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "geninfolib", "geninfolib\geninfolib.vcxproj", "{262C4BD8-3400-43E1-B611-1F64DA7F6C90}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "UnitTestGenInfo", "UnitTestGenInfo\UnitTestGenInfo.vcxproj", "{2120D1E4-2EFB-47A6-B942-6124A0131927}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -93,6 +97,22 @@ Global
 		{5B449482-A762-47E6-922C-42DE7A387262}.Release|x64.Build.0 = Release|x64
 		{5B449482-A762-47E6-922C-42DE7A387262}.Release|x86.ActiveCfg = Release|Win32
 		{5B449482-A762-47E6-922C-42DE7A387262}.Release|x86.Build.0 = Release|Win32
+		{262C4BD8-3400-43E1-B611-1F64DA7F6C90}.Debug|x64.ActiveCfg = Debug|x64
+		{262C4BD8-3400-43E1-B611-1F64DA7F6C90}.Debug|x64.Build.0 = Debug|x64
+		{262C4BD8-3400-43E1-B611-1F64DA7F6C90}.Debug|x86.ActiveCfg = Debug|Win32
+		{262C4BD8-3400-43E1-B611-1F64DA7F6C90}.Debug|x86.Build.0 = Debug|Win32
+		{262C4BD8-3400-43E1-B611-1F64DA7F6C90}.Release|x64.ActiveCfg = Release|x64
+		{262C4BD8-3400-43E1-B611-1F64DA7F6C90}.Release|x64.Build.0 = Release|x64
+		{262C4BD8-3400-43E1-B611-1F64DA7F6C90}.Release|x86.ActiveCfg = Release|Win32
+		{262C4BD8-3400-43E1-B611-1F64DA7F6C90}.Release|x86.Build.0 = Release|Win32
+		{2120D1E4-2EFB-47A6-B942-6124A0131927}.Debug|x64.ActiveCfg = Debug|x64
+		{2120D1E4-2EFB-47A6-B942-6124A0131927}.Debug|x64.Build.0 = Debug|x64
+		{2120D1E4-2EFB-47A6-B942-6124A0131927}.Debug|x86.ActiveCfg = Debug|Win32
+		{2120D1E4-2EFB-47A6-B942-6124A0131927}.Debug|x86.Build.0 = Debug|Win32
+		{2120D1E4-2EFB-47A6-B942-6124A0131927}.Release|x64.ActiveCfg = Release|x64
+		{2120D1E4-2EFB-47A6-B942-6124A0131927}.Release|x64.Build.0 = Release|x64
+		{2120D1E4-2EFB-47A6-B942-6124A0131927}.Release|x86.ActiveCfg = Release|Win32
+		{2120D1E4-2EFB-47A6-B942-6124A0131927}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
