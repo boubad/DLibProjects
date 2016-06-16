@@ -40,6 +40,9 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "geninfolib", "geninfolib\geninfolib.vcxproj", "{262C4BD8-3400-43E1-B611-1F64DA7F6C90}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "UnitTestGenInfo", "UnitTestGenInfo\UnitTestGenInfo.vcxproj", "{2120D1E4-2EFB-47A6-B942-6124A0131927}"
+	ProjectSection(ProjectDependencies) = postProject
+		{262C4BD8-3400-43E1-B611-1F64DA7F6C90} = {262C4BD8-3400-43E1-B611-1F64DA7F6C90}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

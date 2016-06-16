@@ -71,14 +71,18 @@ public:
 	using cancelflag = std::atomic<bool>;
 	using pcancelflag = cancelflag *;
 	using PBackgrounder = Backgrounder *;
-	using Operation = std::function<void(pcancelflag, PBackgrounder)>;
+	using Operation = std::function<void()>;
 private:
 	std::atomic<bool> m_cancel;
 	std::unique_ptr<Backgrounder> _active;
+	std::unique_ptr<Backgrounder> _dispatcher;
 public:
-	InfoRunner() :m_cancel(false),_active(new Backgrounder()) {
+	InfoRunner() :m_cancel(false),_active(new Backgrounder()),_dispatcher(new Backgrounder()) {
 	}
 	virtual ~InfoRunner() {
+	}
+	PBackgrounder get_dispatcher(void) {
+		return (this->_dispatcher.get());
 	}
 	PBackgrounder get_backgrounder(void) {
 		return (this->_active.get());
@@ -91,6 +95,12 @@ public:
 	}
 	void cancel(void) {
 		this->m_cancel.store(true);
+	}
+	void send_dispatch(Operation op) {
+		this->_dispatcher->send(op);
+	}
+	void send_result(Operation op) {
+		this->_active->send(op);
 	}
 };
 // class InfoRunner
