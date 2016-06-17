@@ -163,6 +163,7 @@
     <ClInclude Include="include\infosqlitestore.h" />
     <ClInclude Include="include\infostat.h" />
     <ClInclude Include="include\infovalue.h" />
+    <ClInclude Include="include\info_drawcontext.h" />
     <ClInclude Include="include\info_global.h" />
     <ClInclude Include="include\info_includes.h" />
     <ClInclude Include="include\info_matelem.h" />
