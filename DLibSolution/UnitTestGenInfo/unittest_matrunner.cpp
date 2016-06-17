@@ -13,7 +13,7 @@ using namespace std;
 ////////////////////////////////
 namespace UnitTestGenInfo
 {
-	using MatRunnerType = MatRunner<IDTYPE, STRINGTYPE, DISTANCETYPE,INTTYPE,WEIGHTYPE>;
+	using MatRunnerType = MatRunner<IDTYPE, STRINGTYPE, DISTANCETYPE, INTTYPE, WEIGHTYPE>;
 	using cancelflag = std::atomic<bool>;
 	using pcancelflag = cancelflag *;
 	using PBackgrounder = Backgrounder *;
@@ -26,6 +26,12 @@ namespace UnitTestGenInfo
 	using matelem_promise_ptr = std::shared_ptr<matelem_promise>;
 	using matelem_future = std::future<MatElemResultPtr>;
 	using matelem_function = std::function<void(MatElemResultPtr)>;
+	//
+	using InfoMatriceResultPair = std::pair<MatElemResultPtr, MatElemResultPtr>;
+	using InfoMatriceResultPairPtr = std::shared_ptr<InfoMatriceResultPair>;
+	using matrice_promise = std::promise<InfoMatriceResultPairPtr>;
+	using matrice_future = std::future<InfoMatriceResultPairPtr>;
+	using matrice_promise_ptr = std::shared_ptr<matrice_promise>;
 	////////////////////////////////
 	TEST_CLASS(MatRunnerTests)
 	{
@@ -56,13 +62,40 @@ namespace UnitTestGenInfo
 			//
 			std::vector<FLOATTYPE> weights;
 			bool bComputeWeights = true;
-			
+
 			MatRunnerType oRunner;
 			matelem_promise_ptr oPromise = std::make_shared<matelem_promise>();
 			Assert::IsNotNull(oPromise.get());
 
 			matelem_future oFuture = oRunner.arrange_elem(oPromise, nRows, nCols, gdata, rowNames, weights, bComputeWeights, infologger);
 			MatElemResultPtr oRes = oFuture.get();
+			Assert::IsNotNull(oRes.get());
+		}//testArrangeElemsOne
+		TEST_METHOD(testMatriceDataVectorArrange)
+		{
+			auto infologger = [&](MatElemResultPtr oRes) {
+				MatElemResultType *p = oRes.get();
+				if (p != nullptr) {
+					STRINGTYPE sr;
+					p->to_string(sr);
+					Logger::WriteMessage(sr.c_str());
+				} // p
+			};
+			STRINGTYPE name;
+			size_t nRows = 0, nCols = 0;
+			std::vector<DATATYPE> gdata;
+			strings_vector rowNames, colNames;
+			InfoTestData::get_mortal_data(name, nRows, nCols, gdata, rowNames, colNames);
+			//
+			std::vector<FLOATTYPE> weights;
+			bool bComputeWeights = true;
+
+			MatRunnerType oRunner;
+			matrice_promise_ptr oPromise = std::make_shared<matrice_promise>();
+			Assert::IsNotNull(oPromise.get());
+
+			matrice_future oFuture = oRunner.arrange_matrice(oPromise, nRows, nCols, gdata, rowNames, colNames, bComputeWeights, infologger, name);
+			InfoMatriceResultPairPtr  oRes = oFuture.get();
 			Assert::IsNotNull(oRes.get());
 		}//testArrangeElemsOne
 	};

@@ -50,10 +50,15 @@ public:
 		PBackgrounder pq = this->m_pq;
 		if (pq != nullptr) {
 			pq->send([this,arg]() {
-				(this->m_f)(arg);
+				try {
+					(this->m_f)(arg);
+				}catch(...){}
 			});
 		} else {
-			(this->m_f)(arg);
+			try {
+				(this->m_f)(arg);
+			}
+			catch (...) {}
 		}
 	}
 	bool is_cancelled(void) {

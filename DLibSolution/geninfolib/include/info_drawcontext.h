@@ -142,7 +142,7 @@ namespace info {
 		}
 	};// class BaseDrawItem
 	///////////////////////////////////////////////
-	template <typename STRINGTYPE, typename FLOATTYPE>
+	template <typename IDTYPE,typename DISTANCETYPE,typename STRINGTYPE, typename FLOATTYPE>
 	class DrawItemsView {
 	public:
 		using coord_type = long;
@@ -151,30 +151,36 @@ namespace info {
 		using PDrawItemType = DrawItemType *;
 		using items_vector = std::vector<PDrawItemType>;
 		using ContextType = DrawContext<STRINGTYPE, FLOATTYPE>;
-		using DrawItemsViewType = DrawItemsView<STRINGTYPE, FLOATTYPE>;
-		using function_type = std::function<void()>;
+		using DrawItemsViewType = DrawItemsView<IDTYPE,DISTANCETYPE,STRINGTYPE, FLOATTYPE>;
+		using MatElemResultType = MatElemResult<IDTYPE, DISTANCETYPE, STRINGTYPE>;
+		using MatElemResultPtr = std::shared_ptr<MatElemResultType>;
+		using function_type = std::function<void(MatElemResultPtr)>;
 	private:
+		MatriceDrawType m_type;
 		size_t m_nrows;
 		size_t m_ncols;
 		items_vector *m_pitems;
 		function_type m_f;
 	public:
-		DrawItemsView(size_t nRows, size_t nCols,
-			items_vector *pitems, function_type ff = []() {}) :
-			m_nrows(nRows), m_ncols(nCols), m_pitems(pitems), m_f(ff) {
+		DrawItemsView(MatriceDrawType atype,size_t nRows, size_t nCols,
+			items_vector *pitems, function_type ff = [](MatElemResultPtr o) {}) :
+			m_type(atype),m_nrows(nRows), m_ncols(nCols), m_pitems(pitems), m_f(ff) {
 			assert(this->m_nrows > 0);
 			assert(this->m_ncols > 0);
 			assert(this->m_pitems != nullptr);
 		}
 		virtual ~DrawItemsView() {}
 	public:
+		MatriceDrawType get_draw_type(void) const {
+			return (this->m_type);
+		}
 		void set_function(function_type f) {
 			this->m_f = f;
 		}
-		void notify(void) {
-			(this->m_f)();
+		void notify(MatElemResultPtr o) {
+			(this->m_f)(o);
 		}
-		virtual void draw(const ContextType *pContext, coord_type xpos, coord_type ypos) {
+		virtual void draw(const ContextType *pContext, coord_type xpos = 0, coord_type ypos = 0) {
 			assert(pContext != nullptr);
 			DrawContextParams *pParams = const_cast<DrawContextParams *>(pContext->draw_params());
 			assert(pParams != nullptr);
@@ -183,8 +189,8 @@ namespace info {
 			items_vector &vv = (*this->m_pitems);
 			assert(vv.size() >= (size_t)(nTotalCols * nTotalRows));
 			coord_type x0 = xpos + pParams->x0;
-			dist_type ddx = pParams->width / (nTotalCols + 1);
-			dist_type ddy = pParams->height / (nTotalRows + 1);
+			dist_type ddx = (dist_type)( pParams->width / (nTotalCols + 1));
+			dist_type ddy = (dist_type)(pParams->height / (nTotalRows + 1));
 			pParams->dx = ddx - pParams->deltax;
 			pParams->dy = ddy - pParams->deltay;
 			coord_type y = ypos + pParams->y0 + (ddy / 2);
@@ -215,7 +221,7 @@ namespace info {
 		using strings_vector = std::vector<STRINGTYPE>;
 		using MatElemResultType = MatElemResult<IDTYPE, DISTANCETYPE, STRINGTYPE>;
 		using MatElemResultPtr = std::shared_ptr<MatElemResultType>;
-		using ViewType = DrawItemsView<STRINGTYPE, FLOATTYPE>;
+		using ViewType = DrawItemsView<IDTYPE, DISTANCETYPE, STRINGTYPE, FLOATTYPE>;
 		using ViewTypePtr = std::shared_ptr<ViewType>;
 		using views_vector = std::vector<ViewTypePtr>;
 		using SourceType = DataVectorIndivSource<IDTYPE, STRINGTYPE>;
@@ -275,15 +281,16 @@ namespace info {
 			ViewType *pRet = nullptr;
 			ViewTypePtr oRet;
 			if (type == MatriceDrawType::drawIndivs) {
-				oRet = std::make_shared<ViewType>(this->m_nrows, this->m_ncols, &(this->m_indivitems));
+				oRet = std::make_shared<ViewType>(type,this->m_nrows, this->m_ncols, &(this->m_indivitems));
 			}
 			else if (type == MatriceDrawType::drawVariables) {
-				oRet = std::make_shared<ViewType>(this->m_ncols, this->m_nrows, &(this->m_variableitems));
+				oRet = std::make_shared<ViewType>(type,this->m_ncols, this->m_nrows, &(this->m_variableitems));
 			}
 			pRet = oRet.get();
 			if (pRet != nullptr) {
 				this->m_views.push_back(oRet);
 			}
+			return (pRet);
 		}
 		void remove_view(ViewType *pView) {
 			views_vector & vv = this->m_views;
@@ -622,15 +629,22 @@ namespace info {
 			}// i
 			this->form_displays_lists();
 		}
-		template <typename IDTYPE, typename DISTANCETYPE, typename XS>
-		void set_result(std::shared_ptr<MatElemResult<IDTYPE, DISTANCETYPE, XS> > oRes) {
-			MatElemResult<IDTYPE, DISTANCETYPE, XS> *p = oRes.get();
+		void set_result(MatElemResultPtr oRes) {
+			MatElemResultType *p = oRes.get();
 			if (p != nullptr) {
-				if (p->disposition == DispositionType::indiv) {
-					this->row_indexes(p->second);
+				if (p->disposition() == DispositionType::indiv) {
+					this->row_indexes(p->indexes());
+					for (auto &o : this->m_views) {
+						ViewType *p = o.get();
+						p->notify(oRes);
+					}// o
 				}
-				else if (p->disposition == DispositionType::variable) {
-					this->col_indexes(p->second);
+				else if (p->disposition() == DispositionType::variable) {
+					this->col_indexes(p->indexes());
+					for (auto &o : this->m_views) {
+						ViewType *p = o.get();
+						p->notify(oRes);
+					}// o
 				}
 			}
 		}
@@ -692,10 +706,7 @@ namespace info {
 					vv_vars[j * nTotalRows + i] = vv_inds[i * nTotalCols + j];
 				}// j
 			}// i
-			for (auto &o : this->m_views) {
-				ViewType *p = o.get();
-				p->notify();
-			}// o
+			
 		}// form_displays_lists
 		void resize(size_t nRows, size_t nCols) {
 			items_vector &vv = this->m_items;

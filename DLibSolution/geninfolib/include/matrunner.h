@@ -50,11 +50,68 @@ namespace info {
 		using IndivsTreeType = IndivsTree<IDTYPE, STRINGTYPE, DISTANCETYPE>;
 		using ClusterizeKMeansType = ClusterizeKMeans<IDTYPE, STRINGTYPE, DISTANCETYPE>;
 		using AnaCompoIndivSourceCreatorType = AnaCompoIndivSourceCreator<IDTYPE, INTTYPE, STRINGTYPE, WEIGHTYPE, DISTANCETYPE>;
+		//
+		using InfoMatriceResultPair = std::pair<MatElemResultPtr, MatElemResultPtr>;
+		using InfoMatriceResultPairPtr = std::shared_ptr<InfoMatriceResultPair>;
+		using InfoMatriceType = InfoMatrice<IDTYPE, DISTANCETYPE, STRINGTYPE>;
+		using matrice_promise = std::promise<InfoMatriceResultPairPtr>;
+		using matrice_future = std::future<InfoMatriceResultPairPtr>;
+		using matrice_promise_ptr = std::shared_ptr<matrice_promise>;
+		//
 	private:
 	public:
 		MatRunner() {}
 		virtual ~MatRunner() {}
 	public:
+		//
+		template <typename T>
+		matrice_future arrange_matrice(matrice_promise_ptr oPromise,
+			size_t nRows, size_t nCols, const std::vector<T> &oData,
+			const strings_vector &indsNames, const strings_vector &colsNames,
+			bool bComputeWeights = false,
+			matelem_function f = [](MatElemResultPtr o) {},
+			const STRINGTYPE &sSigle = STRINGTYPE()) {
+			this->send_dispatch([this, oPromise, nRows, nCols, oData, indsNames, colsNames, bComputeWeights, f, sSigle]() {
+				try {
+					InfoMatriceResultPairPtr oRes = InfoMatriceType::perform_arrange(nRows, nCols, oData,
+						indsNames, colsNames, bComputeWeights, this->get_cancelflag(), this->get_backgrounder(), f, sSigle);
+					matrice_promise *pPromise = oPromise.get();
+					pPromise->set_value(oRes);
+				}
+				catch (...) {
+					try {
+						matrice_promise *pPromise = oPromise.get();
+						pPromise->set_exception(std::current_exception());
+					}
+					catch (...) {}
+				}
+			});
+			matrice_promise *pPromise = oPromise.get();
+			return (pPromise->get_future());
+		}//arrange_matrice
+		//
+		matrice_future arrange_matrice(matrice_promise_ptr oPromise,
+			SourceType *pIndsSource, SourceType *pVarsSource,
+			const STRINGTYPE &datasetSigle,
+			matelem_function ff = [](MatElemResultPtr arg) {}) {
+			this->send_dispatch([this, oPromise, pIndsSource, pVarsSource, datasetSigle, ff]() {
+				try {
+					InfoMatriceResultPairPtr oRes = InfoMatriceType::perform_arrange(pIndsSource, pVarsSource, this->get_cancelflag(),
+						this->get_backgrounder(), ff, datasetSigle);
+					matrice_promise *pPromise = oPromise.get();
+					pPromise->set_value(oRes);
+				}
+				catch (...) {
+					try {
+						matrice_promise *pPromise = oPromise.get();
+						pPromise->set_exception(std::current_exception());
+					}
+					catch (...) {}
+				}
+			});
+			matrice_promise *pPromise = oPromise.get();
+			return (pPromise->get_future());
+		}//arrange_matrice
 		//
 		indivmappair_future compute_anacompo(indivmappair_promise_ptr oPromise,
 			StoreType *pStore,
