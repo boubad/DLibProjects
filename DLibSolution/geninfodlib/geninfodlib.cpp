@@ -38,7 +38,7 @@ public:
 		STRINGTYPE name;
 		strings_vector rowNames, colNames;
 		std::vector<DATATYPE> data;
-		InfoTestData::get_mortal_data(name, nRows, nCols, data, rowNames, colNames);
+		InfoTestData::get_test_data(name, nRows, nCols, data, rowNames, colNames);
 		this->mat_win.compute(aType, name, nRows, nCols, data, rowNames, colNames);
 		this->show();
 	}
