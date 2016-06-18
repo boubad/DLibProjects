@@ -4,6 +4,7 @@
 ////////////////////////////////
 #include "matresult.h"
 #include "datavector_indivprovider.h"
+#include "matrunner.h"
 /////////////////////////////////
 namespace info {
 	////////////////////////////////////////////
@@ -748,6 +749,92 @@ namespace info {
 		}// resize
 	};// class DrawItems<STRINGTYPE>
 	  ///////////////////////////////////////
+	template<typename IDTYPE, typename DISTANCETYPE, typename STRINGTYPE, typename FLOATTYPE, typename INTTYPE, typename WEIGHTYPE>
+	class MatriceModelData {
+		using MatRunnerType = MatRunner<IDTYPE, STRINGTYPE, DISTANCETYPE, INTTYPE, WEIGHTYPE>;
+		using DrawItemsType = DrawItems<IDTYPE, DISTANCETYPE, STRINGTYPE, FLOATTYPE>;
+		using ViewType = DrawItemsView<IDTYPE, DISTANCETYPE, STRINGTYPE, FLOATTYPE>;
+		using strings_vector = std::vector<STRINGTYPE>;
+		//
+		using MatElemType = MatElem<IDTYPE, DISTANCETYPE, STRINGTYPE>;
+		using MatElemResultType = typename MatElemType::MatElemResultType;
+		using MatElemResultPtr = typename MatElemType::MatElemResultPtr;
+		using matelem_function = std::function<void(MatElemResultPtr)>;
+		using matelem_future = std::future<MatElemResultPtr>;
+		//
+		using InfoMatriceResultPair = std::pair<MatElemResultPtr, MatElemResultPtr>;
+		using InfoMatriceResultPairPtr = std::shared_ptr<InfoMatriceResultPair>;
+		using matrice_promise = std::promise<InfoMatriceResultPairPtr>;
+		using matrice_future = std::future<InfoMatriceResultPairPtr>;
+		using matrice_promise_ptr = std::shared_ptr<matrice_promise>;
+		using DrawItemsViewType = DrawItemsView<IDTYPE, DISTANCETYPE, STRINGTYPE, FLOATTYPE>;
+		using ModelDataType = MatriceModelData<IDTYPE,DISTANCETYPE,STRINGTYPE,FLOATTYPE,INTTYPE,WEIGHTYPE>;
+		//
+	private:
+		std::atomic<bool> m_inited;
+		MatRunnerType *m_prunner;
+		std::unique_ptr<DrawItemsType> m_items;
+	private:
+		void notify(MatElemResultPtr oRes) {
+			DrawItemsType *pp = this->m_items.get();
+			if (pp != nullptr) {
+				pp->set_result(oRes);
+			}
+		}// notify
+	protected:
+		virtual DrawItemsType *create_drawitems(void) {
+			return new DrawItemsType();
+		}// create_drawitems
+	public:
+		MatriceModelData(MatRunnerType *pRunner) : m_inited(false), m_prunner(pRunner) {
+		}
+		~MatriceModelData() {
+		}
+		ViewType *add_view(DispositionType aType) {
+			ViewType *pRet = nullptr;
+			if (!this->m_inited.load()) {
+				return (pRet);
+			}
+			DrawItemsType *pItems = this->m_items.get();
+			if (pItems == nullptr) {
+				return (pRet);
+			}
+			pRet = pItems->add_view(aType);
+			return(pRet);
+		}// add_view
+		void set_result(MatElemResultPtr oRes) {
+			DrawItemsType *pItems = this->m_items.get();
+			if (pItems != nullptr) {
+				pItems->set_result(oRes);
+			}
+		}// set_result
+		template <typename DATATYPE>
+		std::future<bool> initialize(const STRINGTYPE &sigle, size_t nRows, size_t nCols, const std::vector<DATATYPE> &data,
+			const strings_vector &rowNames, const strings_vector &colNames, MatCellType aType = MatCellType::histogCell) {
+			return std::async(std::launch::async, [this, sigle, nRows, nCols, data, rowNames, colNames, aType]()->bool {
+				if (this->m_items.get() == nullptr) {
+					this->m_items.reset(this->create_drawitems());
+				}
+				DrawItemsType *pItems = this->m_items.get();
+				assert(pItems != nullptr);
+				this->m_inited.store(false);
+				bool bRet = pItems->initialize(aType, nRows, nCols, data, rowNames, colNames, sigle);
+				if (bRet) {
+					this->m_inited.store(true);
+				}// bRet
+				return (bRet);
+			});
+		}// initialize
+		matrice_future compute(matrice_promise_ptr oPromise, matelem_function ff = [](MatElemResultPtr o) {}) {
+			matrice_future oRet;
+			DrawItemsType *pItems = this->m_items.get();
+			if (this->m_inited.load() && (pItems != nullptr) && (this->m_prunner != nullptr)) {
+				oRet = this->m_prunner->arrange_matrice(oPromise, pItems->get_indiv_provider(),
+					pItems->get_variable_provider(), pItems->sigle(), ff);
+			}
+			return (oRet);
+		}// compute
+	};// class MatriceModelData
 }// namespace info
  ///////////////////////////////////
 #endif // !__BASEDRAWITEM_H__

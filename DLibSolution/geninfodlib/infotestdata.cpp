@@ -128,7 +128,7 @@ namespace info {
 		}
 		else if (name == st_conso_name) {
 			std::string s;
-			get_mortal_data(s, nRows, nCols, data, indNames, varNames);
+			get_conso_data(s, nRows, nCols, data, indNames, varNames);
 		}
 		else if (name == st_test_name) {
 			std::string s;
@@ -261,7 +261,7 @@ namespace info {
 		}
 		else if (name == wst_conso_name) {
 			std::wstring s;
-			get_mortal_data(s, nRows, nCols, data, indNames, varNames);
+			get_conso_data(s, nRows, nCols, data, indNames, varNames);
 		}
 		else if (name == wst_test_name) {
 			std::wstring s;

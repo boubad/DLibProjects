@@ -16,7 +16,7 @@ using MatRunnerType = MatRunner<IDTYPE, STRINGTYPE, DISTANCETYPE, INTTYPE, WEIGH
 ////////////////////////////////////////
 class matrice_win : public drawable_window
 {
-	using ModelDataType = MatriceModelData<IDTYPE, DISTANCETYPE, STRINGTYPE, FLOATTYPE, INTTYPE, WEIGHTYPE>;
+	using ModelDataType = DLibMatriceModelData<IDTYPE, DISTANCETYPE, STRINGTYPE, FLOATTYPE, INTTYPE, WEIGHTYPE>;
 	using  MatriceWindowType = MatriceDisplayWindow<IDTYPE, DISTANCETYPE, STRINGTYPE, FLOATTYPE>;
 	using strings_vector = std::vector<STRINGTYPE>;
 	using MatElemType = MatElem<IDTYPE, DISTANCETYPE, STRINGTYPE>;
@@ -31,6 +31,7 @@ class matrice_win : public drawable_window
 	using matrice_promise_ptr = std::shared_ptr<matrice_promise>;
 	using ViewType = DrawItemsView<IDTYPE, DISTANCETYPE, STRINGTYPE, FLOATTYPE>;
 private:
+	bool m_ok;
 	MatRunnerType *m_prunner;
 	MatriceWindowType mat_win;
 	std::unique_ptr<ModelDataType> m_model;
@@ -52,15 +53,19 @@ protected:
 	}
 public:
 	matrice_win(MatRunnerType *pRunner,const STRINGTYPE &name, MatCellType aType = MatCellType::plainCell) : 
-		m_prunner(pRunner),mat_win(*this)
+		m_ok(false),m_prunner(pRunner),mat_win(*this)
 	{
 		size_t nRows = 0, nCols = 0;
 		strings_vector rowNames, colNames;
 		std::vector<DATATYPE> data;
 		InfoTestData::get_data(name, nRows, nCols, data, rowNames, colNames);
-		ModelDataType *pModel = new ModelDataType(*this,pRunner);
-		this->m_model.reset(pModel);
-		this->m_init_future = pModel->initialize(name, nRows, nCols, data, rowNames, colNames,aType);
+		if ((nRows > 0) && (nCols > 0) && (data.size() >= (nCols * nRows)) && (rowNames.size() >= nRows) &&
+			(colNames.size() >= nCols)) {
+			ModelDataType *pModel = new ModelDataType(*this, pRunner);
+			this->m_model.reset(pModel);
+			this->m_init_future = pModel->initialize(name, nRows, nCols, data, rowNames, colNames, aType);
+			this->m_ok = true;
+		}
 		this->show();
 	}
 	~matrice_win() {
@@ -81,6 +86,9 @@ public:
 		pModel->set_result(oRes);
 	}// oRes
 	void init_all(void) {
+		if (!this->m_ok) {
+			return;
+		}
 		try {
 			bool bInit = this->m_init_future.get();
 			if (bInit) {
@@ -101,11 +109,14 @@ public:
 	}// init_all;
 };
 //////////////////////////
-int main()
+int main(int argc, char *argv[])
 {
 	//
 	MatRunnerType oRunner;
 	STRINGTYPE sigle("mortal_data");
+	if (argc > 1) {
+		sigle = argv[1];
+	}
 	// create our window
 	matrice_win my_window(&oRunner,sigle,MatCellType::histogCell);
 	my_window.init_all();
