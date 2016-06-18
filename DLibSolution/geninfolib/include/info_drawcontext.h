@@ -100,6 +100,9 @@ namespace info {
 	template <typename STRINGTYPE, typename FLOATTYPE>
 	class BaseDrawItem {
 	public:
+		using coord_type = long;
+		using dist_type = unsigned long;
+		using ContextType = DrawContext<STRINGTYPE, FLOATTYPE>;
 		using BaseDrawItemType = BaseDrawItem<STRINGTYPE, FLOATTYPE>;
 	private:
 		FLOATTYPE m_val;
@@ -140,6 +143,10 @@ namespace info {
 		void value(FLOATTYPE n) {
 			this->m_val = n;
 		}
+	public:
+		virtual bool draw(const ContextType *pContext, coord_type x0 = 0, coord_type y0 = 0) const {
+			return (true);
+		}// draw
 	};// class BaseDrawItem
 	///////////////////////////////////////////////
 	template <typename IDTYPE,typename DISTANCETYPE,typename STRINGTYPE, typename FLOATTYPE>
@@ -156,13 +163,13 @@ namespace info {
 		using MatElemResultPtr = std::shared_ptr<MatElemResultType>;
 		using function_type = std::function<void(MatElemResultPtr)>;
 	private:
-		MatriceDrawType m_type;
+		DispositionType m_type;
 		size_t m_nrows;
 		size_t m_ncols;
 		items_vector *m_pitems;
 		function_type m_f;
 	public:
-		DrawItemsView(MatriceDrawType atype,size_t nRows, size_t nCols,
+		DrawItemsView(DispositionType atype,size_t nRows, size_t nCols,
 			items_vector *pitems, function_type ff = [](MatElemResultPtr o) {}) :
 			m_type(atype),m_nrows(nRows), m_ncols(nCols), m_pitems(pitems), m_f(ff) {
 			assert(this->m_nrows > 0);
@@ -171,7 +178,7 @@ namespace info {
 		}
 		virtual ~DrawItemsView() {}
 	public:
-		MatriceDrawType get_draw_type(void) const {
+		DispositionType disposition(void) const {
 			return (this->m_type);
 		}
 		void set_function(function_type f) {
@@ -236,6 +243,7 @@ namespace info {
 		items_vector m_indivitems;
 		items_vector m_variableitems;
 		views_vector m_views;
+		STRINGTYPE m_sigle;
 		std::unique_ptr<SourceType> m_varsource;
 		std::unique_ptr<SourceType> m_indsource;
 	public:
@@ -269,21 +277,24 @@ namespace info {
 			this->m_variableitems.clear();
 		}
 	public:
+		const STRINGTYPE sigle(void) const {
+			return (this->m_sigle);
+		}
 		SourceType *get_indiv_provider(void) {
 			return (this->m_indsource.get());
 		}
 		SourceType *get_variable_provider(void) {
 			return (this->m_varsource.get());
 		}
-		ViewType *add_view(MatriceDrawType type) {
+		ViewType *add_view(DispositionType type) {
 			assert(this->m_nrows > 0);
 			assert(this->m_ncols);
 			ViewType *pRet = nullptr;
 			ViewTypePtr oRet;
-			if (type == MatriceDrawType::drawIndivs) {
+			if (type == DispositionType::indiv) {
 				oRet = std::make_shared<ViewType>(type,this->m_nrows, this->m_ncols, &(this->m_indivitems));
 			}
-			else if (type == MatriceDrawType::drawVariables) {
+			else if (type == DispositionType::variable) {
 				oRet = std::make_shared<ViewType>(type,this->m_ncols, this->m_nrows, &(this->m_variableitems));
 			}
 			pRet = oRet.get();
@@ -305,13 +316,15 @@ namespace info {
 		bool initialize(MatCellType aType, size_t nRows, size_t nCols,
 			const std::vector<T> &data,
 			const strings_vector &rowNames,
-			const strings_vector &colNames) {
+			const strings_vector &colNames,
+			const STRINGTYPE &sSigle = STRINGTYPE()) {
 			assert(nRows > 0);
 			assert(nCols > 0);
 			size_t nn = (size_t)(nCols * nRows);
 			assert(data.size() >= nn);
 			assert(rowNames.size() >= nRows);
 			assert(colNames.size() >= nCols);
+			this->m_sigle = sSigle;
 			std::vector<double> fdata(nn), vardata(nn), varsum(nCols), indsum(nRows);
 			ints_vector varids(nCols), indids(nRows);
 			ints_doubles_map weights;
@@ -453,7 +466,8 @@ namespace info {
 			const strings_vector &rowNames,
 			const strings_vector &colNames,
 			const std::vector<F> &indsSum,
-			const std::vector<F> &varsSum
+			const std::vector<F> &varsSum,
+			const STRINGTYPE &sSigle = STRINGTYPE()
 		) {
 			if ((nRows < 1) || (nCols < 1)) {
 				return (false);
@@ -467,6 +481,7 @@ namespace info {
 			if (vMax <= vMin) {
 				return (false);
 			}
+			this->m_sigle = sSigle;
 			double deltaVal = (double)(vMax - vMin);
 			//
 			bool bIndsNames = (rowNames.size() >= nRows);
@@ -635,15 +650,15 @@ namespace info {
 				if (p->disposition() == DispositionType::indiv) {
 					this->row_indexes(p->indexes());
 					for (auto &o : this->m_views) {
-						ViewType *p = o.get();
-						p->notify(oRes);
+						ViewType *pp = o.get();
+						pp->notify(oRes);
 					}// o
 				}
 				else if (p->disposition() == DispositionType::variable) {
 					this->col_indexes(p->indexes());
 					for (auto &o : this->m_views) {
-						ViewType *p = o.get();
-						p->notify(oRes);
+						ViewType *pp = o.get();
+						pp->notify(oRes);
 					}// o
 				}
 			}

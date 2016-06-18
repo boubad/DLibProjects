@@ -9,9 +9,114 @@
 #include "../matrunner.h"
 //////////////////////////////////////
 namespace info {
+	///////////////////////////////////////////////
+	template <typename STRINGTYPE, typename FLOATTYPE>
+	class DLibBaseDrawItem : public BaseDrawItem<STRINGTYPE, FLOATTYPE> {
+		using BaseType = BaseDrawItem<STRINGTYPE, FLOATTYPE>;
+		using coord_type = long;
+		using dist_type = unsigned long;
+		using ContextType = DrawContext<STRINGTYPE, FLOATTYPE>;
+	protected:
+		dlib::drawable_window &m_drawable;
+	public:
+		DLibBaseDrawItem(dlib::drawable_window &w) : m_drawable(w) {
+		}
+		DLibBaseDrawItem(dlib::drawable_window &w, MatCellType t, FLOATTYPE val) : BaseType(t, val), m_drawable(w) {
+		}
+		DLibBaseDrawItem(dlib::drawable_window &w, MatCellType t, const STRINGTYPE &s) :BaseType(t, s), m_drawable(w) {
+		}
+		virtual ~DLibBaseDrawItem() {}
+	};
+	template <typename STRINGTYPE, typename FLOATTYPE>
+	class DLibTextDrawItem : public DLibBaseDrawItem<STRINGTYPE, FLOATTYPE> {
+		using coord_type = long;
+		using dist_type = unsigned long;
+		using BaseType = DLibBaseDrawItem<STRINGTYPE, FLOATTYPE>;
+		using ContextType = DrawContext<STRINGTYPE, FLOATTYPE>;
+		using ItemType = DLibTextDrawItem<STRINGTYPE,FLOATTYPE>;
+	protected:
+		dlib::label m_label;
+	public:
+		DLibTextDrawItem(dlib::drawable_window &w, MatCellType t, const STRINGTYPE &s) :BaseType(w, t, s), m_label(w) {
+			this->m_label.set_text(s);
+		}
+		virtual ~DLibTextDrawItem() {}
+		virtual bool draw(const ContextType *pContext, coord_type x0 = 0, coord_type y0 = 0) const {
+			const DrawContextParams *pParams = pContext->draw_params();
+			assert(pParams != nullptr);
+			//dist_type w = pParams->dx;
+			dist_type  h = pParams->dy;
+			if (h < 0) {
+				return (false);
+			}
+			ItemType *p = const_cast<ItemType *>(this);
+			p->m_label.set_pos(x0, y0 + h / 2);
+			return (true);
+		}// draw
+	};
+	template <typename STRINGTYPE, typename FLOATTYPE>
+	class DLibIndivDrawItem : public DLibTextDrawItem<STRINGTYPE, FLOATTYPE> {
+		using BaseType = DLibTextDrawItem<STRINGTYPE, FLOATTYPE>;
+	public:
+		DLibIndivDrawItem(dlib::drawable_window &w, const STRINGTYPE &s) :BaseType(w, MatCellType::indCell, s) {
+		}
+		virtual ~DLibIndivDrawItem() {}
+	};
+	template <typename STRINGTYPE, typename FLOATTYPE>
+	class DLibVarDrawItem : public DLibTextDrawItem<STRINGTYPE, FLOATTYPE> {
+		using BaseType = DLibTextDrawItem<STRINGTYPE, FLOATTYPE>;
+	public:
+		DLibVarDrawItem(dlib::drawable_window &w, const STRINGTYPE &s) :BaseType(w, MatCellType::varCell, s) {
+		}
+		virtual ~DLibVarDrawItem() {}
+	};
+	template <typename STRINGTYPE, typename FLOATTYPE>
+	class DLibSummaryDrawItem : public DLibBaseDrawItem<STRINGTYPE, FLOATTYPE> {
+		using BaseType = DLibBaseDrawItem<STRINGTYPE, FLOATTYPE>;
+	public:
+		DLibSummaryDrawItem(dlib::drawable_window &w, MatCellType t, FLOATTYPE val) :BaseType(w, t, val) {
+		}
+		virtual ~DLibSummaryDrawItem() {}
+	};
+	//
+	template <typename STRINGTYPE, typename FLOATTYPE>
+	class DLibIndSummaryDrawItem : public DLibSummaryDrawItem<STRINGTYPE, FLOATTYPE> {
+		using BaseType = DLibSummaryDrawItem<STRINGTYPE, FLOATTYPE>;
+	public:
+		DLibIndSummaryDrawItem(dlib::drawable_window &w, FLOATTYPE val) :BaseType(w, MatCellType::summaryIndCell, val) {
+		}
+		virtual ~DLibIndSummaryDrawItem() {}
+	};
+	template <typename STRINGTYPE, typename FLOATTYPE>
+	class DLibVarSummaryDrawItem : public DLibSummaryDrawItem<STRINGTYPE, FLOATTYPE> {
+		using BaseType = DLibSummaryDrawItem<STRINGTYPE, FLOATTYPE>;
+	public:
+		DLibVarSummaryDrawItem(dlib::drawable_window &w, FLOATTYPE val) :BaseType(w, MatCellType::summaryVarCell, val) {
+		}
+		virtual ~DLibVarSummaryDrawItem() {}
+	};
+	////////////////////////////////////////////
+	template <typename STRINGTYPE, typename FLOATTYPE>
+	class DLibHistogDrawItem : public DLibBaseDrawItem<STRINGTYPE, FLOATTYPE> {
+		using BaseType = DLibBaseDrawItem<STRINGTYPE, FLOATTYPE>;
+	public:
+		DLibHistogDrawItem(dlib::drawable_window &w, FLOATTYPE val) :BaseType(w, MatCellType::histogCell, val) {
+		}
+		virtual ~DLibHistogDrawItem() {}
+	};
+	template <typename STRINGTYPE, typename FLOATTYPE>
+	class DLibPlainDrawItem : public DLibBaseDrawItem<STRINGTYPE, FLOATTYPE> {
+		using BaseType = DLibBaseDrawItem<STRINGTYPE, FLOATTYPE>;
+	public:
+		DLibPlainDrawItem(dlib::drawable_window &w, FLOATTYPE val) :BaseType(w, MatCellType::plainCell, val) {
+		}
+		virtual ~DLibPlainDrawItem() {}
+	};
 	////////////////////////////////////////////
 	template <typename STRINGTYPE, typename FLOATTYPE>
 	class DLibDrawContext : public DrawContext<STRINGTYPE, FLOATTYPE> {
+		using coord_type = long;
+		using dist_type = unsigned long;
 		using DrawItem = BaseDrawItem<STRINGTYPE, FLOATTYPE>;
 		using PDrawItem = DrawItem *;
 		using BaseType = DrawContext<STRINGTYPE, FLOATTYPE>;
@@ -41,6 +146,16 @@ namespace info {
 			MatCellType aType = pItem->type();
 			switch (aType)
 			{
+			case MatCellType::indCell:
+			{
+				pItem->draw(this, x0, y0);
+			}
+			break;
+			case MatCellType::varCell:
+			{
+				pItem->draw(this, x0, y0);
+			}
+			break;
 			case MatCellType::summaryIndCell:
 			{
 				double v = (double)pItem->value();
@@ -100,79 +215,51 @@ namespace info {
 			}
 		}// draw
 	};// class DLibDrawContext
-	  ////////////////////////////////////////////////
+	/////////////////////////////////////////////////
 	template <typename IDTYPE, typename DISTANCETYPE, typename STRINGTYPE, typename FLOATTYPE>
-	class MatriceShowWindow : public dlib::button {
+	class DLibDrawItems : public DrawItems<IDTYPE, DISTANCETYPE, STRINGTYPE, FLOATTYPE> {
 	public:
-		using DrawItemsViewType = DrawItemsView<IDTYPE, DISTANCETYPE, STRINGTYPE, FLOATTYPE>;
-		using ContextType = DLibDrawContext<STRINGTYPE, FLOATTYPE>;
-		using MatriceShowWindowType = MatriceShowWindow<IDTYPE, DISTANCETYPE, STRINGTYPE, FLOATTYPE>;
-		using MatElemResultType = MatElemResult<IDTYPE, DISTANCETYPE, STRINGTYPE>;
-		using MatElemResultPtr = std::shared_ptr<MatElemResultType>;
+		using BaseType = DrawItems<IDTYPE, DISTANCETYPE, STRINGTYPE, FLOATTYPE>;
 	private:
-		dlib::label m_label;
-		DrawItemsViewType *m_pview;
-		DrawContextParams m_params;
-	private:
-		void notify(MatElemResultPtr oRes) {
-			STRINGTYPE ss;
-			MatElemResultType *p = oRes.get();
-			if (p != nullptr) {
-				p->to_string(ss, false);
-			}// p
-			this->m_label.set_text(ss);
-			this->show();
-		}// notify
+		dlib::drawable_window &m_drawable;
 	public:
-		MatriceShowWindow(dlib::drawable_window& w, DrawItemsViewType *pView = nullptr) : dlib::button(w), m_label(w), m_pview(pView) {
-			this->m_label.set_pos(5, 5);
-			if (this->m_pview != nullptr) {
-				this->m_pview->set_function([this](MatElemResultPtr o) {
-					this->notify(o);
-				});
-			}
-			this->show();
-		}
-		virtual ~MatriceShowWindow() {}
-		void set_view(DrawItemsViewType *pView) {
-			this->m_pview = pView;
-			if (this->m_pview != nullptr) {
-				this->m_pview->set_function([this](MatElemResultPtr o) {
-					this->notify(o);
-				});
-			}
-		}
+		DLibDrawItems(dlib::drawable_window &w) :m_drawable(w) {}
+		virtual ~DLibDrawItems() {}
 	protected:
-		virtual void draw(const dlib::canvas& c) const
-		{
-			if (this->m_pview != nullptr) {
-				unsigned long ww = this->width();
-				unsigned long hh = this->height();
-				long h0 = (long)(5 + this->m_label.height() + 3);
-				{
-					MatriceShowWindowType *p = const_cast<MatriceShowWindowType *>(this);
-					p->m_params.width = ww;
-					p->m_params.height = hh - h0;
-				}
-				dlib::rectangle r(0, h0, ww, hh);
-				dlib::fill_rect(c, r, dlib::rgb_pixel(255, 255, 255));
-				ContextType oContext(c, &m_params);
-				this->m_pview->draw(&oContext, 0, h0);
-			}// pview
-		}// draw
-	};
-	//////////////////////////////////////////////
+		virtual PDrawItemType create_empty_item(void) {
+			return (new DLibBaseDrawItem<STRINGTYPE, FLOATTYPE>(this->m_drawable));
+		}// create_tem
+		virtual PDrawItemType create_varname_item(const STRINGTYPE &s) {
+			return (new DLibVarDrawItem<STRINGTYPE, FLOATTYPE>(this->m_drawable, s));
+		}// create_tem
+		virtual PDrawItemType create_indname_item(const STRINGTYPE &s) {
+			return (new DLibIndivDrawItem<STRINGTYPE, FLOATTYPE>(this->m_drawable, s));
+		}// create_tem
+		virtual PDrawItemType create_varsum_item(FLOATTYPE val) {
+			return (new DLibVarSummaryDrawItem<STRINGTYPE, FLOATTYPE>(this->m_drawable, val));
+		}// create_tem
+		virtual PDrawItemType create_indsum_item(FLOATTYPE val) {
+			return (new  DLibIndSummaryDrawItem<STRINGTYPE, FLOATTYPE>(this->m_drawable, val));
+		}// create_tem
+		virtual PDrawItemType create_histog_item(FLOATTYPE val) {
+			return (new DLibHistogDrawItem<STRINGTYPE, FLOATTYPE>(this->m_drawable, val));
+		}// create_tem
+		virtual PDrawItemType create_plain_item(FLOATTYPE val) {
+			return (new DLibPlainDrawItem<STRINGTYPE, FLOATTYPE>(this->m_drawable, val));
+		}// create_tem
+	}; // DLibDrawItems
+	  ////////////////////////////////////////////////
 	template<typename IDTYPE, typename DISTANCETYPE, typename STRINGTYPE, typename FLOATTYPE, typename INTTYPE, typename WEIGHTYPE>
-	class MatriceDisplayWindow : public dlib::button {
+	class MatriceModelData  {
 		using MatRunnerType = MatRunner<IDTYPE, STRINGTYPE, DISTANCETYPE, INTTYPE, WEIGHTYPE>;
-		using MatriceShowWindowType = MatriceShowWindow<IDTYPE, DISTANCETYPE, STRINGTYPE, FLOATTYPE>;
-		using DrawItemsType = DrawItems<IDTYPE, DISTANCETYPE, STRINGTYPE, FLOATTYPE>;
+		using DrawItemsType = DLibDrawItems<IDTYPE, DISTANCETYPE, STRINGTYPE, FLOATTYPE>;
 		using ViewType = DrawItemsView<IDTYPE, DISTANCETYPE, STRINGTYPE, FLOATTYPE>;
 		using strings_vector = std::vector<STRINGTYPE>;
 		//
 		using MatElemType = MatElem<IDTYPE, DISTANCETYPE, STRINGTYPE>;
 		using MatElemResultType = typename MatElemType::MatElemResultType;
 		using MatElemResultPtr = typename MatElemType::MatElemResultPtr;
+		using matelem_function = std::function<void(MatElemResultPtr)>;
 		using matelem_future = std::future<MatElemResultPtr>;
 		//
 		using InfoMatriceResultPair = std::pair<MatElemResultPtr, MatElemResultPtr>;
@@ -182,32 +269,91 @@ namespace info {
 		using matrice_promise_ptr = std::shared_ptr<matrice_promise>;
 		using DrawItemsViewType = DrawItemsView<IDTYPE, DISTANCETYPE, STRINGTYPE, FLOATTYPE>;
 		//
-		using MatriceDisplayType = MatriceDisplayWindow<IDTYPE,DISTANCETYPE,STRINGTYPE,FLOATTYPE,INTTYPE,WEIGHTYPE>;
-		using ContextType = DLibDrawContext<STRINGTYPE, FLOATTYPE>;
-		using mutex_type = std::mutex;
-		using lock_type = std::lock_guard<mutex_type>;
-		//
 	private:
-		dlib::label m_label;
-		ViewType *m_pview;
-		DrawContextParams m_params;
-		std::unique_ptr<MatRunnerType> m_runner;
+		std::atomic<bool> m_inited;
+		MatRunnerType *m_prunner;
+		dlib::drawable_window &m_drawable;
 		std::unique_ptr<DrawItemsType> m_items;
-		matrice_promise_ptr m_promise;
-		matrice_future m_future;
-		mutex_type _mutex;
 	private:
 		void notify(MatElemResultPtr oRes) {
 			DrawItemsType *pp = this->m_items.get();
 			if (pp != nullptr) {
 				pp->set_result(oRes);
 			}
-			STRINGTYPE ss;
+		}// notify
+	public:
+		MatriceModelData(dlib::drawable_window& w,MatRunnerType *pRunner) : m_inited(false),m_prunner(pRunner),m_drawable(w){
+		}
+		~MatriceModelData() {
+		}
+		ViewType *add_view(DispositionType aType) {
+			ViewType *pRet = nullptr;
+			if (!this->m_inited.load()) {
+				return (pRet);
+			}
+			DrawItemsType *pItems = this->m_items.get();
+			if (pItems == nullptr) {
+				return (pRet);
+			}
+			pRet = pItems->add_view(aType);
+			return(pRet);
+		}// add_view
+		void set_result(MatElemResultPtr oRes) {
+			DrawItemsType *pItems = this->m_items.get();
+			if (pItems != nullptr) {
+				pItems->set_result(oRes);
+			}
+		}// set_result
+		template <typename DATATYPE>
+		std::future<bool> initialize(const STRINGTYPE &sigle, size_t nRows, size_t nCols, const std::vector<DATATYPE> &data,
+			const strings_vector &rowNames, const strings_vector &colNames,MatCellType aType = MatCellType::histogCell){
+			return std::async(std::launch::async, [this, sigle, nRows, nCols, data, rowNames, colNames,aType]()->bool {
+				if (this->m_items.get() == nullptr) {
+					this->m_items.reset(new DrawItemsType(this->m_drawable));
+				}
+				DrawItemsType *pItems = this->m_items.get();
+				assert(pItems != nullptr);
+				this->m_inited.store(false);
+				bool bRet = pItems->initialize(aType, nRows, nCols, data, rowNames, colNames,sigle);
+				if (bRet) {
+					this->m_inited.store(true);
+				}// bRet
+				return (bRet);
+			});
+		}// initialize
+		matrice_future compute(matrice_promise_ptr oPromise, matelem_function ff = [](MatElemResultPtr o) {}) {
+			matrice_future oRet;
+			DrawItemsType *pItems = this->m_items.get();
+			if (this->m_inited.load() && (pItems != nullptr) && (this->m_prunner != nullptr)) {
+				oRet = this->m_prunner->arrange_matrice(oPromise, pItems->get_indiv_provider(),
+					pItems->get_variable_provider(), pItems->sigle(), ff);
+			}
+			return (oRet);
+		}// compute
+	};// class MatriceModelData
+	//////////////////////////////////////////////
+	template<typename IDTYPE, typename DISTANCETYPE, typename STRINGTYPE, typename FLOATTYPE>
+	class MatriceDisplayWindow : public dlib::button {
+		using ViewType = DrawItemsView<IDTYPE, DISTANCETYPE, STRINGTYPE, FLOATTYPE>;
+		using MatElemType = MatElem<IDTYPE, DISTANCETYPE, STRINGTYPE>;
+		using MatElemResultType = typename MatElemType::MatElemResultType;
+		using MatElemResultPtr = typename MatElemType::MatElemResultPtr;
+		using matelem_future = std::future<MatElemResultPtr>;
+		using MatriceDisplayType = MatriceDisplayWindow<IDTYPE, DISTANCETYPE, STRINGTYPE, FLOATTYPE>;
+		using ContextType = DLibDrawContext<STRINGTYPE, FLOATTYPE>;
+		//
+	private:
+		dlib::label m_label;
+		ViewType *m_pview;
+		DrawContextParams m_params;
+	private:
+		void notify(MatElemResultPtr oRes) {
 			MatElemResultType *p = oRes.get();
-			if (p != nullptr) {
+			if ((this->m_pview != nullptr) && (p != nullptr)) {
+				STRINGTYPE ss;
 				p->to_string(ss, false);
+				this->m_label.set_text(ss);
 			}// p
-			this->m_label.set_text(ss);
 			this->show();
 		}// notify
 	public:
@@ -215,12 +361,8 @@ namespace info {
 			this->show();
 		}//MatriceDisplayWindow
 		~MatriceDisplayWindow() {
-			MatRunnerType *pRunner = this->m_runner.get();
-			if (pRunner != nullptr) {
-				pRunner->cancel();
-			}
 		}
-		void set_view(DrawItemsViewType *pView) {
+		void set_view(ViewType *pView) {
 			this->m_pview = pView;
 			if (this->m_pview != nullptr) {
 				this->m_pview->set_function([this](MatElemResultPtr o) {
@@ -228,33 +370,6 @@ namespace info {
 				});
 			}
 		}
-		template <typename DATATYPE>
-		bool compute(MatCellType aType, const STRINGTYPE &sigle, size_t nRows, size_t nCols, const std::vector<DATATYPE> &data,
-			const strings_vector &rowNames, const strings_vector &colNames) {
-			if (this->m_items.get() == nullptr) {
-				this->m_items.reset(new DrawItemsType());
-			}
-			DrawItemsType *pItems = this->m_items.get();
-			assert(pItems != nullptr);
-			bool bRet = pItems->initialize(aType, nRows, nCols, data, rowNames, colNames);
-			if (bRet) {
-				ViewType *pView = pItems->add_view(MatriceDrawType::drawVariables);
-				assert(pView != nullptr);
-				this->m_pview = pView;
-				if (this->m_runner.get() == nullptr) {
-					this->m_runner.reset(new MatRunnerType());
-				}
-				this->m_promise = std::make_shared<matrice_promise>();
-				MatRunnerType *pRunner = this->m_runner.get();
-				assert(pRunner != nullptr);
-				this->m_future = pRunner->arrange_matrice(this->m_promise,
-					pItems->get_indiv_provider(), pItems->get_variable_provider(), sigle,
-					[this](MatElemResultPtr oRes) {
-					this->notify(oRes);
-				});
-			}// bRet
-			return (bRet);
-		}// compute
 	protected:
 		virtual void draw(const dlib::canvas& c) const
 		{
