@@ -159,6 +159,12 @@
     <ClInclude Include="include\infodlib\dlib_matrice.h">
       <Filter>Fichiers d%27en-tête\include\infodlib</Filter>
     </ClInclude>
+    <ClInclude Include="include\pugiconfig.hpp">
+      <Filter>Fichiers d%27en-tête\include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\pugixml.hpp">
+      <Filter>Fichiers d%27en-tête\include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\eigen_impl.cpp">
@@ -178,6 +184,9 @@
     </ClCompile>
     <ClCompile Include="src\sqlite\sqlite3.c">
       <Filter>Fichiers sources\src\sqlite</Filter>
+    </ClCompile>
+    <ClCompile Include="src\pugixml.cpp">
+      <Filter>Fichiers sources\src</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
