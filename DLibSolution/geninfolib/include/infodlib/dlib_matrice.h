@@ -138,8 +138,8 @@ namespace info {
 			if ((w <= 0) || (h <= 0)) {
 				return;
 			}
-			dlib::rectangle r(x0, y0, x0 + w, y0 + h);
-			dlib::rectangle area = m_canvas.intersect(r);
+			dlib::rectangle rClip(x0, y0, x0 + w, y0 + h);
+			dlib::rectangle area = m_canvas.intersect(rClip);
 			if (area.is_empty() == true) {
 				return;
 			}
@@ -165,7 +165,7 @@ namespace info {
 					int r = (int)rf;
 					dlib::point center(x0 + (w / 2), y0 + (h / 2));
 					dlib::rgb_pixel color(pParams->sumindcolor.red, pParams->sumindcolor.green, pParams->sumindcolor.blue);
-					dlib::draw_solid_circle(m_canvas, center, r, color);
+					dlib::draw_solid_circle(m_canvas, center, r, color,rClip);
 				}
 			}
 			break;
@@ -178,7 +178,7 @@ namespace info {
 					int r = (int)rf;
 					dlib::point center(x0 + (w / 2), y0 + (h / 2));
 					dlib::rgb_pixel color(pParams->sumvarcolor.red, pParams->sumvarcolor.green, pParams->sumvarcolor.blue);
-					dlib::draw_solid_circle(m_canvas, center, r, color);
+					dlib::draw_solid_circle(m_canvas, center, r, color, rClip);
 				}
 			}
 			break;
