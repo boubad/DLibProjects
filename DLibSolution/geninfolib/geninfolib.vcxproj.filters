@@ -25,6 +25,9 @@
     <Filter Include="Fichiers d%27en-tête\include\infodlib">
       <UniqueIdentifier>{9b7b1517-67be-48ed-92c9-cd74494743bf}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Fichiers d%27en-tête\include\svg">
+      <UniqueIdentifier>{d1e91e3c-0ee9-48f2-97a9-8f49b0bdc0f0}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
@@ -159,6 +162,18 @@
     <ClInclude Include="include\infodlib\dlib_matrice.h">
       <Filter>Fichiers d%27en-tête\include\infodlib</Filter>
     </ClInclude>
+    <ClInclude Include="include\pugiconfig.hpp">
+      <Filter>Fichiers d%27en-tête\include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\pugixml.hpp">
+      <Filter>Fichiers d%27en-tête\include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\svg\svg_matrice.h">
+      <Filter>Fichiers d%27en-tête\include\svg</Filter>
+    </ClInclude>
+    <ClInclude Include="include\svg_arranger.h">
+      <Filter>Fichiers d%27en-tête\include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\eigen_impl.cpp">
@@ -178,6 +193,9 @@
     </ClCompile>
     <ClCompile Include="src\sqlite\sqlite3.c">
       <Filter>Fichiers sources\src\sqlite</Filter>
+    </ClCompile>
+    <ClCompile Include="src\pugixml.cpp">
+      <Filter>Fichiers sources\src</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

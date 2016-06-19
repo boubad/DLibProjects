@@ -28,6 +28,8 @@ namespace info {
 		using coord_type = long;
 		using dist_type = unsigned long;
 		//
+		dist_type  variableFontSize;
+		dist_type  indivFontSize;
 		dist_type width;
 		dist_type height;
 		MatriceDrawType  drawType;
@@ -47,10 +49,11 @@ namespace info {
 		InfoColor sumvarcolor;
 		InfoColor textcolor;
 		InfoColor donecolor;
+		InfoColor strokecolor;
 		//
-		DrawContextParams() : width(200), height(200), drawType(MatriceDrawType::drawIndivs), bIndsNames(true), bIndsSum(true), bVarsNames(true), bVarsSum(true),
+		DrawContextParams() : variableFontSize(20), indivFontSize(10),width(744), height(1052), drawType(MatriceDrawType::drawIndivs), bIndsNames(true), bIndsSum(true), bVarsNames(true), bVarsSum(true),
 			x0(0), y0(0), deltax(0), dx(32), deltay(0), dy(32), upcolor(255), downcolor(0),
-			sumindcolor(0, 255, 0), sumvarcolor(255, 0, 0), textcolor(0), donecolor(127) {}
+			sumindcolor(0, 255, 0), sumvarcolor(255, 0, 0), textcolor(0), donecolor(127),strokecolor(0) {}
 	};// struct DrawContextParams
 	  /////////////////////////////////////////
 	enum class MatCellType { noCell, varCell, indCell, summaryVarCell, summaryIndCell, histogCell, plainCell };
@@ -179,6 +182,12 @@ namespace info {
 		}
 		virtual ~DrawItemsView() {}
 	public:
+		size_t get_nb_rows(void) const {
+			return (this->m_nrows);
+		}
+		size_t get_nb_cols(void) const {
+			return (this->m_ncols);
+		}
 		DispositionType disposition(void) const {
 			return (this->m_type);
 		}
@@ -207,7 +216,7 @@ namespace info {
 				coord_type x = ddx / 2;
 				for (size_t j = 0; j < nTotalCols; ++j) {
 					PDrawItemType p = vv[base_pos + j];
-					if (p != nullptr) {
+					if ((p != nullptr) && (p->type() != MatCellType::noCell)) {
 						pContext->draw(p, x, y);
 					}
 					x += ddx;
@@ -825,12 +834,12 @@ namespace info {
 				return (bRet);
 			});
 		}// initialize
-		matrice_future compute(matrice_promise_ptr oPromise, matelem_function ff = [](MatElemResultPtr o) {}) {
+		matrice_future compute(matrice_promise_ptr oPromise, matelem_function ff = [](MatElemResultPtr o) {}, bool bNotify = true) {
 			matrice_future oRet;
 			DrawItemsType *pItems = this->m_items.get();
 			if (this->m_inited.load() && (pItems != nullptr) && (this->m_prunner != nullptr)) {
 				oRet = this->m_prunner->arrange_matrice(oPromise, pItems->get_indiv_provider(),
-					pItems->get_variable_provider(), pItems->sigle(), ff);
+					pItems->get_variable_provider(), pItems->sigle(), ff,bNotify);
 			}
 			return (oRet);
 		}// compute

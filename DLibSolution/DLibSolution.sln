@@ -15,6 +15,11 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "geninfodlib", "geninfodlib\
 		{262C4BD8-3400-43E1-B611-1F64DA7F6C90} = {262C4BD8-3400-43E1-B611-1F64DA7F6C90}
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "testdata", "testdata", "{1808B746-799B-49FD-9D3F-6BAECDFAC124}"
+	ProjectSection(SolutionItems) = preProject
+		testdata\test.svg = testdata\test.svg
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64

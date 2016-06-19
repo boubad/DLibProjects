@@ -177,6 +177,8 @@
     <ClInclude Include="include\matrunner.h" />
     <ClInclude Include="include\memorydataset.h" />
     <ClInclude Include="include\memorystatstore.h" />
+    <ClInclude Include="include\pugiconfig.hpp" />
+    <ClInclude Include="include\pugixml.hpp" />
     <ClInclude Include="include\sharedqueue.h" />
     <ClInclude Include="include\sqlitestore.h" />
     <ClInclude Include="include\sqlite_database.h" />
@@ -185,6 +187,8 @@
     <ClInclude Include="include\storeindivsource.h" />
     <ClInclude Include="include\storevariablesource.h" />
     <ClInclude Include="include\stringconvert.h" />
+    <ClInclude Include="include\svg\svg_matrice.h" />
+    <ClInclude Include="include\svg_arranger.h" />
     <ClInclude Include="include\transformed_storeindivsource.h" />
     <ClInclude Include="src\sqlite\sqlite3.h" />
     <ClInclude Include="src\sqlite\sqlite3ext.h" />
@@ -193,6 +197,7 @@
     <ClCompile Include="src\eigen_impl.cpp" />
     <ClCompile Include="src\infosqlitestore.cpp" />
     <ClCompile Include="src\infovalue.cpp" />
+    <ClCompile Include="src\pugixml.cpp" />
     <ClCompile Include="src\sqlite\sqlite3.c" />
     <ClCompile Include="src\sqlite_database.cpp" />
     <ClCompile Include="src\sqlite_statement.cpp" />
