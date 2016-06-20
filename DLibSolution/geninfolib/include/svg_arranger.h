@@ -2,85 +2,159 @@
 #ifndef __SVG_ARRANGER_H__
 #define __SVG_ARRANGER_H__
 /////////////////////////////////
+#include "matricedata.h"
+#include "info_matord.h"
 #include "svg/svg_matrice.h"
-#include "matrunner.h"
 /////////////////////////////
 namespace info {
 	/////////////////////////////////////////////////
-	template<typename IDTYPE, typename DISTANCETYPE, typename STRINGTYPE, typename FLOATTYPE, typename INTTYPE, typename WEIGHTYPE>
+	template<typename IDTYPE, typename DISTANCETYPE, typename STRINGTYPE, typename FLOATTYPE>
 	class SVGMatriceArranger {
 	public:
-		using ModelDataType = MatriceModelData<IDTYPE, DISTANCETYPE, STRINGTYPE, FLOATTYPE, INTTYPE, WEIGHTYPE>;
-		using  MatriceWindowType = MatriceSVG<IDTYPE, DISTANCETYPE, STRINGTYPE, FLOATTYPE>;
-		using strings_vector = std::vector<STRINGTYPE>;
 		using MatElemType = MatElem<IDTYPE, DISTANCETYPE, STRINGTYPE>;
-		using MatElemResultType = typename MatElemType::MatElemResultType;
-		using MatElemResultPtr = typename MatElemType::MatElemResultPtr;
-		using matelem_function = std::function<void(MatElemResultPtr)>;
-		using matelem_future = std::future<MatElemResultPtr>;
-		using InfoMatriceResultPair = std::pair<MatElemResultPtr, MatElemResultPtr>;
-		using InfoMatriceResultPairPtr = std::shared_ptr<InfoMatriceResultPair>;
-		using matrice_promise = std::promise<InfoMatriceResultPairPtr>;
-		using matrice_future = std::future<InfoMatriceResultPairPtr>;
-		using matrice_promise_ptr = std::shared_ptr<matrice_promise>;
-		using ViewType = DrawItemsView<IDTYPE, DISTANCETYPE, STRINGTYPE, FLOATTYPE>;
-		using MatRunnerType = MatRunner<IDTYPE, STRINGTYPE, DISTANCETYPE, INTTYPE, WEIGHTYPE>;
+		using SourceType = typename MatElemType::SourceType;
+		using MatriceDataType = MatriceData<IDTYPE, STRINGTYPE>;
+		using MatriceType = InfoMatrice<IDTYPE, DISTANCETYPE, STRINGTYPE>;
+		using sizets_vector = typename MatriceType::sizets_vector;
+		using MatElemResultType = typename MatriceType::MatElemResultType;
+		using MatElemResultPtr = typename MatriceType::MatElemResultPtr;
+		using strings_vector = std::vector<STRINGTYPE>;
+		using doubles_vector = std::vector<double>;
+		using MatElemResultType = typename MatriceType::MatElemResultType;
+		using MatElemResultPtr = typename MatriceType::MatElemResultPtr;
+		using BaseDrawItemType = BaseDrawItem<STRINGTYPE, FLOATTYPE>;
+		using ContextType = SVGDrawContext<STRINGTYPE, FLOATTYPE>;
+		using coord_type = typename BaseDrawItemType::coord_type;
+		using dist_type = typename BaseDrawItemType::dist_type;
 	private:
-		std::unique_ptr<MatRunnerType> m_runner;
-		MatriceWindowType mat_win;
-		std::unique_ptr<ModelDataType> m_model;
-		matrice_promise_ptr m_promise;
-		matrice_future m_future;
+		STRINGTYPE m_sigle;
+		sizets_vector m_varindexes;
+		sizets_vector m_indindexes;
+		std::unique_ptr<MatriceDataType> m_matdata;
+		std::unique_ptr<MatriceType> m_matrice;
 	public:
-		SVGMatriceArranger() {
-			this->m_runner.reset(new MatRunnerType());
-			MatRunnerType *pRunner = this->m_runner.get();
-			assert(pRunner != nullptr);
-			ModelDataType *pModel = new ModelDataType(pRunner);
-			assert(pModel != nullptr);
-			this->m_model.reset(pModel);
+		SVGMatriceArranger(const STRINGTYPE &sSigle = STRINGTYPE()):m_sigle(sSigle) {
+			this->m_matdata.reset(new MatriceDataType());
+			this->m_matrice.reset(new MatriceType(nullptr, nullptr, [](MatElemResultPtr o) {}, sSigle, false));
 		}
 		~SVGMatriceArranger() {
 		}
 		template <typename T>
-		std::future<InfoMatriceResultPairPtr> export_svg(const STRINGTYPE &filename,
-			const STRINGTYPE &name,size_t nRows, size_t nCols,const std::vector<T> &data,
-			const strings_vector &rowNames, 
-			const strings_vector &colNames,MatCellType aType = MatCellType::histogCell){
+		std::future<bool> export_svg(const STRINGTYPE &filename,
+			size_t nRows, size_t nCols, const std::vector<T> &data,
+			const strings_vector &rowNames,
+			const strings_vector &colNames, MatCellType aType = MatCellType::histogCell) {
 			return std::async(std::launch::async,
-				[this,filename,name,nRows,nCols,data,rowNames,colNames,aType](){
-					return (this->arrange(filename,name,nRows,nCols,data,
-						rowNames,colNames,aType));
+				[this, filename, nRows, nCols, data, rowNames, colNames, aType]()->bool {
+				try {
+					return (this->perform_arrange(filename, this->m_sigle, nRows, nCols, data,
+						rowNames, colNames, aType));
+				}
+				catch (...) {
+
+				}
+				return (false);
 			});
 		}// export svg
-private:
-	template <typename T>
-	InfoMatriceResultPairPtr arrange(const STRINGTYPE &filename,
-			const STRINGTYPE &name,size_t nRows, size_t nCols,const std::vector<T> &data,
+	private:
+		void draw(const STRINGTYPE &filename, MatCellType aType = MatCellType::histogCell) {
+			MatriceDataType *pData = this->m_matdata.get();
+			assert(pData != nullptr);
+			const size_t nCols = pData->cols_count();
+			const size_t nRows = pData->rows_count();
+			const sizets_vector &rowindexes = this->m_indindexes;
+			assert(rowindexes.size() >= nRows);
+			const sizets_vector &colindexes = this->m_varindexes;
+			assert(colindexes.size() >= nCols);
+			const strings_vector &rowNames = pData->rows_names();
+			const strings_vector &colNames = pData->cols_names();
+			const doubles_vector &data = pData->data();
+			const doubles_vector &varSum = pData->variables_summary();
+			const doubles_vector &indSum = pData->indivs_summary();
+			ContextType oContext;
+			DrawContextParams *pParams = const_cast<DrawContextParams *>(oContext.draw_params());
+			pParams->update(nCols, nRows);
+			coord_type x0, y0;
+			dist_type w, h, dx, dy;
+			oContext.get_origin(x0, y0);
+			oContext.get_cell_draw_params(w, dx, h, dy);
+			coord_type y = y0 + (dy / 2);
+			const coord_type startx = x0 + (w / 2);
+			const dist_type deltax = dx + w;
+			const dist_type deltay = dy + h;
+			coord_type x = startx + (2 * deltax);
+			for (size_t i = 0; i < nRows; ++i) {
+				size_t ii = rowindexes[i];
+				STRINGTYPE s = rowNames[ii];
+				BaseDrawItemType oItem(MatCellType::indCell, s);
+				oContext.draw(&oItem, x, y);
+				x += deltax;
+			}// i
+			y += deltay;
+			x = startx + (2 * deltax);
+			for (size_t i = 0; i < nRows; ++i) {
+				size_t ii = rowindexes[i];
+				double f = indSum[ii];
+				BaseDrawItemType oItem(MatCellType::summaryIndCell, f);
+				oContext.draw(&oItem, x, y);
+				x += deltax;
+			}// i
+			y += deltay;
+			for (size_t i = 0; i < nCols; ++i) {
+				x = startx;
+				size_t ii = colindexes[i];
+				STRINGTYPE s = colNames[ii];
+				BaseDrawItemType oItem(MatCellType::varCell, s);
+				oContext.draw(&oItem, x, y);
+				x += deltax;
+				double f = varSum[ii];
+				BaseDrawItemType oItem1(MatCellType::summaryVarCell, f);
+				oContext.draw(&oItem1, x, y);
+				x += deltax;
+				for (size_t j = 0; j < nRows; ++j) {
+					size_t jj = rowindexes[j];
+					double f = data[jj * nCols + ii];
+					BaseDrawItemType oItem2(aType, f);
+					oContext.draw(&oItem2, x, y);
+					x += deltax;
+				}// j
+				y += deltay;
+			}// i
+			oContext.save(filename);
+		}// draw
+		template <typename T>
+		bool perform_arrange(const STRINGTYPE &filename,
+			const STRINGTYPE &name, size_t nRows, size_t nCols, const std::vector<T> &data,
 			const strings_vector &rowNames, const strings_vector &colNames,
-			MatCellType aType = MatCellType::histogCell); 
+			MatCellType aType = MatCellType::histogCell)
 		{
-			InfoMatriceResultPairPtr oRet;
-			if ((nRows > 0) && (nCols > 0) && (data.size() >= (nCols * nRows)) && (rowNames.size() >= nRows) &&
-				(colNames.size() >= nCols)) {
-				ModelDataType *pModel = this->m_model.get();
-				assert(pModel != nullptr);
-				std::future<bool> oFuture = pModel->initialize(name, nRows, nCols, 
-					data, rowNames, colNames, aType);
-				oFuture.wait();
-				ViewType *pView = pModel->add_view(DispositionType::variable);
-				assert(pView != nullptr);
-				this->mat_win.set_view(pView);
-				this->m_promise = std::make_shared<matrice_promise>();
-				this->m_future = pModel->compute(this->m_promise, [pModel](MatElemResultPtr oRes) {
-						pModel->set_result(oRes);
-				});
-				this->m_future.wait();
-				this->mat_win.draw(filename);
-				oRet = this->m_future.get();
-			}
-			return (oRet);
-		}	
+			bool bRet = false;
+			MatriceDataType *pData = this->m_matdata.get();
+			assert(pData != nullptr);
+			std::future<bool> bf = pData->initializeAsync(name, nRows, nCols, data, rowNames, colNames);
+			bool b = bf.get();
+			SourceType *pInd = pData->indiv_provider();
+			SourceType *pVar = pData->variable_provider();
+			if ((pInd != nullptr) && (pVar != nullptr)) {
+				MatriceType *pMat = this->m_matrice.get();
+				if (pMat != nullptr) {
+					pMat->arrange(pInd, pVar);
+					MatElemResultPtr oIndRes = pMat->get_inds_result();
+					MatElemResultType *p1 = oIndRes.get();
+					if (p1 != nullptr) {
+						this->m_indindexes = p1->indexes();
+						MatElemResultPtr oVarRes = pMat->get_vars_result();
+						MatElemResultType *p2 = oVarRes.get();
+						if (p2 != nullptr) {
+							this->m_varindexes = p2->indexes();
+							this->draw(filename, aType);
+							bRet = true;
+						}// p1
+					}// p1
+				}// pMat
+			}//source
+			return (bRet);
+		}// perform_arrange	
 	};
 	////////////////////////////////////////////////////
 }// namespace info

@@ -23,11 +23,7 @@ namespace info {
 	private:
 		std::unique_ptr<xml_document> m_doc;
 	public:
-		SVGDrawContext(const DrawContextParams *params) :BaseType(params) {
-			assert(params != nullptr);
-			DrawContextParams *px = const_cast<DrawContextParams *>(params);
-			px->width = 744;
-			px->height = 1052;
+		SVGDrawContext(const DrawContextParams *params = nullptr) :BaseType(params) {
 			this->initialize();
 		}
 		virtual ~SVGDrawContext() {}
@@ -42,7 +38,7 @@ namespace info {
 			pDoc->append_attribute("xmlns:svg").set_value("http://www.w3.org/2000/svg");
 			pDoc->append_attribute("xmlns").set_value("http://www.w3.org/2000/svg");
 			pDoc->append_attribute("version").set_value("1.1");
-			pDoc->append_attribute("viewBox").set_value("0 0 744 1052");
+			pDoc->append_attribute("viewBox").set_value("0 0 595 841");
 			pDoc->append_attribute("width").set_value("100%");
 			pDoc->append_attribute("height").set_value("100%");
 		}// initialize
@@ -77,7 +73,24 @@ namespace info {
 			os << L"rotate(" << angle << L" " << x << L"," << y << L")";
 			ss = os.str();
 		}
+		static void convert_font_size(double fsize, std::string &ss) {
+			std::stringstream os;
+			os << "font-size:" << fsize << "px";
+			ss = os.str();
+		}
+		static void convert_font_size(double fsize, std::wstring &ss) {
+			std::wstringstream os;
+			os << L"font-size:" << fsize << L"px";
+			ss = os.str();
+		}
 		virtual void draw(PDrawItem pItem, coord_type x0 = 0, coord_type y0 = 0) const {
+			if (pItem == nullptr) {
+				return;
+			}
+			MatCellType aType = pItem->type();
+			if (aType == MatCellType::noCell) {
+				return;
+			}
 			ContextType *p = const_cast<ContextType *>(this);
 			const DrawContextParams *pParams = this->draw_params();
 			assert(pParams != nullptr);
@@ -90,20 +103,20 @@ namespace info {
 			assert(p0 != nullptr);
 			xml_node oNode = p0->document_element();
 			xml_node *pDoc = &oNode;
-			MatCellType aType = pItem->type();
 			switch (aType) {
 			case MatCellType::indCell:
 			{
 				std::string s = info_2s(pItem->text());
 				if (!s.empty()) {
-					double x = x0 + (w / 2) + pParams->variableFontSize;
-					double y = y0 + h - 2 * pParams->variableFontSize;
-					std::string srotate;
-					convert_rotate(285, x, y, srotate);
+					double x = x0 + (w / 2) + pParams->indivFontSize;
+					double y = y0 + h -  pParams->indivFontSize;
+					std::string srotate, sfont;
+					convert_rotate(pParams->fangle, x, y, srotate);
+					convert_font_size(pParams->indivFontSize, sfont);
 					xml_node node = pDoc->append_child("text");
 					node.append_attribute("x").set_value(x0);
 					node.append_attribute("y").set_value(y);
-					node.append_attribute("style").set_value("font-size:15px");
+					node.append_attribute("style").set_value(sfont.c_str());
 					node.append_attribute("transform").set_value(srotate.c_str());
 					node.append_child(pugi::node_pcdata).set_value(s.c_str());
 				}// s
@@ -113,11 +126,13 @@ namespace info {
 			{
 				std::string s = info_2s(pItem->text());
 				if (!s.empty()) {
-					double y = y0 + (h - pParams->variableFontSize) / 2;
+					double y = y0 + (h / 2) + (pParams->variableFontSize / 2);
+					std::string sfont;
+					convert_font_size(pParams->variableFontSize, sfont);
 					xml_node node = pDoc->append_child("text");
 					node.append_attribute("x").set_value(x0);
 					node.append_attribute("y").set_value(y);
-					node.append_attribute("style").set_value("font-size:15px");
+					node.append_attribute("style").set_value(sfont.c_str());
 					node.append_child(pugi::node_pcdata).set_value(s.c_str());
 				}// s
 			}

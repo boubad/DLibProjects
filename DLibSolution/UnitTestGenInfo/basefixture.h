@@ -11,7 +11,7 @@ namespace info {
 	template<typename U, typename STRINGTYPE, typename DATATYPE>
 	class DataFixture {
 	public:
-		using MatriceDataType = MatriceData<U, STRINGTYPE, DATATYPE>;
+		using MatriceDataType = MatriceData<U, STRINGTYPE>;
 		using SourceType = IIndivSource<U, STRINGTYPE>;
 		using DataVectorIndivSourceType = DataVectorIndivSource<U, STRINGTYPE>;
 		using strings_vector = std::vector<STRINGTYPE>;
