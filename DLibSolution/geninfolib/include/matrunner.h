@@ -70,11 +70,11 @@ namespace info {
 			const strings_vector &indsNames, const strings_vector &colsNames,
 			bool bComputeWeights = false,
 			matelem_function f = [](MatElemResultPtr o) {},
-			const STRINGTYPE &sSigle = STRINGTYPE()) {
-			this->send_dispatch([this, oPromise, nRows, nCols, oData, indsNames, colsNames, bComputeWeights, f, sSigle]() {
+			const STRINGTYPE &sSigle = STRINGTYPE(),bool bNotify = true) {
+			this->send_dispatch([this, oPromise, nRows, nCols, oData, indsNames, colsNames, bComputeWeights, f, sSigle,bNotify]() {
 				try {
 					InfoMatriceResultPairPtr oRes = InfoMatriceType::perform_arrange(nRows, nCols, oData,
-						indsNames, colsNames, bComputeWeights, this->get_cancelflag(), this->get_backgrounder(), f, sSigle);
+						indsNames, colsNames, bComputeWeights, this->get_cancelflag(), this->get_backgrounder(), f, sSigle,bNotify);
 					matrice_promise *pPromise = oPromise.get();
 					pPromise->set_value(oRes);
 				}
@@ -93,11 +93,11 @@ namespace info {
 		matrice_future arrange_matrice(matrice_promise_ptr oPromise,
 			SourceType *pIndsSource, SourceType *pVarsSource,
 			const STRINGTYPE &datasetSigle,
-			matelem_function ff = [](MatElemResultPtr arg) {}) {
-			this->send_dispatch([this, oPromise, pIndsSource, pVarsSource, datasetSigle, ff]() {
+			matelem_function ff = [](MatElemResultPtr arg) {},bool bNotify = true) {
+			this->send_dispatch([this, oPromise, pIndsSource, pVarsSource, datasetSigle, ff,bNotify]() {
 				try {
 					InfoMatriceResultPairPtr oRes = InfoMatriceType::perform_arrange(pIndsSource, pVarsSource, this->get_cancelflag(),
-						this->get_backgrounder(), ff, datasetSigle);
+						this->get_backgrounder(), ff, datasetSigle,bNotify);
 					matrice_promise *pPromise = oPromise.get();
 					pPromise->set_value(oRes);
 				}

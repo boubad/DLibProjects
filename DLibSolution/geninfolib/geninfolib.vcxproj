@@ -187,6 +187,8 @@
     <ClInclude Include="include\storeindivsource.h" />
     <ClInclude Include="include\storevariablesource.h" />
     <ClInclude Include="include\stringconvert.h" />
+    <ClInclude Include="include\svg\svg_matrice.h" />
+    <ClInclude Include="include\svg_arranger.h" />
     <ClInclude Include="include\transformed_storeindivsource.h" />
     <ClInclude Include="src\sqlite\sqlite3.h" />
     <ClInclude Include="src\sqlite\sqlite3ext.h" />

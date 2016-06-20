@@ -18,15 +18,19 @@ private:
 	pcancelflag m_pcancel;
 	PBackgrounder m_pq;
 	function_type m_f;
+	bool m_bnotify;
 private:
 	CancellableObject(const CancellableObject<T> &) = delete;
 	CancellableObject<T> & operator=(const CancellableObject<T> &) = delete;
 public:
 	CancellableObject(pcancelflag pFlag = nullptr, PBackgrounder pq = nullptr,
-			function_type f = [](T arg) {}) :
-			m_pcancel(pFlag), m_pq(pq), m_f(f) {
+			function_type f = [](T arg) {}, bool bNotify = true) :
+			m_pcancel(pFlag), m_pq(pq), m_f(f),m_bnotify(bNotify) {
 	}
 	virtual ~CancellableObject() {
+	}
+	bool is_notify(void) const {
+		return (this->m_bnotify);
 	}
 	pcancelflag get_cancelflag(void) {
 		return (this->m_pcancel);
@@ -47,20 +51,24 @@ public:
 		return (this->m_f);
 	}
 	void send(T arg) {
-		PBackgrounder pq = this->m_pq;
-		if (pq != nullptr) {
-			pq->send([this,arg]() {
+		if (this->m_bnotify) {
+			PBackgrounder pq = this->m_pq;
+			if (pq != nullptr) {
+				pq->send([this, arg]() {
+					try {
+						(this->m_f)(arg);
+					}
+					catch (...) {}
+				});
+			}
+			else {
 				try {
 					(this->m_f)(arg);
-				}catch(...){}
-			});
-		} else {
-			try {
-				(this->m_f)(arg);
+				}
+				catch (...) {}
 			}
-			catch (...) {}
 		}
-	}
+	}// send
 	bool is_cancelled(void) {
 		if (this->m_pcancel == nullptr){
 			return (false);

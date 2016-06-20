@@ -28,6 +28,10 @@ namespace info {
 		using coord_type = long;
 		using dist_type = unsigned long;
 		//
+		double fangle;
+		int kfactor;
+		dist_type  variableFontSize;
+		dist_type  indivFontSize;
 		dist_type width;
 		dist_type height;
 		MatriceDrawType  drawType;
@@ -47,10 +51,19 @@ namespace info {
 		InfoColor sumvarcolor;
 		InfoColor textcolor;
 		InfoColor donecolor;
+		InfoColor strokecolor;
 		//
-		DrawContextParams() : width(200), height(200), drawType(MatriceDrawType::drawIndivs), bIndsNames(true), bIndsSum(true), bVarsNames(true), bVarsSum(true),
+		DrawContextParams() :fangle(285), kfactor(8), variableFontSize(15), indivFontSize(12), width(595), height(841), drawType(MatriceDrawType::drawIndivs), bIndsNames(true), bIndsSum(true), bVarsNames(true), bVarsSum(true),
 			x0(0), y0(0), deltax(0), dx(32), deltay(0), dy(32), upcolor(255), downcolor(0),
-			sumindcolor(0, 255, 0), sumvarcolor(255, 0, 0), textcolor(0), donecolor(127) {}
+			sumindcolor(0, 255, 0), sumvarcolor(255, 0, 0), textcolor(0), donecolor(127), strokecolor(0) {}
+		void update(size_t nRows, size_t nCols) {
+			double fcol = (double)this->kfactor  / ((this->kfactor + 1)*(nCols + 3));
+			this->dx = (dist_type)(fcol * this->width);
+			this->deltax = (dist_type)(this->dx / this->kfactor);
+			double frow = (double)this->kfactor  / ((this->kfactor + 1)*(nRows + 3));
+			this->dy = (dist_type)(frow * this->height);
+			this->deltay = (dist_type)(this->dy / this->kfactor);
+		}// update
 	};// struct DrawContextParams
 	  /////////////////////////////////////////
 	enum class MatCellType { noCell, varCell, indCell, summaryVarCell, summaryIndCell, histogCell, plainCell };
@@ -64,38 +77,48 @@ namespace info {
 		using coord_type = long;
 		using dist_type = unsigned long;
 		using DrawItem = BaseDrawItem<STRINGTYPE, FLOATTYPE>;
+		using ContextType = DrawContext<STRINGTYPE, FLOATTYPE>;
 	protected:
 		const DrawContextParams *m_params;
+		FLOATTYPE m_fdummy;
+		STRINGTYPE m_dummy;
+		std::unique_ptr<DrawContextParams> m_oparam;
 	public:
-		DrawContext(const DrawContextParams *pParams) : m_params(pParams) {
-			assert(this->m_params != nullptr);
+		DrawContext(const DrawContextParams *pParams = nullptr) : m_params(pParams), m_fdummy(0) {
 		}
 		virtual ~DrawContext() {}
-	public:
 		const DrawContextParams *draw_params(void) const {
-			return (this->m_params);
-		}
+			const DrawContextParams *pRet = this->m_params;
+			if (pRet == nullptr) {
+				pRet = this->m_oparam.get();
+				if (pRet == nullptr) {
+					ContextType *p = const_cast<ContextType *>(this);
+					p->m_oparam.reset(new DrawContextParams());
+					pRet = const_cast<const DrawContextParams *>(p->m_oparam.get());
+				}
+			}
+			return (pRet);
+		}// draw_params
 		virtual void draw(DrawItem *pItem, coord_type x0 = 0, coord_type y0 = 0) const {
 			// do nothing here
 		}// draw
 	public:
-		void get_origin(coord_type &x, coord_type &y) const {
-			DrawContextParams *p = this->draw_params();
-			assert(p != nullptr);
-			x = p->x0;
-			y = p->y0;
+		void get_origin(coord_type &x, coord_type &y)  {
+			const DrawContextParams *p = this->draw_params();
+			if (p != nullptr) {
+				x = p->x0;
+				y = p->y0;
+			}
 		}
-		void get_cell_draw_params(dist_type &w, dist_type &dx, dist_type &h, dist_type &dy) const {
-			DrawContextParams *p = this->draw_params();
-			assert(p != nullptr);
-			w = p->dx;
-			dx = p->deltax;
-			h = p->dy;
-			dx = p->deltay;
+		void get_cell_draw_params(dist_type &w, dist_type &dx, dist_type &h, dist_type &dy)  {
+			const DrawContextParams *p = this->draw_params();
+			if (p != nullptr) {
+				w = p->dx;
+				dx = p->deltax;
+				h = p->dy;
+				dy = p->deltay;
+			}
 		}
-	private:
-		FLOATTYPE m_fdummy;
-		STRINGTYPE m_dummy;
 	}; // class DrawContext<STRINGTYPE,FLOATTYPE>
 	   ////////////////////////////////////////
 	template <typename STRINGTYPE, typename FLOATTYPE>
@@ -150,7 +173,7 @@ namespace info {
 		}// draw
 	};// class BaseDrawItem
 	///////////////////////////////////////////////
-	template <typename IDTYPE,typename DISTANCETYPE,typename STRINGTYPE, typename FLOATTYPE>
+	template <typename IDTYPE, typename DISTANCETYPE, typename STRINGTYPE, typename FLOATTYPE>
 	class DrawItemsView {
 	public:
 		using coord_type = long;
@@ -159,7 +182,7 @@ namespace info {
 		using PDrawItemType = DrawItemType *;
 		using items_vector = std::vector<PDrawItemType>;
 		using ContextType = DrawContext<STRINGTYPE, FLOATTYPE>;
-		using DrawItemsViewType = DrawItemsView<IDTYPE,DISTANCETYPE,STRINGTYPE, FLOATTYPE>;
+		using DrawItemsViewType = DrawItemsView<IDTYPE, DISTANCETYPE, STRINGTYPE, FLOATTYPE>;
 		using MatElemResultType = MatElemResult<IDTYPE, DISTANCETYPE, STRINGTYPE>;
 		using MatElemResultPtr = std::shared_ptr<MatElemResultType>;
 		using function_type = std::function<void(MatElemResultPtr)>;
@@ -170,15 +193,21 @@ namespace info {
 		items_vector *m_pitems;
 		function_type m_f;
 	public:
-		DrawItemsView(DispositionType atype,size_t nRows, size_t nCols,
+		DrawItemsView(DispositionType atype, size_t nRows, size_t nCols,
 			items_vector *pitems, function_type ff = [](MatElemResultPtr o) {}) :
-			m_type(atype),m_nrows(nRows), m_ncols(nCols), m_pitems(pitems), m_f(ff) {
+			m_type(atype), m_nrows(nRows), m_ncols(nCols), m_pitems(pitems), m_f(ff) {
 			assert(this->m_nrows > 0);
 			assert(this->m_ncols > 0);
 			assert(this->m_pitems != nullptr);
 		}
 		virtual ~DrawItemsView() {}
 	public:
+		size_t get_nb_rows(void) const {
+			return (this->m_nrows);
+		}
+		size_t get_nb_cols(void) const {
+			return (this->m_ncols);
+		}
 		DispositionType disposition(void) const {
 			return (this->m_type);
 		}
@@ -197,7 +226,7 @@ namespace info {
 			items_vector &vv = (*this->m_pitems);
 			assert(vv.size() >= (size_t)(nTotalCols * nTotalRows));
 			coord_type x0 = xpos + pParams->x0;
-			dist_type ddx = (dist_type)( pParams->width / (nTotalCols + 1));
+			dist_type ddx = (dist_type)(pParams->width / (nTotalCols + 1));
 			dist_type ddy = (dist_type)(pParams->height / (nTotalRows + 1));
 			pParams->dx = ddx - pParams->deltax;
 			pParams->dy = ddy - pParams->deltay;
@@ -207,7 +236,7 @@ namespace info {
 				coord_type x = ddx / 2;
 				for (size_t j = 0; j < nTotalCols; ++j) {
 					PDrawItemType p = vv[base_pos + j];
-					if (p != nullptr) {
+					if ((p != nullptr) && (p->type() != MatCellType::noCell)) {
 						pContext->draw(p, x, y);
 					}
 					x += ddx;
@@ -293,10 +322,10 @@ namespace info {
 			ViewType *pRet = nullptr;
 			ViewTypePtr oRet;
 			if (type == DispositionType::indiv) {
-				oRet = std::make_shared<ViewType>(type,this->m_nrows, this->m_ncols, &(this->m_indivitems));
+				oRet = std::make_shared<ViewType>(type, this->m_nrows, this->m_ncols, &(this->m_indivitems));
 			}
 			else if (type == DispositionType::variable) {
-				oRet = std::make_shared<ViewType>(type,this->m_ncols, this->m_nrows, &(this->m_variableitems));
+				oRet = std::make_shared<ViewType>(type, this->m_ncols, this->m_nrows, &(this->m_variableitems));
 			}
 			pRet = oRet.get();
 			if (pRet != nullptr) {
@@ -722,7 +751,7 @@ namespace info {
 					vv_vars[j * nTotalRows + i] = vv_inds[i * nTotalCols + j];
 				}// j
 			}// i
-			
+
 		}// form_displays_lists
 		void resize(size_t nRows, size_t nCols) {
 			items_vector &vv = this->m_items;
@@ -768,7 +797,7 @@ namespace info {
 		using matrice_future = std::future<InfoMatriceResultPairPtr>;
 		using matrice_promise_ptr = std::shared_ptr<matrice_promise>;
 		using DrawItemsViewType = DrawItemsView<IDTYPE, DISTANCETYPE, STRINGTYPE, FLOATTYPE>;
-		using ModelDataType = MatriceModelData<IDTYPE,DISTANCETYPE,STRINGTYPE,FLOATTYPE,INTTYPE,WEIGHTYPE>;
+		using ModelDataType = MatriceModelData<IDTYPE, DISTANCETYPE, STRINGTYPE, FLOATTYPE, INTTYPE, WEIGHTYPE>;
 		//
 	private:
 		std::atomic<bool> m_inited;
@@ -825,12 +854,12 @@ namespace info {
 				return (bRet);
 			});
 		}// initialize
-		matrice_future compute(matrice_promise_ptr oPromise, matelem_function ff = [](MatElemResultPtr o) {}) {
+		matrice_future compute(matrice_promise_ptr oPromise, matelem_function ff = [](MatElemResultPtr o) {}, bool bNotify = true) {
 			matrice_future oRet;
 			DrawItemsType *pItems = this->m_items.get();
 			if (this->m_inited.load() && (pItems != nullptr) && (this->m_prunner != nullptr)) {
 				oRet = this->m_prunner->arrange_matrice(oPromise, pItems->get_indiv_provider(),
-					pItems->get_variable_provider(), pItems->sigle(), ff);
+					pItems->get_variable_provider(), pItems->sigle(), ff, bNotify);
 			}
 			return (oRet);
 		}// compute

@@ -51,7 +51,7 @@ namespace info {
 			PBackgrounder pBack = this->get_backgrounder();
 			MatElemFunctionType ff = this->get_function();
 			this->m_vars.reset(
-				new MatElemType(DispositionType::variable, pCancel, pBack, ff));
+				new MatElemType(DispositionType::variable, pCancel, pBack, ff,this->is_notify()));
 			MatElemType *pMat = this->m_vars.get();
 			assert(pMat != nullptr);
 			pMat->sigle(this->m_sigle);
@@ -63,7 +63,7 @@ namespace info {
 			PBackgrounder pBack = this->get_backgrounder();
 			MatElemFunctionType ff = this->get_function();
 			this->m_vars.reset(
-				new MatElemType(DispositionType::variable, pCancel, pBack, ff));
+				new MatElemType(DispositionType::variable, pCancel, pBack, ff, this->is_notify()));
 			MatElemType *pMat = this->m_vars.get();
 			assert(pMat != nullptr);
 			pMat->sigle(this->m_sigle);
@@ -75,7 +75,7 @@ namespace info {
 			PBackgrounder pBack = this->get_backgrounder();
 			MatElemFunctionType ff = this->get_function();
 			this->m_inds.reset(
-				new MatElemType(DispositionType::indiv, pCancel, pBack, ff));
+				new MatElemType(DispositionType::indiv, pCancel, pBack, ff, this->is_notify()));
 			MatElemType *pMat = this->m_inds.get();
 			assert(pMat != nullptr);
 			pMat->sigle(this->m_sigle);
@@ -87,7 +87,7 @@ namespace info {
 			PBackgrounder pBack = this->get_backgrounder();
 			MatElemFunctionType ff = this->get_function();
 			this->m_inds.reset(
-				new MatElemType(DispositionType::indiv, pCancel, pBack, ff));
+				new MatElemType(DispositionType::indiv, pCancel, pBack, ff, this->is_notify()));
 			MatElemType *pMat = this->m_inds.get();
 			assert(pMat != nullptr);
 			pMat->sigle(this->m_sigle);
@@ -97,21 +97,21 @@ namespace info {
 	public:
 		InfoMatrice(pcancelflag pFlag = nullptr, PBackgrounder pq = nullptr,
 			MatElemFunctionType f = [](MatElemResultPtr o) {},
-			const STRINGTYPE &sSigle = STRINGTYPE()) :
-			BaseType(pFlag, pq, f), m_sigle(sSigle) {
+			const STRINGTYPE &sSigle = STRINGTYPE(),bool bNotify = true) :
+			BaseType(pFlag, pq, f,bNotify), m_sigle(sSigle) {
 		} // MatOrd
 		InfoMatrice(SourceType *pIndsSource, SourceType *pVarsSource,
 			pcancelflag pFlag = nullptr, PBackgrounder pq = nullptr,
 			MatElemFunctionType f = [](MatElemResultPtr o) {},
-			const STRINGTYPE &sSigle = STRINGTYPE()) :
-			BaseType(pFlag, pq, f), m_sigle(sSigle) {
+			const STRINGTYPE &sSigle = STRINGTYPE(), bool bNotify = true) :
+			BaseType(pFlag, pq, f,bNotify), m_sigle(sSigle) {
 			this->arrange(pIndsSource, pVarsSource);
 		} // MatOrd
 		InfoMatrice(IndivMapType *pIndsSource, IndivMapType *pVarsSource,
 			pcancelflag pFlag = nullptr, PBackgrounder pq = nullptr,
 			MatElemFunctionType f = [](MatElemResultPtr o) {},
-			const STRINGTYPE &sSigle = STRINGTYPE()) :
-			BaseType(pFlag, pq, f), m_sigle(sSigle) {
+			const STRINGTYPE &sSigle = STRINGTYPE(), bool bNotify = true) :
+			BaseType(pFlag, pq, f,bNotify), m_sigle(sSigle) {
 			this->arrange(pIndsSource, pVarsSource);
 		} // MatOrd
 		template<typename T>
@@ -120,8 +120,8 @@ namespace info {
 			bool bComputeWeights = false, pcancelflag pFlag = nullptr,
 			PBackgrounder pq = nullptr, MatElemFunctionType f =
 			[](MatElemResultPtr o) {}, const STRINGTYPE &sSigle =
-			STRINGTYPE()) :
-			BaseType(pFlag, pq, f), m_sigle(sSigle) {
+			STRINGTYPE(), bool bNotify = true) :
+			BaseType(pFlag, pq, f,bNotify), m_sigle(sSigle) {
 			this->arrange(nRows, nCols, oData, indsNames, colsNames,
 				bComputeWeights);
 		} // MatOrd
@@ -219,8 +219,8 @@ namespace info {
 			bool bComputeWeights = false,
 			pcancelflag pFlag = nullptr, PBackgrounder pq = nullptr,
 			MatElemFunctionType f = [](MatElemResultPtr o) {},
-			const STRINGTYPE &sSigle = STRINGTYPE()) {
-			InfoMatriceType oMat(nRows, nCols, oData, indsNames, colsNames, bComputeWeights, pFlag, pq, f, sSigle);
+			const STRINGTYPE &sSigle = STRINGTYPE(), bool bNotify = true) {
+			InfoMatriceType oMat(nRows, nCols, oData, indsNames, colsNames, bComputeWeights, pFlag, pq, f, sSigle,bNotify);
 			InfoMatriceResultPairPtr oRet = std::make_shared<InfoMatriceResultPair>();
 			InfoMatriceResultPair *p = oRet.get();
 			assert(p != nullptr);
@@ -231,8 +231,8 @@ namespace info {
 		static InfoMatriceResultPairPtr perform_arrange(SourceType *pIndsSource, SourceType *pVarsSource,
 			pcancelflag pFlag = nullptr, PBackgrounder pq = nullptr,
 			MatElemFunctionType f = [](MatElemResultPtr o) {},
-			const STRINGTYPE &sSigle = STRINGTYPE()) {
-			InfoMatriceType oMat(pIndsSource, pVarsSource, pFlag, pq, f, sSigle);
+			const STRINGTYPE &sSigle = STRINGTYPE(),bool bNotify = false) {
+			InfoMatriceType oMat(pIndsSource, pVarsSource, pFlag, pq, f, sSigle,bNotify);
 			InfoMatriceResultPairPtr oRet = std::make_shared<InfoMatriceResultPair>();
 			InfoMatriceResultPair *p = oRet.get();
 			assert(p != nullptr);

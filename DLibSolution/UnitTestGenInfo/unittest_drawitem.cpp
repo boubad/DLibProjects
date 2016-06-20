@@ -22,9 +22,6 @@ namespace UnitTestGenInfo
 	using strings_vector = std::vector<STRINGTYPE>;
 	using MatElemResultType = MatElemResult<IDTYPE, DISTANCETYPE, STRINGTYPE>;
 	using MatElemResultPtr = std::shared_ptr<MatElemResultType>;
-	using ViewType = DrawItemsView<STRINGTYPE, FLOATTYPE>;
-	using ViewTypePtr = std::shared_ptr<ViewType>;
-	using views_vector = std::vector<ViewTypePtr>;
 	////////////////////////////////
 	TEST_CLASS(DrawItemsTests)
 	{
