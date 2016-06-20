@@ -33,7 +33,7 @@ namespace info {
 		std::unique_ptr<MatriceDataType> m_matdata;
 		std::unique_ptr<MatriceType> m_matrice;
 	public:
-		SVGMatriceArranger(const STRINGTYPE &sSigle = STRINGTYPE()):m_sigle(sSigle) {
+		SVGMatriceArranger(const STRINGTYPE &sSigle = STRINGTYPE()) :m_sigle(sSigle) {
 			this->m_matdata.reset(new MatriceDataType());
 			this->m_matrice.reset(new MatriceType(nullptr, nullptr, [](MatElemResultPtr o) {}, sSigle, false));
 		}
@@ -56,8 +56,42 @@ namespace info {
 				return (false);
 			});
 		}// export svg
+		template <typename T>
+		std::future<bool> export_svg(std::ostream &os,
+			size_t nRows, size_t nCols, const std::vector<T> &data,
+			const strings_vector &rowNames,
+			const strings_vector &colNames, MatCellType aType = MatCellType::histogCell) {
+			return std::async(std::launch::async,
+				[this, nRows, nCols, data, rowNames, colNames, aType, &os]()->bool {
+				try {
+					return (this->perform_arrange(os, this->m_sigle, nRows, nCols, data,
+						rowNames, colNames, aType));
+				}
+				catch (...) {
+
+				}
+				return (false);
+			});
+		}// export svg
+		template <typename T>
+		std::future<bool> export_svg(std::wostream &os,
+			size_t nRows, size_t nCols, const std::vector<T> &data,
+			const strings_vector &rowNames,
+			const strings_vector &colNames, MatCellType aType = MatCellType::histogCell) {
+			return std::async(std::launch::async,
+				[this, nRows, nCols, data, rowNames, colNames, aType, &os]()->bool {
+				try {
+					return (this->perform_arrange(os, this->m_sigle, nRows, nCols, data,
+						rowNames, colNames, aType));
+				}
+				catch (...) {
+
+				}
+				return (false);
+			});
+		}// export svg
 	private:
-		void draw(const STRINGTYPE &filename, MatCellType aType = MatCellType::histogCell) {
+		void draw(ContextType &oContext, MatCellType aType) {
 			MatriceDataType *pData = this->m_matdata.get();
 			assert(pData != nullptr);
 			const size_t nCols = pData->cols_count();
@@ -71,7 +105,6 @@ namespace info {
 			const doubles_vector &data = pData->data();
 			const doubles_vector &varSum = pData->variables_summary();
 			const doubles_vector &indSum = pData->indivs_summary();
-			ContextType oContext;
 			DrawContextParams *pParams = const_cast<DrawContextParams *>(oContext.draw_params());
 			pParams->update(nCols, nRows);
 			coord_type x0, y0;
@@ -120,7 +153,24 @@ namespace info {
 				}// j
 				y += deltay;
 			}// i
+		}// draw
+		void draw(const STRINGTYPE &filename, MatCellType aType = MatCellType::histogCell) {
+			MatriceDataType *pData = this->m_matdata.get();
+			ContextType oContext;
+			this->draw(oContext, aType);
 			oContext.save(filename);
+		}// draw
+		void draw(std::ostream &os, MatCellType aType = MatCellType::histogCell) {
+			MatriceDataType *pData = this->m_matdata.get();
+			ContextType oContext;
+			this->draw(oContext, aType);
+			oContext.save(os);
+		}// draw
+		void draw(std::wostream &os, MatCellType aType = MatCellType::histogCell) {
+			MatriceDataType *pData = this->m_matdata.get();
+			ContextType oContext;
+			this->draw(oContext, aType);
+			oContext.save(os);
 		}// draw
 		template <typename T>
 		bool perform_arrange(const STRINGTYPE &filename,
@@ -148,6 +198,72 @@ namespace info {
 						if (p2 != nullptr) {
 							this->m_varindexes = p2->indexes();
 							this->draw(filename, aType);
+							bRet = true;
+						}// p1
+					}// p1
+				}// pMat
+			}//source
+			return (bRet);
+		}// perform_arrange	
+		template <typename T>
+		bool perform_arrange(std::ostream &os,
+			const STRINGTYPE &name, size_t nRows, size_t nCols, const std::vector<T> &data,
+			const strings_vector &rowNames, const strings_vector &colNames,
+			MatCellType aType = MatCellType::histogCell)
+		{
+			bool bRet = false;
+			MatriceDataType *pData = this->m_matdata.get();
+			assert(pData != nullptr);
+			std::future<bool> bf = pData->initializeAsync(name, nRows, nCols, data, rowNames, colNames);
+			bool b = bf.get();
+			SourceType *pInd = pData->indiv_provider();
+			SourceType *pVar = pData->variable_provider();
+			if ((pInd != nullptr) && (pVar != nullptr)) {
+				MatriceType *pMat = this->m_matrice.get();
+				if (pMat != nullptr) {
+					pMat->arrange(pInd, pVar);
+					MatElemResultPtr oIndRes = pMat->get_inds_result();
+					MatElemResultType *p1 = oIndRes.get();
+					if (p1 != nullptr) {
+						this->m_indindexes = p1->indexes();
+						MatElemResultPtr oVarRes = pMat->get_vars_result();
+						MatElemResultType *p2 = oVarRes.get();
+						if (p2 != nullptr) {
+							this->m_varindexes = p2->indexes();
+							this->draw(os, aType);
+							bRet = true;
+						}// p1
+					}// p1
+				}// pMat
+			}//source
+			return (bRet);
+		}// perform_arrange	
+		template <typename T>
+		bool perform_arrange(std::wostream &os,
+			const STRINGTYPE &name, size_t nRows, size_t nCols, const std::vector<T> &data,
+			const strings_vector &rowNames, const strings_vector &colNames,
+			MatCellType aType = MatCellType::histogCell)
+		{
+			bool bRet = false;
+			MatriceDataType *pData = this->m_matdata.get();
+			assert(pData != nullptr);
+			std::future<bool> bf = pData->initializeAsync(name, nRows, nCols, data, rowNames, colNames);
+			bool b = bf.get();
+			SourceType *pInd = pData->indiv_provider();
+			SourceType *pVar = pData->variable_provider();
+			if ((pInd != nullptr) && (pVar != nullptr)) {
+				MatriceType *pMat = this->m_matrice.get();
+				if (pMat != nullptr) {
+					pMat->arrange(pInd, pVar);
+					MatElemResultPtr oIndRes = pMat->get_inds_result();
+					MatElemResultType *p1 = oIndRes.get();
+					if (p1 != nullptr) {
+						this->m_indindexes = p1->indexes();
+						MatElemResultPtr oVarRes = pMat->get_vars_result();
+						MatElemResultType *p2 = oVarRes.get();
+						if (p2 != nullptr) {
+							this->m_varindexes = p2->indexes();
+							this->draw(os, aType);
 							bRet = true;
 						}// p1
 					}// p1

@@ -43,6 +43,16 @@ namespace info {
 			pDoc->append_attribute("height").set_value("100%");
 		}// initialize
 	public:
+		void save(std::ostream &os) {
+			xml_document *pDoc = this->m_doc.get();
+			assert(pDoc != nullptr);
+			pDoc->save(os);
+		}// save
+		void save(std::wostream &os) {
+			xml_document *pDoc = this->m_doc.get();
+			assert(pDoc != nullptr);
+			pDoc->save(os);
+		}// save
 		void save(const std::string &filename) {
 			xml_document *pDoc = this->m_doc.get();
 			assert(pDoc != nullptr);
