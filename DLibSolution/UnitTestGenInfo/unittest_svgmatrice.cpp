@@ -32,8 +32,8 @@ namespace UnitTestGenInfo
 			STRINGTYPE name;
 			strings_vector rowNames, colNames;
 			std::vector<DATATYPE> data;
-			InfoTestData::get_mortal_data(name, nRows, nCols, data, rowNames, colNames);
-			STRINGTYPE filename("D:\\temp\\test_mortal_data.svg");
+			InfoTestData::get_conso_data(name, nRows, nCols, data, rowNames, colNames);
+			STRINGTYPE filename("D:\\temp\\test_conso_data.svg");
 			//
 			ArrangerType oArrange(name);
 			std::future<bool> bFuture = oArrange.export_svg(filename, nRows, nCols, data, rowNames, colNames);
