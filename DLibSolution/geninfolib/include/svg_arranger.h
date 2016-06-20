@@ -26,83 +26,61 @@ namespace info {
 		using ViewType = DrawItemsView<IDTYPE, DISTANCETYPE, STRINGTYPE, FLOATTYPE>;
 		using MatRunnerType = MatRunner<IDTYPE, STRINGTYPE, DISTANCETYPE, INTTYPE, WEIGHTYPE>;
 	private:
-		bool m_ok;
 		std::unique_ptr<MatRunnerType> m_runner;
 		MatriceWindowType mat_win;
 		std::unique_ptr<ModelDataType> m_model;
 		matrice_promise_ptr m_promise;
 		matrice_future m_future;
-		std::future<bool> m_init_future;
 	public:
-		SVGMatriceArranger() :m_ok(false) {
+		SVGMatriceArranger() {
 			this->m_runner.reset(new MatRunnerType());
 			MatRunnerType *pRunner = this->m_runner.get();
 			assert(pRunner != nullptr);
 			ModelDataType *pModel = new ModelDataType(pRunner);
+			assert(pModel != nullptr);
 			this->m_model.reset(pModel);
 		}
 		~SVGMatriceArranger() {
 		}
 		template <typename T>
-		bool arrange(const STRINGTYPE &name,size_t nRows, size_t nCols,const std::vector<T> &data,
-			const strings_vector &rowNames, const strings_vector &colNames) 
+		std::future<InfoMatriceResultPairPtr> export_svg(const STRINGTYPE &filename,
+			const STRINGTYPE &name,size_t nRows, size_t nCols,const std::vector<T> &data,
+			const strings_vector &rowNames, 
+			const strings_vector &colNames,MatCellType aType = MatCellType::histogCell){
+			return std::async(std::launch::async,
+				[this,filename,name,nRows,nCols,data,rowNames,colNames,aType](){
+					return (this->arrange(filename,name,nRows,nCols,data,
+						rowNames,colNames,aType));
+			});
+		}// export svg
+private:
+	template <typename T>
+	InfoMatriceResultPairPtr arrange(const STRINGTYPE &filename,
+			const STRINGTYPE &name,size_t nRows, size_t nCols,const std::vector<T> &data,
+			const strings_vector &rowNames, const strings_vector &colNames,
+			MatCellType aType = MatCellType::histogCell); 
 		{
+			InfoMatriceResultPairPtr oRet;
 			if ((nRows > 0) && (nCols > 0) && (data.size() >= (nCols * nRows)) && (rowNames.size() >= nRows) &&
 				(colNames.size() >= nCols)) {
 				ModelDataType *pModel = this->m_model.get();
 				assert(pModel != nullptr);
-				std::future<bool> oFuture = pModel->initialize(name, nRows, nCols, data, rowNames, colNames, MatCellType::histogCell);
-				this->m_ok = oFuture.get();
+				std::future<bool> oFuture = pModel->initialize(name, nRows, nCols, 
+					data, rowNames, colNames, aType);
+				oFuture.wait();
+				ViewType *pView = pModel->add_view(DispositionType::variable);
+				assert(pView != nullptr);
+				this->mat_win.set_view(pView);
+				this->m_promise = std::make_shared<matrice_promise>();
+				this->m_future = pModel->compute(this->m_promise, [pModel](MatElemResultPtr oRes) {
+						pModel->set_result(oRes);
+				});
+				this->m_future.wait();
+				this->mat_win.draw(filename);
+				oRet = this->m_future.get();
 			}
-		}
-		
-		void set_result(MatElemResultPtr oRes) {
-			if (!this->m_ok) {
-				return;
-			}
-			ModelDataType *pModel = this->m_model.get();
-			assert(pModel != nullptr);
-			pModel->set_result(oRes);
-		}// oRes
-		void init_all(void) {
-			if (!this->m_ok) {
-				return;
-			}
-			try {
-				bool bInit = this->m_init_future.get();
-				if (bInit) {
-					ModelDataType *pModel = this->m_model.get();
-					assert(pModel != nullptr);
-					ViewType *pView = pModel->add_view(DispositionType::variable);
-					assert(pView != nullptr);
-					this->mat_win.set_view(pView);
-					this->m_promise = std::make_shared<matrice_promise>();
-					this->m_future = pModel->compute(this->m_promise, [this](MatElemResultPtr oRes) {
-						this->set_result(oRes);
-					});
-				}// bInit
-			}
-			catch (...) {
-
-			}
-		}// init_all;
-		InfoMatriceResultPairPtr getResult(void) {
-			return (this->m_future.get());
-		}
-		void save(const STRINGTYPE &filename) {
-			auto p = this->m_future.get();
-			this->mat_win.draw(filename);
-		}// save
-		std::future<bool> export_svg(const STRINGTYPE &filename) {
-			return std::async(std::launch::async, [this, filename]()->bool {
-				if (!this->m_ok) {
-					return (false);
-				}
-				this->init_all();
-				this->save(filename);
-				return (true);
-			});
-		}// export_svg
+			return (oRet);
+		}	
 	};
 	////////////////////////////////////////////////////
 }// namespace info
