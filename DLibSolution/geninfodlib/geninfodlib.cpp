@@ -32,7 +32,6 @@ class matrice_win : public drawable_window
 	using ViewType = DrawItemsView<IDTYPE, DISTANCETYPE, STRINGTYPE, FLOATTYPE>;
 private:
 	bool m_ok;
-	MatRunnerType *m_prunner;
 	MatriceWindowType mat_win;
 	std::unique_ptr<ModelDataType> m_model;
 	matrice_promise_ptr m_promise;
@@ -53,7 +52,7 @@ protected:
 	}
 public:
 	matrice_win(MatRunnerType *pRunner,const STRINGTYPE &name, MatCellType aType = MatCellType::plainCell) : 
-		m_ok(false),m_prunner(pRunner),mat_win(*this)
+		m_ok(false),mat_win(*this)
 	{
 		size_t nRows = 0, nCols = 0;
 		strings_vector rowNames, colNames;
@@ -61,7 +60,7 @@ public:
 		InfoTestData::get_data(name, nRows, nCols, data, rowNames, colNames);
 		if ((nRows > 0) && (nCols > 0) && (data.size() >= (nCols * nRows)) && (rowNames.size() >= nRows) &&
 			(colNames.size() >= nCols)) {
-			ModelDataType *pModel = new ModelDataType(*this, pRunner);
+			ModelDataType *pModel = new ModelDataType(*this);
 			this->m_model.reset(pModel);
 			this->m_init_future = pModel->initialize(name, nRows, nCols, data, rowNames, colNames, aType);
 			this->m_ok = true;
@@ -70,21 +69,6 @@ public:
 	}
 	~matrice_win() {
 	}
-	void set_result(MatElemResultPtr oRes) {
-		STRINGSTREAM os;
-		os << "Matrice ";
-		MatElemResultType *p = oRes.get();
-		if (p != nullptr) {
-			STRINGTYPE ss;
-			p->to_string(ss, false);
-			os << ss;
-		}
-		STRINGTYPE st = os.str();
-		this->set_title(st);
-		ModelDataType *pModel = this->m_model.get();
-		assert(pModel != nullptr);
-		pModel->set_result(oRes);
-	}// oRes
 	void init_all(void) {
 		if (!this->m_ok) {
 			return;
@@ -97,10 +81,7 @@ public:
 				ViewType *pView = pModel->add_view(DispositionType::variable);
 				assert(pView != nullptr);
 				this->mat_win.set_view(pView);
-				this->m_promise = std::make_shared<matrice_promise>();
-				this->m_future = pModel->compute(this->m_promise, [this](MatElemResultPtr oRes) {
-					this->set_result(oRes);
-				});
+				this->m_future = pModel->compute();
 			}// bInit
 		}
 		catch (...) {

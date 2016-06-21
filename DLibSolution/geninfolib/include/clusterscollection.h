@@ -228,8 +228,7 @@ namespace info {
 		virtual ClusterizeResultPtr getResult(StageType s = StageType::current) {
 			this->update_result();
 			ClusterizeResultPtr oRes = std::make_shared<ClusterizeResultType>(this->m_res);
-			ClusterizeResultType *p = oRes.get();
-			assert(p != nullptr);
+			assert(oRes.get() != nullptr);
 			return oRes;
 		}
 		virtual void notify(StageType s = StageType::current) {

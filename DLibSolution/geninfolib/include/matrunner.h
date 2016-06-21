@@ -144,9 +144,9 @@ namespace info {
 			clusterize_function ff = [](RESULT) {}) {
 			this->send_dispatch([this, oPromise, ff, nbClusters, nbMaxIters, pProvider]() {
 				try {
-					ClusterizeKMeansType oMean(this->get_cancelflag(), this->get_backgrounder(), ff, mode);
+					ClusterizeKMeansType oMean(this->get_cancelflag(), this->get_backgrounder(), ff);
 					oMean.process(pProvider, nbClusters, nbMaxIters);
-					ClusterizeResultPtr oRes = oMat.getResult(StageType::finished);
+					ClusterizeResultPtr oRes = oMean.getResult(StageType::finished);
 					clusterize_promise *pPromise = oPromise.get();
 					pPromise->set_value(oRes);
 				}
@@ -170,7 +170,7 @@ namespace info {
 				try {
 					IndivsTreeType oTree(this->get_cancelflag(), this->get_backgrounder(), ff, mode);
 					oTree.process(pProvider, nbClusters);
-					ClusterizeResultPtr oRes = oMat.getResult(StageType::finished);
+					ClusterizeResultPtr oRes = oTree.getResult(StageType::finished);
 					clusterize_promise *pPromise = oPromise.get();
 					pPromise->set_value(oRes);
 				}

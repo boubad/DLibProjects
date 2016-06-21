@@ -40,7 +40,6 @@ namespace info {
 		using InfoMatriceResultPair = std::pair<MatElemResultPtr, MatElemResultPtr>;
 		using InfoMatriceResultPairPtr = std::shared_ptr<InfoMatriceResultPair>;
 		//
-		using InfoMatriceType = InfoMatrice<IDTYPE, DISTANCETYPE, STRINGTYPE>;
 	private:
 		STRINGTYPE m_sigle;
 		std::unique_ptr<MatElemType> m_vars;
@@ -231,7 +230,7 @@ namespace info {
 		static InfoMatriceResultPairPtr perform_arrange(SourceType *pIndsSource, SourceType *pVarsSource,
 			pcancelflag pFlag = nullptr, PBackgrounder pq = nullptr,
 			MatElemFunctionType f = [](MatElemResultPtr o) {},
-			const STRINGTYPE &sSigle = STRINGTYPE(),bool bNotify = false) {
+			const STRINGTYPE &sSigle = STRINGTYPE(),bool bNotify = true) {
 			InfoMatriceType oMat(pIndsSource, pVarsSource, pFlag, pq, f, sSigle,bNotify);
 			InfoMatriceResultPairPtr oRet = std::make_shared<InfoMatriceResultPair>();
 			InfoMatriceResultPair *p = oRet.get();
