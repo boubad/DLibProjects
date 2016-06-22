@@ -28,6 +28,9 @@
     <Filter Include="Fichiers d%27en-tête\include\svg">
       <UniqueIdentifier>{d1e91e3c-0ee9-48f2-97a9-8f49b0bdc0f0}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Fichiers d%27en-tête\include\eps">
+      <UniqueIdentifier>{82eeafb2-05cd-4e99-acf1-e7ca7ae6a872}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
@@ -172,6 +175,12 @@
       <Filter>Fichiers d%27en-tête\include\svg</Filter>
     </ClInclude>
     <ClInclude Include="include\svg_arranger.h">
+      <Filter>Fichiers d%27en-tête\include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\eps\eps_matrice.h">
+      <Filter>Fichiers d%27en-tête\include\eps</Filter>
+    </ClInclude>
+    <ClInclude Include="include\eps_arranger.h">
       <Filter>Fichiers d%27en-tête\include</Filter>
     </ClInclude>
   </ItemGroup>

@@ -107,6 +107,7 @@ private:
 		const dist_type deltax = dx + w;
 		const dist_type deltay = dy + h;
 		coord_type x = startx + (2 * deltax);
+		oContext.set_indivs_font();
 		for (size_t i = 0; i < nRows; ++i) {
 			size_t ii = rowindexes[i];
 			STRINGTYPE s = rowNames[ii];
@@ -116,6 +117,7 @@ private:
 		} // i
 		y += deltay;
 		x = startx + (2 * deltax);
+		oContext.set_indivs_summary_color();
 		for (size_t i = 0; i < nRows; ++i) {
 			size_t ii = rowindexes[i];
 			double f = indSum[ii];
@@ -124,7 +126,9 @@ private:
 			x += deltax;
 		} // i
 		y += deltay;
+		oContext.set_variables_font();
 		for (size_t i = 0; i < nCols; ++i) {
+			oContext.set_variables_font_color();
 			x = startx;
 			size_t ii = colindexes[i];
 			STRINGTYPE s = colNames[ii];
@@ -133,8 +137,12 @@ private:
 			x += deltax;
 			double f = varSum[ii];
 			BaseDrawItemType oItem1(MatCellType::summaryVarCell, f);
+			oContext.set_variables_summary_color();
 			oContext.draw(&oItem1, x, y);
 			x += deltax;
+			if (aType == MatCellType::histogCell) {
+				oContext.set_histog_color();
+			}
 			for (size_t j = 0; j < nRows; ++j) {
 				size_t jj = rowindexes[j];
 				double f = data[jj * nCols + ii];

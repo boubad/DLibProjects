@@ -155,6 +155,8 @@
     <ClInclude Include="include\datavector_indivprovider.h" />
     <ClInclude Include="include\distancemap.h" />
     <ClInclude Include="include\eigen_impl.h" />
+    <ClInclude Include="include\eps\eps_matrice.h" />
+    <ClInclude Include="include\eps_arranger.h" />
     <ClInclude Include="include\indiv.h" />
     <ClInclude Include="include\indivcluster.h" />
     <ClInclude Include="include\indivmap.h" />
