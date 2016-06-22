@@ -318,6 +318,10 @@ template<typename IDTYPE, typename DISTANCETYPE, typename STRINGTYPE,typename FL
 		using MatElemResultType = MatElemResult<IDTYPE, DISTANCETYPE, STRINGTYPE>;
 		using MatElemResultPtr = std::shared_ptr<MatElemResultType>;
 		using function_type = std::function<void(MatElemResultPtr)>;
+		using ContextType = DrawContext<STRINGTYPE, FLOATTYPE>;
+		using DrawItemType = BaseDrawItem<STRINGTYPE, FLOATTYPE>;
+		using PDrawItemType = DrawItemType *;
+		using items_vector = std::vector<PDrawItemType>;
 	protected:
 		virtual void update_context(ContextType *pContext) {
 			DrawContextParams *pParams = pContext->draw_params();
