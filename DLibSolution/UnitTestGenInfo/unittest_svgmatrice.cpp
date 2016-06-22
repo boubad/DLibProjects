@@ -36,7 +36,7 @@ namespace UnitTestGenInfo
 			STRINGTYPE filename("D:\\temp\\test_conso_data.svg");
 			//
 			ArrangerType oArrange(name);
-			std::future<bool> bFuture = oArrange.export_svg(filename, nRows, nCols, data, rowNames, colNames);
+			std::future<bool> bFuture = oArrange.export_async(filename, nRows, nCols, data, rowNames, colNames);
 			bool bRet = bFuture.get();
 			Assert::IsTrue(bRet);
 		}//testArrangeElemsOne
@@ -50,7 +50,7 @@ namespace UnitTestGenInfo
 			//
 			std::stringstream os;
 			ArrangerType oArrange(name);
-			std::future<bool> bFuture = oArrange.export_svg(os, nRows, nCols, data, rowNames, colNames);
+			std::future<bool> bFuture = oArrange.export_async(os, nRows, nCols, data, rowNames, colNames);
 			bool bRet = bFuture.get();
 			Assert::IsTrue(bRet);
 			std::string ss = os.str();

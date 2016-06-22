@@ -36,8 +36,32 @@ namespace UnitTestGenInfo
 			STRINGTYPE filename("D:\\temp\\test_mortal_data.eps");
 			//
 			ArrangerType oArrange(name);
-			std::future<bool> bFuture = oArrange.export_eps(filename, nRows, nCols, data, rowNames, colNames);
+			std::future<bool> bFuture = oArrange.export_async(filename, nRows, nCols, data, rowNames, colNames);
 			bool bRet = bFuture.get();
+			Assert::IsTrue(bRet);
+		}//testArrangeElemsOne
+		TEST_METHOD(testEPSAll)
+		{
+			size_t nRows, nCols;
+			STRINGTYPE name;
+			strings_vector rowNames, colNames;
+			std::vector<DATATYPE> data;
+			InfoTestData::get_mortal_data(name, nRows, nCols, data, rowNames, colNames);
+			STRINGTYPE filename1("D:\\temp\\test_mortal_data_initial.eps");
+			STRINGTYPE filename2("D:\\temp\\test_mortal_data_ordered.eps");
+			//
+			ArrangerType oArrange(name);
+			std::future<bool> b1 = oArrange.initializeAsync(name, nRows, nCols, data, rowNames, colNames);
+			bool bRet = b1.get();
+			Assert::IsTrue(bRet);
+			std::future<bool> b2 = oArrange.exportAsync(filename1);
+			bRet = b2.get();
+			Assert::IsTrue(bRet);
+			std::future<bool> b3 = oArrange.arrangeAsync();
+			bRet = b3.get();
+			Assert::IsTrue(bRet);
+			std::future<bool> b4 = oArrange.exportAsync(filename2);
+			bRet = b4.get();
 			Assert::IsTrue(bRet);
 		}//testArrangeElemsOne
 		TEST_METHOD(testEPSStream)
@@ -50,7 +74,7 @@ namespace UnitTestGenInfo
 			//
 			std::stringstream os;
 			ArrangerType oArrange(name);
-			std::future<bool> bFuture = oArrange.export_eps(os, nRows, nCols, data, rowNames, colNames);
+			std::future<bool> bFuture = oArrange.export_async(os, nRows, nCols, data, rowNames, colNames);
 			bool bRet = bFuture.get();
 			Assert::IsTrue(bRet);
 			std::string ss = os.str();

@@ -42,7 +42,7 @@ namespace info {
 			this->m_os.reset(new std::stringstream());
 		} // initialize
 	public:
-		void save(std::ostream &os, const std::string &stitle = std::string()) {
+		virtual void save(std::ostream &os, const std::string &stitle = std::string()) {
 			const DrawContextParams *pParams = this->draw_params();
 			std::time_t result = std::time(nullptr);
 			std::string ssx = std::asctime(std::localtime(&result));
@@ -57,19 +57,19 @@ namespace info {
 				<< ((int)(this->m_maxy + 1)) << std::endl;
 			os << "%%DocumentNeededFonts: Times-Roman" << std::endl;
 			os << "%%EndComments" << std::endl;
-			os << "/w "  << pParams->dx << " def" << std::endl;
-			os << "/n {newpath} def" << std::endl;
-			os << "/rg { setrgbcolor} def" << std::endl;
-			os << "/sf { scalefont setfont} def" << std::endl;
-			os << "/i { moveto gsave 75 rotate show grestore }  def" << std::endl;
-			os << "/v { moveto show }  def" << std::endl;
-			os << "/s { 0 360 arc fill }  def" << std::endl;
-			os << "/h { moveto /hx exch def w 0 rlineto 0 hx rlineto 0 w sub 0 rlineto closepath fill }  def" << std::endl;
+			os << "/w "  << pParams->dx << "  def" << std::endl;
+			os << "/n {newpath} bind def" << std::endl;
+			os << "/rg { setrgbcolor} bind def" << std::endl;
+			os << "/sf { scalefont setfont} bind def" << std::endl;
+			os << "/i { moveto gsave 75 rotate show grestore } bind  def" << std::endl;
+			os << "/v { moveto show } bind def" << std::endl;
+			os << "/s { 0 360 arc fill }  bind def" << std::endl;
+			os << "/h { moveto w 0 rlineto 0 exch rlineto 0 w sub 0 rlineto closepath fill } bind def" << std::endl;
 			std::string ss = this->m_os->str();
 			os << ss;
 			os << "%%EOF" << std::endl;
 		} // save
-		void save(std::wostream &wos, const std::wstring &stitle = std::wstring()) {
+		virtual void save(std::wostream &wos, const std::wstring &stitle = std::wstring()) {
 			std::string s1 = info_2s(stitle);
 			std::stringstream os;
 			this->save(os, s1);
@@ -77,49 +77,56 @@ namespace info {
 			std::wstring sz = info_2ws(s2);
 			wos << sz;
 		}// save
-		void save(const std::string &filename) {
+		void save(std::wostream &wos) {
+			std::stringstream os;
+			this->save(os);
+			std::string s2 = os.str();
+			std::wstring sz = info_2ws(s2);
+			wos << sz;
+		}// save
+		virtual void save(const std::string &filename) {
 			std::ofstream os(filename.c_str());
 			this->save(os, filename);
 		} // save
-		void save(const std::wstring &filename) {
+		virtual void save(const std::wstring &filename) {
 			std::wofstream os(filename.c_str());
 			this->save(os, filename);
 		} // save
-		void set_indivs_font(void) {
+		virtual void set_indivs_font(void) {
 			std::stringstream &os = *(this->m_os);
 			const DrawContextParams *pParams = this->draw_params();
 			os << "/Times-Roman findfont" << std::endl;
 			os << pParams->indivFontSize << " sf" << std::endl;
 		}//set_indivs_font
-		void set_variables_font(void) {
+		virtual void set_variables_font(void) {
 			std::stringstream &os = *(this->m_os);
 			const DrawContextParams *pParams = this->draw_params();
 			os << "/Times-Roman findfont" << std::endl;
 			os << pParams->variableFontSize << " sf" << std::endl;
 		}//set_indivs_font
-		void set_variables_font_color(void) {
+		virtual void set_variables_font_color(void) {
 			std::stringstream &os = *(this->m_os);
 			os << "0.0 0.0 0.0 rg" << std::endl;
 		}//set_variables_font_color
-		void set_indivs_summary_color(void) {
+		virtual void set_indivs_summary_color(void) {
 			std::stringstream &os = *(this->m_os);
 			const DrawContextParams *pParams = this->draw_params();
 			InfoColor c = pParams->sumindcolor;
 			os << (c.red / 255.0) << " " << (c.green / 255.0) << " " << (c.blue / 255.0) << " rg" << std::endl;
 		}// set_indivs_summary_color
-		void set_variables_summary_color(void) {
+		virtual void set_variables_summary_color(void) {
 			std::stringstream &os = *(this->m_os);
 			const DrawContextParams *pParams = this->draw_params();
 			InfoColor c = pParams->sumvarcolor;
 			os << (c.red / 255.0) << " " << (c.green / 255.0) << " " << (c.blue / 255.0) << " rg" << std::endl;
 		}// set_variables_summary_color
-		void set_histog_color(void) {
+		virtual void set_histog_color(void) {
 			std::stringstream &os = *(this->m_os);
 			const DrawContextParams *pParams = this->draw_params();
 			InfoColor c = pParams->downcolor;
 			os << (c.red / 255.0) << " " << (c.green / 255.0) << " " << (c.blue / 255.0) << " rg" << std::endl;
 		}// set_histog_color
-		void set_plain_color(double f) {
+		virtual void set_plain_color(double f) {
 			const DrawContextParams *pParams = this->draw_params();
 			std::stringstream &os = *(this->m_os);
 			InfoColor c = pParams->downcolor;

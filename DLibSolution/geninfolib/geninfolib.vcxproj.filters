@@ -183,6 +183,9 @@
     <ClInclude Include="include\eps_arranger.h">
       <Filter>Fichiers d%27en-tête\include</Filter>
     </ClInclude>
+    <ClInclude Include="include\base_arranger.h">
+      <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\eigen_impl.cpp">

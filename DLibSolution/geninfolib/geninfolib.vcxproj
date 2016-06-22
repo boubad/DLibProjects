@@ -149,6 +149,7 @@
     <ClInclude Include="include\anacompo.h" />
     <ClInclude Include="include\anacompo_indivprovider.h" />
     <ClInclude Include="include\baseitem.h" />
+    <ClInclude Include="include\base_arranger.h" />
     <ClInclude Include="include\clusterize.h" />
     <ClInclude Include="include\clusterscollection.h" />
     <ClInclude Include="include\crititem.h" />
