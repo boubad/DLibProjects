@@ -181,6 +181,7 @@
     <ClCompile Include="unittest_epsmatrice.cpp" />
     <ClCompile Include="unittest_kmeans.cpp" />
     <ClCompile Include="unittest_matrunner.cpp" />
+    <ClCompile Include="unittest_streammatrice.cpp" />
     <ClCompile Include="unittest_svgmatrice.cpp" />
     <ClCompile Include="unittest_tree.cpp" />
   </ItemGroup>

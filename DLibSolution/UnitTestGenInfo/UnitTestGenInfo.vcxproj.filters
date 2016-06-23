@@ -59,5 +59,8 @@
     <ClCompile Include="unittest_epsmatrice.cpp">
       <Filter>Fichiers sources</Filter>
     </ClCompile>
+    <ClCompile Include="unittest_streammatrice.cpp">
+      <Filter>Fichiers sources</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

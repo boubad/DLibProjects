@@ -189,6 +189,8 @@
     <ClInclude Include="include\storebaseprovider.h" />
     <ClInclude Include="include\storeindivsource.h" />
     <ClInclude Include="include\storevariablesource.h" />
+    <ClInclude Include="include\stream\stream_matrice.h" />
+    <ClInclude Include="include\stream_arranger.h" />
     <ClInclude Include="include\stringconvert.h" />
     <ClInclude Include="include\svg\svg_matrice.h" />
     <ClInclude Include="include\svg_arranger.h" />

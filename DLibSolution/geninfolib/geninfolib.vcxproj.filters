@@ -31,6 +31,9 @@
     <Filter Include="Fichiers d%27en-tête\include\eps">
       <UniqueIdentifier>{82eeafb2-05cd-4e99-acf1-e7ca7ae6a872}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Fichiers d%27en-tête\include\stream">
+      <UniqueIdentifier>{7f6c783a-a2f3-470a-87d9-4fc9eecd4be9}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
@@ -185,6 +188,12 @@
     </ClInclude>
     <ClInclude Include="include\base_arranger.h">
       <Filter>Fichiers d%27en-tête</Filter>
+    </ClInclude>
+    <ClInclude Include="include\stream\stream_matrice.h">
+      <Filter>Fichiers d%27en-tête\include\stream</Filter>
+    </ClInclude>
+    <ClInclude Include="include\stream_arranger.h">
+      <Filter>Fichiers d%27en-tête\include</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

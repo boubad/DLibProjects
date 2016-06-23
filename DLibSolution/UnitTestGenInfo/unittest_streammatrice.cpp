@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "CppUnitTest.h"
 /////////////////////////////////
-#include <svg_arranger.h>
+#include <stream_arranger.h>
 /////////////////////////////
 #include "infotestdata.h"
 ////////////////////////////////////
@@ -13,10 +13,10 @@ using namespace std;
 ////////////////////////////////////////
 namespace UnitTestGenInfo
 {
-	using ArrangerType = SVGMatriceArranger<IDTYPE, DISTANCETYPE, STRINGTYPE, FLOATTYPE>;
+	using ArrangerType = StreamMatriceArranger<IDTYPE, DISTANCETYPE, STRINGTYPE, FLOATTYPE>;
 	using strings_vector = std::vector<STRINGTYPE>;
 	///////////////////////////////
-	TEST_CLASS(MatSvgMatriceTests)
+	TEST_CLASS(StreamMatriceTests)
 	{
 	public:
 		TEST_METHOD_INITIALIZE(setUp)
@@ -26,21 +26,21 @@ namespace UnitTestGenInfo
 		{
 		}// tearDown
 	public:
-		TEST_METHOD(testSVGArrange)
+		TEST_METHOD(testStreamArrange)
 		{
 			size_t nRows, nCols;
 			STRINGTYPE name;
 			strings_vector rowNames, colNames;
 			std::vector<DATATYPE> data;
 			InfoTestData::get_conso_data(name, nRows, nCols, data, rowNames, colNames);
-			STRINGTYPE filename(".\\test_conso_data.svg");
+			STRINGTYPE filename(".\\test_conso_data.txt");
 			//
 			ArrangerType oArrange(name);
 			std::future<bool> bFuture = oArrange.export_async(filename, nRows, nCols, data, rowNames, colNames);
 			bool bRet = bFuture.get();
 			Assert::IsTrue(bRet);
 		}//testArrangeElemsOne
-		TEST_METHOD(testSVGStream)
+		TEST_METHOD(testStreamStream)
 		{
 			size_t nRows, nCols;
 			STRINGTYPE name;
