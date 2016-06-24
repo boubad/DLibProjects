@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "CppUnitTest.h"
 /////////////////////////////////
-#include <info_drawcontext.h>
+#include <matrice_drawitems.h>
 /////////////////////////////
 #include "infotestdata.h"
 ////////////////////////////////////

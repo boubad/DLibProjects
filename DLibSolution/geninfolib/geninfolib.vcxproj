@@ -152,6 +152,7 @@
     <ClInclude Include="include\base_arranger.h" />
     <ClInclude Include="include\clusterize.h" />
     <ClInclude Include="include\clusterscollection.h" />
+    <ClInclude Include="include\criteria_func.h" />
     <ClInclude Include="include\crititem.h" />
     <ClInclude Include="include\datavector_indivprovider.h" />
     <ClInclude Include="include\distancemap.h" />
@@ -177,6 +178,8 @@
     <ClInclude Include="include\istatstore.h" />
     <ClInclude Include="include\matresult.h" />
     <ClInclude Include="include\matricedata.h" />
+    <ClInclude Include="include\matrice_drawitems.h" />
+    <ClInclude Include="include\matrice_modeldata.h" />
     <ClInclude Include="include\matrunner.h" />
     <ClInclude Include="include\memorydataset.h" />
     <ClInclude Include="include\memorystatstore.h" />

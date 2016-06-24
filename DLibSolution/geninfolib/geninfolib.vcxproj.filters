@@ -186,13 +186,22 @@
     <ClInclude Include="include\eps_arranger.h">
       <Filter>Fichiers d%27en-tête\include</Filter>
     </ClInclude>
-    <ClInclude Include="include\base_arranger.h">
-      <Filter>Fichiers d%27en-tête</Filter>
-    </ClInclude>
     <ClInclude Include="include\stream\stream_matrice.h">
       <Filter>Fichiers d%27en-tête\include\stream</Filter>
     </ClInclude>
     <ClInclude Include="include\stream_arranger.h">
+      <Filter>Fichiers d%27en-tête\include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\base_arranger.h">
+      <Filter>Fichiers d%27en-tête\include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\matrice_modeldata.h">
+      <Filter>Fichiers d%27en-tête\include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\matrice_drawitems.h">
+      <Filter>Fichiers d%27en-tête\include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\criteria_func.h">
       <Filter>Fichiers d%27en-tête\include</Filter>
     </ClInclude>
   </ItemGroup>

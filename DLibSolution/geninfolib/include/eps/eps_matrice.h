@@ -8,7 +8,7 @@
 #ifndef EPS_EPS_MATRICE_H_
 #define EPS_EPS_MATRICE_H_
  ////////////////////////////////////////
-#include "../info_drawcontext.h"
+#include "../matrice_drawitems.h"
 #include <fstream>
 /////////////////////////////////////////
 namespace info {
