@@ -1,25 +1,19 @@
-/*
- * eps_matrice.h
- *
- *  Created on: 21 juin 2016
- *      Author: boubad
- */
-
-#ifndef EPS_EPS_MATRICE_H_
-#define EPS_EPS_MATRICE_H_
- ////////////////////////////////////////
+#pragma once
+#ifndef __GNUPLOT_MATRICE_H__
+#define __GNUPLOT_MATRICE_H__
+////////////////////////////////////////
 #include "../matrice_drawitems.h"
 /////////////////////////////////////////
 namespace info {
 	//////////////////////////////
 	template<typename STRINGTYPE, typename FLOATTYPE>
-	class EPSDrawContext : public DrawContext<STRINGTYPE, FLOATTYPE> {
+	class GnuplotDrawContext : public DrawContext<STRINGTYPE, FLOATTYPE> {
 		using coord_type = DrawContextParams::coord_type;
 		using dist_type = DrawContextParams::dist_type;
 		using DrawItem = BaseDrawItem<STRINGTYPE, FLOATTYPE>;
 		using PDrawItem = DrawItem *;
 		using BaseType = DrawContext<STRINGTYPE, FLOATTYPE>;
-		using ContextType = EPSDrawContext<STRINGTYPE, FLOATTYPE>;
+		using ContextType = GnuplotDrawContext<STRINGTYPE, FLOATTYPE>;
 		//
 	private:
 		coord_type m_maxx;
@@ -29,12 +23,12 @@ namespace info {
 		bool m_first;
 		std::unique_ptr<std::stringstream> m_os;
 	public:
-		EPSDrawContext(DrawContextParams *params = nullptr) :
+		GnuplotDrawContext(DrawContextParams *params = nullptr) :
 			BaseType(params), m_maxx(0), m_maxy(0), m_minx(0), m_miny(0), m_first(
 				true) {
 			this->initialize();
 		}
-		virtual ~EPSDrawContext() {
+		virtual ~GnuplotDrawContext() {
 		}
 	private:
 		void initialize(void) {
@@ -45,28 +39,24 @@ namespace info {
 			const DrawContextParams *pParams = this->draw_params();
 			std::time_t result = std::time(nullptr);
 			std::string ssx = std::asctime(std::localtime(&result));
-			os << "%!PS-Adobe-3.0 EPSF-3.0" << std::endl;
-			os << "%%Title: " << stitle << std::endl;
-			os << "%%Creator: GenInfo stats suite" << std::endl;
-			os << "%%CreationDate: " << ssx;
-			os << "%%LanguageLevel: 2" << std::endl;
-			os << "%%BoundingBox: " << ((int) this->m_minx) << " "
+			os << "# Title: " << stitle << std::endl;
+			os << "# Creator: GenInfo stats suite" << std::endl;
+			os << "# CreationDate: " << ssx;
+			os << "# BoundingBox: " << ((int) this->m_minx) << " "
 				<< ((int) this->m_miny);
 			os << " " << ((int)(this->m_maxx + 1)) << " "
 				<< ((int)(this->m_maxy + 1)) << std::endl;
-			os << "%%DocumentNeededFonts: Times-Roman" << std::endl;
-			os << "%%EndComments" << std::endl;
-			os << "/w "  << pParams->dx << "  def" << std::endl;
-			os << "/n {newpath} bind def" << std::endl;
-			os << "/rg { setrgbcolor} bind def" << std::endl;
-			os << "/sf { scalefont setfont} bind def" << std::endl;
-			os << "/i { moveto gsave 75 rotate show grestore } bind  def" << std::endl;
-			os << "/v { moveto show } bind def" << std::endl;
-			os << "/s { 0 360 arc fill }  bind def" << std::endl;
-			os << "/h { moveto w 0 rlineto 0 exch rlineto 0 w sub 0 rlineto closepath fill } bind def" << std::endl;
+			os << "# RowsCount: " << pParams->nRows << std::endl;
+			os << "# ColsCount: " << pParams->nCols << std::endl;
+			os << "# ==============================================" << std::endl;
+			os << "set titke \"" << stitle << "\"" << std::endl;
+			os << "set xrange [" << this->m_minx << ":" << this->m_maxx << "]" << std::endl;
+			os << "set yrange [" << this->m_miny << ":" << this->m_maxy << "]" << std::endl;
+			os << "# ==============================================" << std::endl;
+			//
 			std::string ss = this->m_os->str();
 			os << ss;
-			os << "%%EOF" << std::endl;
+			os << "# EOF" << std::endl;
 		} // save
 		virtual void save(std::wostream &wos, const std::wstring &stitle = std::wstring()) {
 			std::string s1 = info_2s(stitle);
@@ -178,7 +168,7 @@ namespace info {
 				if (!s.empty()) {
 					double x = x0 + (w / 2) + (pParams->indivFontSize / 2);
 					double y = ydown;
-					os << "(" << s << ") " << x << " " << y << " i" << std::endl;
+					os << "set label \"" << s << "\" at " << x << "," << y << " left rotate by 75" << std::endl;
 				} // s
 			}
 									   break;
@@ -186,7 +176,7 @@ namespace info {
 				std::string s = info_2s(pItem->text());
 				if (!s.empty()) {
 					double y = ydown + (h / 2) + (pParams->variableFontSize / 2);
-					os << "(" << s << ") " << x0 << " " << y << " v" << std::endl;
+					os << "set label \"" << s << "\" at " << x << "," << y <<  std::endl;
 				} // s
 			}
 									   break;
@@ -194,7 +184,7 @@ namespace info {
 				double v = (double)pItem->value();
 				if ((v >= 0.0) && (v <= 1.0)) {
 					double height = h * v;
-					os << "n " << height << " " <<  x0 << " " << ydown << " h" << std::endl;
+					os << "n " << height << " " << x0 << " " << ydown << " h" << std::endl;
 				}
 			}
 										  break;
@@ -236,4 +226,6 @@ namespace info {
 	// class SVGDrawContext
 	///////////////////////////////
 }// namespace info
-#endif /* EPS_EPS_MATRICE_H_ */
+ ////////////////////////////////////////
+#endif // !__SVG_MATRICE_H__
+

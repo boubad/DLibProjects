@@ -11,6 +11,7 @@
 #include "matricedata.h"
 #include "info_matord.h"
 #include "info_drawcontext.h"
+#include "criteria_func.h"
 /////////////////////////////
 namespace info {
 	/////////////////////////////////////////////////
@@ -32,6 +33,8 @@ namespace info {
 			using coord_type = typename BaseDrawItemType::coord_type;
 			using dist_type = typename BaseDrawItemType::dist_type;
 			using ArrangerType = BASEMatriceArranger<IDTYPE, DISTANCETYPE, STRINGTYPE, FLOATTYPE>;
+			using image_type = InfoImage<double>;
+			using image_type_ptr = std::shared_ptr<image_type>;
 		private:
 			STRINGTYPE m_sigle;
 			sizets_vector m_varindexes;
@@ -39,13 +42,48 @@ namespace info {
 			std::unique_ptr<MatriceDataType> m_matdata;
 			std::unique_ptr<MatriceType> m_matrice;
 		protected:
-			virtual ContextType *create_context(void) = 0;
+			virtual ContextType *create_context(void) {
+				return (nullptr);
+			}
 		public:
 			BASEMatriceArranger(const STRINGTYPE &sSigle = STRINGTYPE()) :
 				m_sigle(sSigle) {
 			}
 			virtual ~BASEMatriceArranger() {
 			}
+			std::future<image_type_ptr> getImageAsync(void) {
+				return std::async(std::launch::async, [this]()->image_type_ptr {
+					image_type_ptr oRet;
+					MatriceDataType *pData = this->m_matdata.get();
+					if (pData != nullptr) {
+						const size_t nCols = pData->cols_count();
+						const size_t &nRows = pData->rows_count();
+						const doubles_vector &data = pData->data();
+						oRet = std::make_shared<image_type>(nRows, nCols, data);
+					}// pData
+					return (oRet);
+				});
+			}// getImageAsync
+			std::future<image_type_ptr> getCriteriasImageAsync(void) {
+				return std::async(std::launch::async, [this]()->image_type_ptr {
+					image_type_ptr oRet;
+					MatriceDataType *pData = this->m_matdata.get();
+					if (pData != nullptr) {
+						const size_t nCols = pData->cols_count();
+						const size_t &nRows = pData->rows_count();
+						const doubles_vector &data = pData->data();
+						image_type src(nRows, nCols, data);
+						oRet = std::make_shared<image_type>();
+						image_type *pDest = oRet.get();
+						std::future<bool> bf = src.filterAsync(pDest, &(this->m_indindexes), &(this->m_varindexes));
+						bool bRet = bf.get();
+						if (!bRet) {
+							oRet.reset();
+						}// pData
+					}
+					return (oRet);
+				});
+			}// getImageAsync
 			template<typename T>
 			std::future<bool> initializeAsync(const STRINGTYPE &sSigle, size_t nRows, size_t nCols,
 				const std::vector<T> &data, const strings_vector &rowNames, const strings_vector &colNames) {
@@ -146,8 +184,8 @@ namespace info {
 					return (false);
 				});
 			} // export svg
-		private:
-			static void draw(ContextType &oContext, MatriceDataType *pData,
+		protected:
+			virtual void draw(ContextType &oContext, MatriceDataType *pData,
 				const sizets_vector rowindexes, const sizets_vector &colindexes, MatCellType aType) {
 				assert(pData != nullptr);
 				const size_t nCols = pData->cols_count();
@@ -227,25 +265,30 @@ namespace info {
 					oContext.set_endline();
 				} // i
 			}// draw
+		private:
 			void draw(ContextType &oContext, MatCellType aType) {
 				MatriceDataType *pData = this->m_matdata.get();
 				assert(pData != nullptr);
-				ArrangerType::draw(oContext, pData, this->m_indindexes, this->m_varindexes, aType);
+				this->draw(oContext, pData, this->m_indindexes, this->m_varindexes, aType);
 			} // draw
 			void draw(const STRINGTYPE &filename, MatCellType aType =
 				MatCellType::histogCell) {
 				std::unique_ptr<ContextType> ctx(this->create_context());
 				ContextType *pctx = ctx.get();
-				assert(pctx != nullptr);
+				if (pctx == nullptr) {
+					return;
+				}
 				this->draw(*pctx, aType);
 				pctx->save(filename);
 			} // draw
 			void draw(std::ostream &os, MatCellType aType = MatCellType::histogCell) {
 				std::unique_ptr<ContextType> ctx(this->create_context());
 				ContextType *pctx = ctx.get();
-				assert(pctx != nullptr);
+				if (pctx == nullptr) {
+					return;
+				}
 				this->draw(*pctx, aType);
-				pctx->save(os,this->m_sigle);
+				pctx->save(os, this->m_sigle);
 			} // draw
 			template<typename T>
 			bool perform_arrange(const STRINGTYPE &filename, const STRINGTYPE &name,

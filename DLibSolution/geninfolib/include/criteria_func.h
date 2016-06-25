@@ -37,36 +37,129 @@ namespace info {
 			}
 		}
 		template <typename X>
-		InfoImage(size_t nRows, size_t nCols, const std::vector<X> &oData) :m_nrows(0), m_nCols(0) {
+		InfoImage(size_t nRows, size_t nCols, const std::vector<X> &oData) :m_nrows(0), m_ncols(0) {
 			const size_t nn = (size_t)(nCols * nRows);
-			if ((nRows < 0) && (nCols > 0) && (oData.size() >= nn)) {
+			if ((nRows > 0) && (nCols > 0) && (oData.size() >= nn)) {
 				this->m_nrows = nRows;
 				this->m_ncols = nCols;
 				this->m_data.reset(new T[nn]);
 				T *pData = this->m_data.get();
 				assert(pData != nullptr);
 				for (size_t i = 0; i < nn; ++i) {
-					pDest[i] = oData[i];
+					pData[i] = oData[i];
 				}
 			}
 		}
 		virtual ~InfoImage() {}
 	public:
+		bool get_pixel(size_t i, size_t j, T &val) const {
+			bool bRet = false;
+			const size_t nc = this->m_ncols;
+			if ((i < this->m_nrows) && (j < nc)) {
+				const T * pData = this->m_data.get();
+				if (pData != nullptr) {
+					val = pData[i * nc + j];
+					bRet = true;
+				}
+			}
+			return (bRet);
+		}// get_pixel
+		bool set_pixel(size_t i, size_t j, T val) {
+			bool bRet = false;
+			const size_t nc = this->m_ncols;
+			if ((i < this->m_nrows) && (j < nc)) {
+				T * pData = const_cast<T *>(this->m_data.get());
+				if (pData != nullptr) {
+					pData[i * nc + j] = val;
+					bRet = true;
+				}
+			}
+			return (bRet);
+		}// set_pixel
 		void get_size(size_t &nRows, size_t &nCols) const {
 			nRows = this->m_nrows;
 			nCols = this->m_ncols;
 		}
 		T operator()(size_t i, size_t j) const {
 			T val = (T)0;
-			(void)this->get_pixel(i, j);
+			(void)this->get_pixel(i, j,val);
 			return (val);
 		}
 		std::future<bool> filterAsync(InfoImage<double> *pDest, const sizets_vector *pRowIndexes = nullptr,
 			const sizets_vector *pColIndexes = nullptr) const {
-			return std::async(std::launch::async, [this, pDest, pRowIndexes, pColIndexes]()->bool {
+			return std::async(std::launch::async, [this, pRowIndexes, pColIndexes,&pDest]()->bool {
 				return (this->compute_criterias(pDest, pRowIndexes,pColIndexes));
 			});
 		}// filterAnsync
+		std::future<bool> writeAsync(std::ostream &os,bool bCoords = false) {
+			return std::async(std::launch::async, [this,bCoords, &os]()->bool {
+				bool bRet = false;
+				try {
+					const size_t nRows = this->m_nrows;
+					const size_t nCols = this->m_ncols;
+					os << "# nbCols: " << nCols << "\t nbRows: " << nRows << std::endl;
+					if (!bCoords) {
+						for (size_t i = 0; i < nRows; ++i) {
+							for (size_t j = 0; j < nCols; ++j) {
+								T val;
+								(void)this->get_pixel(i, j, val);
+								if (j != 0) {
+									os << "\t";
+								}
+								os << val;
+							}// j
+							os << std::endl;
+						}// i
+					}
+					else {
+						for (size_t i = 0; i < nRows; ++i) {
+							for (size_t j = 0; j < nCols; ++j) {
+								T val;
+								(void)this->get_pixel(i, j, val);
+								os << i << "\t" << j << "\t" << val << std::endl;
+							}// j
+							os << std::endl;
+						}// i
+					}
+				}catch(...){}
+				return (bRet);
+			});
+		}// writeAsync
+		std::future<bool> writeAsync(std::wostream &os,bool bCoords = false) {
+			return std::async(std::launch::async, [this,bCoords, &os]()->bool {
+				bool bRet = false;
+				try {
+					const size_t nRows = this->m_nrows;
+					const size_t nCols = this->m_ncols;
+					os << L"# nbCols: " << nCols << L"\t nbRows: " << nRows << std::endl;
+					if (!bCoords) {
+						for (size_t i = 0; i < nRows; ++i) {
+							for (size_t j = 0; j < nCols; ++j) {
+								T val;
+								(void)this->get_pixel(i, j, val);
+								if (j != 0) {
+									os << L"\t";
+								}
+								os << val;
+							}// j
+							os << std::endl;
+						}// i
+					}
+					else {
+						for (size_t i = 0; i < nRows; ++i) {
+							for (size_t j = 0; j < nCols; ++j) {
+								T val;
+								(void)this->get_pixel(i, j, val);
+								os << i << L"\t" << j << L"\t" << val << std::endl;
+							}// j
+							os << std::endl;
+						}// i
+					}
+				}
+				catch (...) {}
+				return (bRet);
+			});
+		}// writeAsync
 	private:
 		void set_size(size_t nRows, size_t nCols) {
 			if ((nRows > 0) && (nCols > 0)) {
@@ -81,39 +174,17 @@ namespace info {
 				}
 			}
 		}
-		const T get_data(void) const {
+		const T *get_data(void) const {
 			return (this->m_data.get());
 		}
-		bool get_pixel(size_t i, size_t j, T &val) const {
-			bool bRet = false;
-			const size_t nc = this->m_ncols;
-			if ((i < this->m_nrows) && (i < nc)) {
-				const T * pData = this->m_data.get();
-				if (pData != nullptr) {
-					val = pData[i * nc + j];
-					bRet = true;
-				}
-			}
-			return (bRet);
-		}// get_pixel
-		bool set_pixel(size_t i, size_t j, T val) {
-			bool bRet = false;
-			const size_t nc = this->m_ncols;
-			if ((i < this->m_nrows) && (i < nc)) {
-				const T * pData = this->m_data.get();
-				if (pData != nullptr) {
-					pData[i * nc + j] = val;
-					bRet = true;
-				}
-			}
-			return (bRet);
-		}// set_pixel
+		
+		
 		bool compute_criterias(InfoImage<double> *pDest, const sizets_vector *pRowIndexes = nullptr,
 			const sizets_vector *pColIndexes = nullptr) const {
 			bool bRet = false;
 			const size_t nRows = this->m_nrows;
 			const size_t nCols = this->m_ncols;
-			const T *pdata = this->m_data.get();
+			const T *pData = this->m_data.get();
 			if ((pDest == nullptr) || (nRows < 3) || (nCols < 3) || (pData == nullptr)) {
 				return (bRet);
 			}
@@ -127,10 +198,10 @@ namespace info {
 				InfoImage oImage(nRows, nCols);
 				for (size_t i = 0; i < nRows; ++i) {
 					size_t ii = rowindexes[i];
-					for (size_t j = 0; j < nCols) {
+					for (size_t j = 0; j < nCols;++j) {
 						size_t jj = colindexes[j];
 						T val;
-						(void)this->get_pixel(ii, jj);
+						(void)this->get_pixel(ii, jj,val);
 						oImage.set_pixel(i, j, val);
 					}
 				}// i
@@ -149,7 +220,7 @@ namespace info {
 					}// j
 				}// i
 			}
-			double *pRes = pDest->get_data();
+			double *pRes = const_cast<double *>(pDest->get_data());
 			size_t r = 0, c = 0;
 			pDest->get_size(r, c);
 			size_t nn = (size_t)(r * c);

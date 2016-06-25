@@ -16,16 +16,17 @@ namespace info {
 		using ContextType = StreamDrawContext<STRINGTYPE, FLOATTYPE>;
 	private:
 		std::unique_ptr<std::stringstream> m_os;
+	protected:
+		std::stringstream &get_buffer(void) const {
+			return *(this->m_os);
+		}
 	public:
 		StreamDrawContext(DrawContextParams *params = nullptr) : BaseType(params) {
-			this->initialize();
+		 this->m_os.reset(new std::stringstream());
+		 assert(this->m_os.get() != nullptr);
 		}
 		virtual ~StreamDrawContext() {
 		}
-	private:
-		void initialize(void) {
-			this->m_os.reset(new std::stringstream());
-		} // initialize
 	public:
 		virtual void set_separator(void) {
 			std::stringstream & out = *(this->m_os);

@@ -34,6 +34,9 @@
     <Filter Include="Fichiers d%27en-tête\include\stream">
       <UniqueIdentifier>{7f6c783a-a2f3-470a-87d9-4fc9eecd4be9}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Fichiers d%27en-tête\include\gnuplot">
+      <UniqueIdentifier>{162a2409-0035-4724-a762-19caf00d4342}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
@@ -203,6 +206,9 @@
     </ClInclude>
     <ClInclude Include="include\criteria_func.h">
       <Filter>Fichiers d%27en-tête\include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\stream\gnuplot_matrice.h">
+      <Filter>Fichiers d%27en-tête\include\gnuplot</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
